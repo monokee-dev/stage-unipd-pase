@@ -4,8 +4,10 @@ exports.ecdaaTrustAnchor = exports.attestationRootCertificates = exports.tcDispl
 var metadataKeysV2 = /** @class */ (function () {
     //costruttore con tutti i campi, quelli richiesti sono obbligatori, gli altri facoltativi
     function metadataKeysV2(description, authenticatorVersion, upv, assertionScheme, authenticationAlgorithm, publicKeyAlgAndEncoding, attestationTypes, userVerificationDetails, keyProtection, matcherProtection, cryptoStrength, attachmentHint, tcDisplay, attestationRootCertificates, legalHeader, aaid, aaguid, attestationCertificateKeyIdentifiers, alternativeDescriptions, protocolFamily, authenticationAlgorithms, publicKeyAlgAndEncodings, isKeyRestricted, isFreshUserVerificationRequired, operatingEnv, isSecondFactorOnly, tcDisplayContentType, tcDisplayPNGCharacteristics, ecdaaTrustAnchors, icon, supportedExtensions) {
-        if (authenticatorVersion === void 0) { authenticatorVersion = 0; }
+        if (cryptoStrength === void 0) { cryptoStrength = undefined; }
         if (protocolFamily === void 0) { protocolFamily = "uaf"; }
+        if (isKeyRestricted === void 0) { isKeyRestricted = true; }
+        if (isFreshUserVerificationRequired === void 0) { isFreshUserVerificationRequired = true; }
         this.legalHeader = legalHeader;
         this.aaid = aaid;
         this.aaguid = aaguid;
@@ -45,11 +47,11 @@ var metadataKeysV2 = /** @class */ (function () {
     //funzione validazione per tutti i campi
     metadataKeysV2.prototype.validateAll = function () {
         // legalHeader non controllato: è una stringa
-        if (this.aaidCheck() && this.aaguidCheck() && this.attestationCertificateKeyIdentifiersCheck() &&
-            this.protocolFamilyCheck() && this.assertionSchemeCheck() && this.authenticationAlgorithmCheck() &&
+        if (this.aaidCheck() && this.aaguidCheck() && this.attestationCertificateKeyIdentifiersCheck() && this.authenticatorVersionCheck() &&
+            this.protocolFamilyCheck() && this.upvCheck() && this.assertionSchemeCheck() && this.authenticationAlgorithmCheck() &&
             this.authenticationAlgorithmsCheck() && this.publicKeyAlgAndEncodingCheck() &&
             this.publicKeyAlgAndEncodingsCheck() && this.attestationTypesCheck() && this.userVerificationDetailsCheck() &&
-            this.keyProtectionCheck() && this.matcherProtectionCheck() && this.operatingEnvCheck() &&
+            this.keyProtectionCheck() && this.matcherProtectionCheck() && this.cryptoStrengthCeck() && this.operatingEnvCheck() &&
             this.attachmentHintCheck() && this.tcDisplayCheck() && this.tcDisplayContentTypeCheck() &&
             this.tcDisplayPNGCharacteristicsCheck() && this.ecdaaTrustAnchorsCheck() && this.iconCheck() &&
             this.supportedExtensionsCheck()) {
@@ -65,6 +67,11 @@ var metadataKeysV2 = /** @class */ (function () {
     //isSecondFactorOnly non controllato, o bool o undefined
     //capire attestationRootCertificates (da fare, validare certificato, guardare: https://nodejs.org/api/crypto.html#new-x509certificatebuffer)
     //if(this.attestationRootCertificates)
+    /**
+     * Campo legalHeader non controllato:
+     *          1) perché è opzionale
+     *          2) perché è una stringa
+     */
     /**
      * Controlli:
      *          1) che la stringa, se presente sia conforme a quanto riportato qui: https://fidoalliance.org/specs/fido-uaf-v1.2-rd-20171128/fido-uaf-protocol-v1.2-rd-20171128.html#authenticator-attestation-id-aaid-typedef
@@ -96,33 +103,88 @@ var metadataKeysV2 = /** @class */ (function () {
     };
     /**
      * Controlli:
-     *          1) codificato con stringa esadecimale (tutte le lettere devono esserte in lowercase)
-     *          2) il campo deve essere presente se né aaid né aaguid sono presenti
+     *          1) il campo deve essere presente se né aaid né aaguid sono presenti
+     *          2) campo codificato con stringa esadecimale con tutte le lettere devono esserte in lowercase
      */
     metadataKeysV2.prototype.attestationCertificateKeyIdentifiersCheck = function () {
+        if (this.aaid == undefined && this.aaguid == undefined && this.attestationCertificateKeyIdentifiers == undefined)
+            return false;
         if (this.attestationCertificateKeyIdentifiers != undefined) {
             for (var i = 0; i < this.attestationCertificateKeyIdentifiers.length; i++) {
-                if (!RegExp(/^[0-9a-f]$/i).test(this.attestationCertificateKeyIdentifiers[i]))
+                if (!RegExp(/^[0-9a-f]+$/).test(this.attestationCertificateKeyIdentifiers[i]))
                     return false;
             }
         }
         return true;
     };
-    metadataKeysV2.prototype.protocolFamilyCheck = function () {
-        if (this.protocolFamily != undefined && this.protocolFamily != "uaf" && this.protocolFamily != "u2f" && this.protocolFamily != "fido2")
+    /**
+     * Campo description non controllato:
+     *          1) perché è opzionale
+     *          2) perché è una stringa
+     */
+    /**
+     * Campo alternativeDescriptions non controllato:
+     *          1) perché è opzionale
+     *          2) perché è una stringa
+     */
+    /**
+     * Conrtolli:
+     *          1) essendo il campo unsigned short:  0 <= authenticatorVersion <= 65.535
+     */
+    metadataKeysV2.prototype.authenticatorVersionCheck = function () {
+        if (this.authenticatorVersion < 0 || this.authenticatorVersion > 65.535)
             return false;
         return true;
     };
+    /**
+     * Controlli:
+     *          1) che campo sia una delle seguenti stringhe "uaf", "u2f", e "fido2"
+     *          2) se si usa metadata statement per u2f deve esserci obbligatoriamente il campo "u2f", se si usa FIDO 2.0/WebAuthentication Authenticator il campo deve essere "fido2"
+     */
+    metadataKeysV2.prototype.protocolFamilyCheck = function () {
+        if (this.protocolFamily != undefined && this.protocolFamily != "uaf" && this.protocolFamily != "u2f" && this.protocolFamily != "fido2")
+            return false;
+        if (this.assertionScheme == "FIDOV2" && this.protocolFamily != "fido2")
+            return false;
+        if (this.assertionScheme == "U2FV1BIN" && this.protocolFamily != "u2f")
+            return false;
+        if (this.assertionScheme == "UAFV1TLV" && this.protocolFamily != "uaf") // possibile perché in questo metadata se non si passa alcun valore c'è il parametro di default uaf
+            return false;
+        return true;
+    };
+    /**
+     * Controlli:
+     *          1) che i campi di Version siano unsigned short: 0 <= Campi Version upv <= 65.535
+     */
+    metadataKeysV2.prototype.upvCheck = function () {
+        for (var i = 0; i < this.upv.length; i++) {
+            if (this.upv[i].major < 0 || this.upv[i].major > 65.535 || this.upv[i].minor < 0 || this.upv[i].minor > 65.535)
+                return false;
+        }
+        return true;
+    };
+    /**
+     * Controlli:
+     *          1) che il campo stringa sia presente in assertionSchemeEnum (quidi che sia un tra U2FV1BIN, FIDOV2 e UAFV1TLV)
+     */
     metadataKeysV2.prototype.assertionSchemeCheck = function () {
         if (assertionSchemeEnum[this.assertionScheme] == undefined)
             return false;
         return true;
     };
+    /**
+     * Controlli:
+     *          1) che il campo numero sia compreso tra 1 e 18
+     */
     metadataKeysV2.prototype.authenticationAlgorithmCheck = function () {
         if (this.authenticationAlgorithm < 1 || this.authenticationAlgorithm > 18)
             return false;
         return true;
     };
+    /**
+     * Controlli:
+     *          1) che i campi numero siano compresi tra 1 e 18
+     */
     metadataKeysV2.prototype.authenticationAlgorithmsCheck = function () {
         if (this.authenticationAlgorithms != undefined) {
             for (var i = 0; i < this.authenticationAlgorithms.length; i++) {
@@ -132,11 +194,19 @@ var metadataKeysV2 = /** @class */ (function () {
         }
         return true;
     };
+    /**
+     * Controlli:
+     *          1) che il campo numero sia compreso tra 256 e 260
+     */
     metadataKeysV2.prototype.publicKeyAlgAndEncodingCheck = function () {
         if (this.publicKeyAlgAndEncoding < 256 || this.publicKeyAlgAndEncoding > 260)
             return false;
         return true;
     };
+    /**
+     * Controlli:
+     *          1) che i campi numero siano compresi tra 256 e 260
+     */
     metadataKeysV2.prototype.publicKeyAlgAndEncodingsCheck = function () {
         if (this.publicKeyAlgAndEncodings != undefined) {
             for (var i = 0; i < this.publicKeyAlgAndEncodings.length; i++) {
@@ -146,6 +216,10 @@ var metadataKeysV2 = /** @class */ (function () {
         }
         return true;
     };
+    /**
+     * Controlli:
+     *          1) che i campi numero siano compresi tra 15879(0x3E07) e 15882(0x3E0A)
+     */
     metadataKeysV2.prototype.attestationTypesCheck = function () {
         for (var i = 0; i < this.attestationTypes.length; i++) {
             if (this.attestationTypes[i] < 15879 || this.attestationTypes[i] > 15882)
@@ -153,6 +227,10 @@ var metadataKeysV2 = /** @class */ (function () {
         }
         return true;
     };
+    /**
+     * Controlli:
+     *          1) Verifica conformità campo userVerification di VerificationMethodDescriptor (https://fidoalliance.org/specs/fido-v2.0-rd-20180702/fido-metadata-statement-v2.0-rd-20180702.html#idl-def-VerificationMethodDescriptor)
+     */
     metadataKeysV2.prototype.userVerificationDetailsCheck = function () {
         for (var i = 0; i < this.userVerificationDetails.length; i++) {
             if (!this.userVerificationDetails[i].validateData())
@@ -160,16 +238,49 @@ var metadataKeysV2 = /** @class */ (function () {
         }
         return true;
     };
+    /**
+     * Controlli:
+     *          1) Verifica conformità campo (https://fidoalliance.org/specs/fido-v2.0-rd-20180702/fido-registry-v2.0-rd-20180702.html#key-protection-types)
+     */
     metadataKeysV2.prototype.keyProtectionCheck = function () {
         if (this.keyProtection < 1 || this.keyProtection > 16)
             return false;
         return true;
     };
+    /**
+     * Campo isKeyRestricted non controllato:
+     *          1) perché è opzionale (se non viene specificato è true)
+     *          2) perché è un booleano
+     */
+    /**
+     * Campo isFreshUserVerificationRequired non controllato:
+     *          1) perché è opzionale (se non viene specificato è true)
+     *          2) perché è un booleano
+     */
+    /**
+     * Controlli:
+     *          1) Verifica conformità campo (https://fidoalliance.org/specs/fido-v2.0-rd-20180702/fido-registry-v2.0-rd-20180702.html#matcher-protection-types)
+     */
     metadataKeysV2.prototype.matcherProtectionCheck = function () {
         if (this.matcherProtection < 1 || this.matcherProtection > 4 || this.matcherProtection == 3)
             return false;
         return true;
     };
+    /**
+     * Controlli:
+     *          1) Verifica campo sia unsigned short
+     */
+    metadataKeysV2.prototype.cryptoStrengthCeck = function () {
+        if (this.cryptoStrength != undefined) {
+            if (this.cryptoStrength < 0 || this.cryptoStrength > 65.535)
+                return false;
+        }
+        return true;
+    };
+    /**
+     * Controlli:
+     *          1) che il campo stringa sia presente in operatingEnvEnum
+     */
     metadataKeysV2.prototype.operatingEnvCheck = function () {
         if (this.operatingEnv != undefined) {
             if (operatingEnvEnum[this.operatingEnv] == undefined)
@@ -178,7 +289,7 @@ var metadataKeysV2 = /** @class */ (function () {
         return true;
     };
     metadataKeysV2.prototype.attachmentHintCheck = function () {
-        if (this.attachmentHint != (1 && 2 && 4 && 8 && 16 && 32 && 64 && 128 && 256 && 512))
+        if (this.attachmentHint != (1 && 2 && 4 && 8 && 16 && 32 && 64 && 128 && 256))
             return false;
         return true;
     };

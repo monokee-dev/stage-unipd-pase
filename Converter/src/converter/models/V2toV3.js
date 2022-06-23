@@ -17,10 +17,14 @@ function a():boolean{
 
 console.log(a());
 */
-var x = "7c0903708b87115b0B422def3138c3c864e44573";
-function attestationCertificateKeyIdentifiersCheck(s) {
-    if (!RegExp(/^[0-9a-f]+$/).test(s))
-        return false;
+/*
+let x: string = "7c0903708b87115b0B422def3138c3c864e44573"
+
+function attestationCertificateKeyIdentifiersCheck(s:string): boolean{
+            if (!RegExp(/^[0-9a-f]+$/).test(s))
+                return false;
     return true;
 }
-console.log(attestationCertificateKeyIdentifiersCheck(x));
+
+console.log(attestationCertificateKeyIdentifiersCheck(x))
+*/

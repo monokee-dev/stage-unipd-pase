@@ -1,4 +1,4 @@
-import * as KeysV2 from "./Keys/metadataKeys"
+import * as KeysV2 from "./Keys/metadataV2"
 import * as fs from 'node:fs';
 
 let y: string = fs.readFileSync("./Keys/FIDOV2Keys.txt", 'utf8');
@@ -30,6 +30,5 @@ function attestationCertificateKeyIdentifiersCheck(s:string): boolean{
 
 console.log(attestationCertificateKeyIdentifiersCheck(x))
 */
-let y = new verifi
 
-let x = new KeysV2.userVerificationDetails();
+
