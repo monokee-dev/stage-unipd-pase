@@ -1,14 +1,16 @@
 import { getFunctionName } from "inversify/lib/utils/serialization";
 
+import { X509Certificate } from 'crypto'; // per controllare attestationRootCertificates
+
 export class metadataKeysV2{
 
     //costruttore con tutti i campi, quelli richiesti sono obbligatori, gli altri facoltativi
     constructor(description:string, authenticatorVersion:number, upv:Version[], assertionScheme:string, authenticationAlgorithm:number, 
-        publicKeyAlgAndEncoding:number, attestationTypes:number[], userVerificationDetails: VerificationMethodANDCombinations[], 
+        publicKeyAlgAndEncoding:number, attestationTypes:number[], userVerificationDetails: VerificationMethodANDCombinations[], isSecondFactorOnly:boolean,
         keyProtection: number, matcherProtection: number, cryptoStrength:number | undefined = undefined, attachmentHint: number, tcDisplay: number, 
         attestationRootCertificates:string[], legalHeader?:string, aaid?:string, aaguid?:string, attestationCertificateKeyIdentifiers?:string[],  
         alternativeDescriptions?:string, protocolFamily:string="uaf", authenticationAlgorithms?: number[],  publicKeyAlgAndEncodings?:number[],
-        isKeyRestricted:boolean = true, isFreshUserVerificationRequired:boolean = true, operatingEnv?:string, isSecondFactorOnly?:boolean,
+        isKeyRestricted:boolean = true, isFreshUserVerificationRequired:boolean = true, operatingEnv?:string, 
         tcDisplayContentType?:string, tcDisplayPNGCharacteristics?:tcDisplayPNGCharacteristicsDescriptor, ecdaaTrustAnchors?:ecdaaTrustAnchor[], 
         icon?:string, supportedExtensions?: supportedExtensions[]){
 
@@ -26,7 +28,7 @@ export class metadataKeysV2{
             this.authenticationAlgorithms=Array.from(authenticationAlgorithms!);
             this.publicKeyAlgAndEncoding=publicKeyAlgAndEncoding;
             this.publicKeyAlgAndEncodings=Array.from(publicKeyAlgAndEncodings!);
-            this.attestationTypes=attestationTypes;
+            this.attestationTypes=Array.from(attestationTypes);
             this.userVerificationDetails=userVerificationDetails;
             this.keyProtection=keyProtection;
             this.isKeyRestricted=isKeyRestricted;
@@ -69,7 +71,7 @@ export class metadataKeysV2{
     private cryptoStrength: number | undefined;
     private operatingEnv: string | undefined;
     private attachmentHint: number;
-    private isSecondFactorOnly: boolean | undefined;   
+    private isSecondFactorOnly: boolean;   
     private tcDisplay: number;
     private tcDisplayContentType: string | undefined;                               
     private tcDisplayPNGCharacteristics: tcDisplayPNGCharacteristicsDescriptor | undefined;
@@ -94,7 +96,7 @@ export class metadataKeysV2{
         this.publicKeyAlgAndEncodingsCheck() && this.attestationTypesCheck() && this.userVerificationDetailsCheck() &&
         this.keyProtectionCheck() && this.matcherProtectionCheck() && this.cryptoStrengthCeck() && this.operatingEnvCheck() && 
         this.attachmentHintCheck() && this.tcDisplayCheck() && this.tcDisplayContentTypeCheck() && 
-        this.tcDisplayPNGCharacteristicsCheck() && this.ecdaaTrustAnchorsCheck() && this.iconCheck() &&
+        this.tcDisplayPNGCharacteristicsCheck() && this.attestationRootCertificatesCheck() && this.ecdaaTrustAnchorsCheck() && this.iconCheck() &&
         this.supportedExtensionsCheck()){
             return true;
         }
@@ -139,19 +141,19 @@ export class metadataKeysV2{
 
     /**
      * Controlli:
-     *          1) che la stringa, se presente sia conforme a quanto ricavato qui: https://fidoalliance.org/specs/fido-v2.0-rd-20180702/fido-metadata-statement-v2.0-rd-20180702.html#fido2-example 
-     *          2) che il campo sia presente nel caso protocol family sia settato su "fido2"
-     *          3) per questioni di compatibilità il campo aaguid non può essere presente se protocol family è settato su "uaf"
+     *          1) che il campo sia presente nel caso protocol family sia settato su "fido2"
+     *          2) per questioni di compatibilità il campo aaguid non può essere presente se protocol family è settato su "uaf"
+     *          3) che la stringa, se presente sia conforme a quanto ricavato qui: https://fidoalliance.org/specs/fido-v2.0-rd-20180702/fido-metadata-statement-v2.0-rd-20180702.html#fido2-example  
      */
     private aaguidCheck(): boolean{
-        if(this.aaguid != undefined){
-            if(this.aaguid.length != 36 || (this.aaguid.length == 36 && !RegExp(/^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/i).test(this.aaguid)))
-                    return false;
-        }
         if(this.protocolFamily == "fido2" && this.aaguid == undefined)
             return false;
         if(this.protocolFamily == "uaf" && this.aaguid != undefined)
             return false;
+        if(this.aaguid != undefined){
+            if(this.aaguid.length != 36 || (this.aaguid.length == 36 && !RegExp(/^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/i).test(this.aaguid)))
+                    return false;
+        }
         return true;
     }
 
@@ -203,11 +205,11 @@ export class metadataKeysV2{
     private protocolFamilyCheck(): boolean{
         if(this.protocolFamily != undefined && this.protocolFamily != "uaf" && this.protocolFamily != "u2f" && this.protocolFamily != "fido2")
             return false;
-        if(this.assertionScheme == "FIDOV2" && this.protocolFamily != "fido2")
+        if(this.protocolFamily != "fido2" && this.assertionScheme == "FIDOV2")
             return false;
-        if(this.assertionScheme == "U2FV1BIN" && this.protocolFamily != "u2f")
+        if(this.protocolFamily != "u2f" && this.assertionScheme == "U2FV1BIN")
             return false;
-        if(this.assertionScheme == "UAFV1TLV" && this.protocolFamily != "uaf") // possibile perché in questo metadata se non si passa alcun valore c'è il parametro di default uaf
+        if((this.protocolFamily != "uaf" && this.protocolFamily != undefined) && this.assertionScheme == "UAFV1TLV" ) 
             return false;
         return true;
     }
@@ -362,19 +364,37 @@ export class metadataKeysV2{
         return true;
     }
 
+    /**
+     * Controlli:
+     *          1) che il campo number presenti i valori corretti
+     */
     private attachmentHintCheck(): boolean{
         if(this.attachmentHint != (1 && 2 && 4 && 8 && 16 && 32 && 64 && 128 && 256))
             return false;
         return true;
     }
 
+    /**
+     * Campo isSecondFactorOnly non controllato:
+     *          1) perché è un booleano obbligatorio
+     */
+
+    /**
+     * Controlli:
+     *          1) che il campo number presenti i valori corretti secondo: https://fidoalliance.org/specs/fido-v2.0-rd-20180702/fido-registry-v2.0-rd-20180702.html#transaction-confirmation-display-types
+     */
     private tcDisplayCheck(): boolean{
-        if(this.tcDisplay > 16 || this.tcDisplay < 0){
+        if(this.tcDisplay != (0 || 1 || 2 || 3 || 4 || 5 || 8 || 9 || 16 || 17 || 18 || 20 || 24)){
             return false;
         }
         return true;
     }
 
+    /**
+     * Controlli:
+     *          1) che il campo sia presente nel caso lo sia anche tcDisplay (non 0)
+     *          2) che il campo presenti un valore tra quelli presentu in tcDisplayContentTypeEnum
+     */
     private tcDisplayContentTypeCheck(): boolean{
         if(this.tcDisplay != 0 && this.tcDisplayContentType == undefined)
             return false;
@@ -386,13 +406,34 @@ export class metadataKeysV2{
         return true;
     }   
 
+    /**
+     * Controlli:
+     *          1) che il campo sia presente nel caso lo siano anche tcDisplay (non 0) e tcDisplayContentType (deve essere image/png)
+     */
     private tcDisplayPNGCharacteristicsCheck(): boolean{ //(seconda parte: se variabile tcDisplayContentType è image/png)
         if(this.tcDisplay != 0 && tcDisplayContentTypeEnum[this.tcDisplayContentType as keyof typeof tcDisplayContentTypeEnum] == tcDisplayContentTypeEnum["image/png" as keyof typeof tcDisplayContentTypeEnum] && this.tcDisplayPNGCharacteristics == undefined)
             return false;
         return true;
     }
 
+    private attestationRootCertificatesCheck(): boolean{
+        for(let i=0;i<this.attestationRootCertificates.length;i++){
+            const x509 = new X509Certificate(this.attestationRootCertificates[i])
+        }
+        
+        return true;
+    }
+
+    /**
+     * Controlli:
+     *          1) Se e solo se AttestationTypes include ATTESTATION_ECDAA (15881) ecdaaTrustAnchors deve essere presente
+     *          2) Validazione campo G1Curve di  EcdaaTrustAnchor 
+     */
     private ecdaaTrustAnchorsCheck(): boolean{
+        let temp: number | undefined = this.attestationTypes.find(element => element == 15881);
+        if(temp != undefined && this.ecdaaTrustAnchors == undefined || temp == undefined && this.ecdaaTrustAnchors != undefined)
+            return false;
+        
         if(this.ecdaaTrustAnchors != undefined){
             for(let i=0;i<this.ecdaaTrustAnchors.length;i++){
                 if(!this.ecdaaTrustAnchors[i].validateData())
@@ -402,6 +443,10 @@ export class metadataKeysV2{
         return true;
     }
 
+    /**
+     * Controlli: 
+     *          1) formato con cui sono inserite le immagini tramite regular expression
+     */
     private iconCheck(): boolean{
         if(this.icon != undefined){
             if(!RegExp(/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/).test(this.icon)){
@@ -411,10 +456,18 @@ export class metadataKeysV2{
         return true;
     }
 
+    /**
+     * Controlli:
+     *          1) che gli oggetti nell'array siamo di tipo ExtensionDescriptor
+     */
     private supportedExtensionsCheck(): boolean{
         if(this.supportedExtensions != undefined){
-            return false;
+            for(let i=0;i<this.supportedExtensions.length;i++){
+                if(!(this.supportedExtensions[i] instanceof ExtensionDescriptor))
+                    return false;
+            }
         }
+        
         return true;
     }
 
@@ -595,7 +648,6 @@ class  rgbPaletteEntry{
         }
     }
 }
-
 
 export class tcDisplayPNGCharacteristicsDescriptor {
 
