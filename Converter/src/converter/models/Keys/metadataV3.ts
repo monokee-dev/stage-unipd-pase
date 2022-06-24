@@ -1,14 +1,14 @@
 import { X509Certificate } from 'crypto'; // per controllare attestationRootCertificates
 
-export class metadataKeysV2{
+export class metadataKeysV3{
 
     //costruttore con tutti i campi, quelli richiesti sono obbligatori, gli altri facoltativi
-    constructor(description:string, authenticatorVersion:number, upv:Version[], assertionScheme:string, authenticationAlgorithm:number, 
-        publicKeyAlgAndEncoding:number, attestationTypes:number[], userVerificationDetails: VerificationMethodANDCombinations[], isSecondFactorOnly:boolean,
-        keyProtection: number, matcherProtection: number, cryptoStrength:number | undefined = undefined, attachmentHint: number, tcDisplay: number, 
-        attestationRootCertificates:string[], legalHeader?:string, aaid?:string, aaguid?:string, attestationCertificateKeyIdentifiers?:string[],  
-        alternativeDescriptions?:string, protocolFamily:string="uaf", authenticationAlgorithms?: number[],  publicKeyAlgAndEncodings?:number[],
-        isKeyRestricted:boolean = true, isFreshUserVerificationRequired:boolean = true, operatingEnv?:string, 
+    constructor(description:string, authenticatorVersion:number, upv:Version[], authenticationAlgorithm:number, schema:number,
+        publicKeyAlgAndEncoding:number, attestationTypes:string[], attestationCertificateKeyIdentifiers:string[],
+        userVerificationDetails: VerificationMethodANDCombinations[], isSecondFactorOnly:boolean, authenticationAlgorithms: string[],  publicKeyAlgAndEncodings:string[],
+        keyProtection: string[], matcherProtection: string[], cryptoStrength:number | undefined = undefined, attachmentHint: string[], tcDisplay: string[], 
+        attestationRootCertificates:string[], legalHeader:string, aaid?:string, aaguid?:string, alternativeDescriptions?:string, 
+        protocolFamily:string="uaf", isKeyRestricted:boolean = true, isFreshUserVerificationRequired:boolean = true, operatingEnv?:string, 
         tcDisplayContentType?:string, tcDisplayPNGCharacteristics?:tcDisplayPNGCharacteristicsDescriptor, ecdaaTrustAnchors?:ecdaaTrustAnchor[], 
         icon?:string, supportedExtensions?: supportedExtensions[]){
 
@@ -20,29 +20,19 @@ export class metadataKeysV2{
             this.alternativeDescriptions=alternativeDescriptions;
             this.authenticatorVersion=authenticatorVersion;
             this.protocolFamily=protocolFamily;
+            this.schema=schema;
             this.upv=Array.from(upv);
-            this.assertionScheme=assertionScheme;
-            this.authenticationAlgorithm=authenticationAlgorithm;
-            //controllo che authenticationAlgorithms esista per assegnarlo a this.authenticationAlgorithms
-            if(authenticationAlgorithms != undefined){
-                this.authenticationAlgorithms=Array.from(authenticationAlgorithms);
-            }
-            this.publicKeyAlgAndEncoding=publicKeyAlgAndEncoding;
-            //controllo che publicKeyAlgAndEncodings esista per assegnarlo a this.publicKeyAlgAndEncodings
-            if(publicKeyAlgAndEncodings != undefined){
-                this.publicKeyAlgAndEncodings=Array.from(publicKeyAlgAndEncodings);
-            }
+            this.authenticationAlgorithms=Array.from(authenticationAlgorithms);
+            this.publicKeyAlgAndEncodings=Array.from(publicKeyAlgAndEncodings); 
             this.attestationTypes=Array.from(attestationTypes);
             this.userVerificationDetails=userVerificationDetails;
-            this.keyProtection=keyProtection;
+            this.keyProtection=Array.from(keyProtection);
             this.isKeyRestricted=isKeyRestricted;
             this.isFreshUserVerificationRequired=isFreshUserVerificationRequired;
-            this.matcherProtection=matcherProtection;
+            this.matcherProtection=Array.from(matcherProtection);
             this.cryptoStrength=cryptoStrength;
-            this.operatingEnv=operatingEnv;
             this.attachmentHint=attachmentHint;
-            this.isSecondFactorOnly=isSecondFactorOnly;
-            this.tcDisplay=tcDisplay;                         
+            this.tcDisplay=Array.from(tcDisplay);                         
             this.tcDisplayContentType=tcDisplayContentType;                            
             this.tcDisplayPNGCharacteristics=tcDisplayPNGCharacteristics;
             this.attestationRootCertificates=attestationRootCertificates;
@@ -56,37 +46,34 @@ export class metadataKeysV2{
     }
 
     //dichiarazione di tutte le variabili con relativo tipo    
-    private legalHeader: string | undefined;
+    private legalHeader: string;
     private aaid: string | undefined; 
     private aaguid: string | undefined; 
-    private attestationCertificateKeyIdentifiers: string[] | undefined; 
+    private attestationCertificateKeyIdentifiers: string[]; 
     private description: string;
     private alternativeDescriptions: string | undefined;
     private authenticatorVersion: number; 
     private protocolFamily: string;
-    private upv: Version[];
-    private assertionScheme: string;
-    private authenticationAlgorithm: number;                 
-    private authenticationAlgorithms: number[] | undefined; 
-    private publicKeyAlgAndEncoding: number;
-    private publicKeyAlgAndEncodings: number[] | undefined;
-    private attestationTypes: number[];
+    private schema: number;
+    private upv: Version[];              
+    private authenticationAlgorithms: string[];
+    private publicKeyAlgAndEncodings: string[];
+    private attestationTypes: string[];
     private userVerificationDetails: VerificationMethodANDCombinations[];
-    private keyProtection: number;
+    private keyProtection: string[];
     private isKeyRestricted: boolean;
     private isFreshUserVerificationRequired: boolean;
-    private matcherProtection: number;
+    private matcherProtection: string[];
     private cryptoStrength: number | undefined;
-    private operatingEnv: string | undefined;
-    private attachmentHint: number;
-    private isSecondFactorOnly: boolean;   
-    private tcDisplay: number;
+    private attachmentHint: string[];
+    private tcDisplay: string[];
     private tcDisplayContentType: string | undefined;                               
     private tcDisplayPNGCharacteristics: tcDisplayPNGCharacteristicsDescriptor | undefined;
     private attestationRootCertificates: string[];
     private ecdaaTrustAnchors: ecdaaTrustAnchor[] | undefined;
     private icon: string | undefined;
     private supportedExtensions: supportedExtensions[] | undefined;
+    private authenticatorGetInfo: AuthenticatorGetInfo;
 
     //funzione validazione singolo campo
     //public validateData(): boolean{
@@ -96,10 +83,10 @@ export class metadataKeysV2{
     //funzione validazione per tutti i campi
     public validateAll(): boolean{
         if(this.aaidCheck() && this.aaguidCheck() && this.attestationCertificateKeyIdentifiersCheck() && this.authenticatorVersionCheck() &&
-        this.protocolFamilyCheck() && this.upvCheck() && this.assertionSchemeCheck() && this.authenticationAlgorithmCheck() &&
-        this.authenticationAlgorithmsCheck() && this.publicKeyAlgAndEncodingCheck() && 
+        this.protocolFamilyCheck() && this.schemaCheck() && this.upvCheck() &&
+        this.authenticationAlgorithmsCheck() && 
         this.publicKeyAlgAndEncodingsCheck() && this.attestationTypesCheck() && this.userVerificationDetailsCheck() &&
-        this.keyProtectionCheck() && this.matcherProtectionCheck() && this.cryptoStrengthCeck() && this.operatingEnvCheck() && 
+        this.keyProtectionCheck() && this.matcherProtectionCheck() && this.cryptoStrengthCeck() && 
         this.attachmentHintCheck() && this.tcDisplayCheck() && this.tcDisplayContentTypeCheck() && 
         this.tcDisplayPNGCharacteristicsCheck() && this.attestationRootCertificatesCheck() && this.ecdaaTrustAnchorsCheck() && this.iconCheck() &&
         this.supportedExtensionsCheck()){
@@ -115,21 +102,20 @@ export class metadataKeysV2{
 
     /**
      * Campo legalHeader non controllato:
-     *          1) perché è opzionale
+     *          1) è obbligatorio ci sia (controllo nel costruttore)
      *          2) perché è una stringa
      */
-    
 
     /**
      * Controlli:
      *          1) che il campo sia presente nel caso protocol family sia settato su "uaf"
-     *          2) che la stringa, se presente sia conforme a quanto riportato qui: https://fidoalliance.org/specs/fido-uaf-v1.2-rd-20171128/fido-uaf-protocol-v1.2-rd-20171128.html#authenticator-attestation-id-aaid-typedef          
+     *          2) che la stringa, se presente sia conforme a quanto riportato qui: https://fidoalliance.org/specs/fido-uaf-v1.2-rd-20171128/fido-uaf-protocol-v1.2-rd-20171128.html#authenticator-attestation-id-aaid-typedef
      */
     private aaidCheck(): boolean{
         if(this.protocolFamily == "uaf" && this.aaid == undefined)
             return false;
         if(this.aaid != undefined && !RegExp(/^[0-9A-F]{4}#[0-9A-F]{4}$/i).test(this.aaid))
-            return false;
+            return false;        
         return true;
     }
 
@@ -142,8 +128,6 @@ export class metadataKeysV2{
     private aaguidCheck(): boolean{
         if(this.protocolFamily == "fido2" && this.aaguid == undefined)
             return false;
-        if(this.protocolFamily == "uaf" && this.aaguid != undefined)
-            return false;
         if(this.aaguid != undefined){
             if(this.aaguid.length != 36 || (this.aaguid.length == 36 && !RegExp(/^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/i).test(this.aaguid)))
                     return false;
@@ -153,13 +137,9 @@ export class metadataKeysV2{
 
     /**
      * Controlli:
-     *          1) il campo deve essere presente se né aaid né aaguid sono presenti
-     *          2) campo codificato con stringa esadecimale con tutte le lettere devono esserte in lowercase
+     *          1) campo codificato con stringa esadecimale con tutte le lettere devono esserte in lowercase
      */
     private attestationCertificateKeyIdentifiersCheck(): boolean{
-        if(this.aaid == undefined && this.aaguid == undefined && this.attestationCertificateKeyIdentifiers == undefined)
-            return false;
-
         if(this.attestationCertificateKeyIdentifiers != undefined){
             for(let i = 0; i < this.attestationCertificateKeyIdentifiers.length; i++) {
                 if (!RegExp(/^[0-9a-f]+$/).test(this.attestationCertificateKeyIdentifiers[i]))
@@ -171,7 +151,7 @@ export class metadataKeysV2{
 
     /**
      * Campo description non controllato:
-     *          1) perché è obbligatorio (controllato nel costruttore)
+     *          1) perché è opzionale
      *          2) perché è una stringa
      */
 
@@ -183,10 +163,10 @@ export class metadataKeysV2{
 
     /**
      * Conrtolli:
-     *          1) essendo il campo unsigned short:  0 <= authenticatorVersion <= 65.535
+     *          1) essendo il campo unsigned long:  0 <= authenticatorVersion <= 4294967295
      */
     private authenticatorVersionCheck(){
-        if(this.authenticatorVersion < 0 || this.authenticatorVersion > 65.535)
+        if(this.authenticatorVersion < 0 || this.authenticatorVersion > 4294967295)
             return false;
         return true;
     }
@@ -194,16 +174,21 @@ export class metadataKeysV2{
     /**
      * Controlli:
      *          1) che campo sia una delle seguenti stringhe "uaf", "u2f", e "fido2"
-     *          2) se si usa metadata statement per u2f deve esserci obbligatoriamente il campo "u2f", se si usa FIDO 2.0/WebAuthentication Authenticator il campo deve essere "fido2"
      */
     private protocolFamilyCheck(): boolean{
-        if(this.protocolFamily != undefined && this.protocolFamily != "uaf" && this.protocolFamily != "u2f" && this.protocolFamily != "fido2")
+        if(this.protocolFamily == undefined )
             return false;
-        if(this.protocolFamily != "fido2" && this.assertionScheme == "FIDOV2")
+        if(protocolFamilyEnum[this.protocolFamily as keyof typeof protocolFamilyEnum] == undefined) 
             return false;
-        if(this.protocolFamily != "u2f" && this.assertionScheme == "U2FV1BIN")
-            return false;
-        if((this.protocolFamily != "uaf" && this.protocolFamily != undefined) && this.assertionScheme == "UAFV1TLV" ) 
+        return true;
+    }
+
+    /**
+     * Conrtolli:
+     *          1) essendo il campo unsigned short:  0 <= authenticatorVersion <= 65.535
+     */
+    private schemaCheck(): boolean{
+        if(this.schema < 0 || this.schema > 65.535)
             return false;
         return true;
     }
@@ -222,45 +207,15 @@ export class metadataKeysV2{
 
     /**
      * Controlli:
-     *          1) che il campo stringa sia presente in assertionSchemeEnum (quidi che sia un tra U2FV1BIN, FIDOV2 e UAFV1TLV)
-     */
-    private assertionSchemeCheck(): boolean{
-        if(assertionSchemeEnum[this.assertionScheme as keyof typeof assertionSchemeEnum] == undefined)
-                return false;
-        return true;
-    }
-
-    /**
-     * Controlli:
-     *          1) che il campo numero sia compreso tra 1 e 18
-     */
-    private authenticationAlgorithmCheck(): boolean{
-        if(this.authenticationAlgorithm < 1 || this.authenticationAlgorithm > 18)
-            return false;
-        return true;
-    }
-
-    /**
-     * Controlli:
      *          1) che i campi numero siano compresi tra 1 e 18
      */
     private authenticationAlgorithmsCheck(): boolean{
         if(this.authenticationAlgorithms != undefined){    
             for(let i = 0; i < this.authenticationAlgorithms.length; i++) {
-                if (this.authenticationAlgorithms[i] < 1 || this.authenticationAlgorithms[i] > 18)
+                if (authenticationAlgorithmsEnum[this.authenticationAlgorithms[i] as keyof typeof authenticationAlgorithmsEnum] == undefined)
                     return false;
             }
         }
-        return true;
-    }
-
-    /**
-     * Controlli:
-     *          1) che il campo numero sia compreso tra 256 e 260
-     */
-    private publicKeyAlgAndEncodingCheck(): boolean{
-        if(this.publicKeyAlgAndEncoding < 256 || this.publicKeyAlgAndEncoding > 260)
-            return false;
         return true;
     }
 
@@ -271,7 +226,7 @@ export class metadataKeysV2{
     private publicKeyAlgAndEncodingsCheck(): boolean{
         if(this.publicKeyAlgAndEncodings != undefined){
             for(let i = 0; i < this.publicKeyAlgAndEncodings.length; i++) {
-                if (this.publicKeyAlgAndEncodings[i] < 256 || this.publicKeyAlgAndEncodings[i] > 260)
+                if (publicKeyAlgAndEncodingsEnum[this.publicKeyAlgAndEncodings[i] as keyof typeof publicKeyAlgAndEncodingsEnum] == undefined)
                     return false;
             }
         }
@@ -280,11 +235,11 @@ export class metadataKeysV2{
 
     /**
      * Controlli:
-     *          1) che i campi numero siano compresi tra 15879(0x3E07) e 15882(0x3E0A)
+     *          1) che i campi stringa siano basic_full, basic_surrogate, ecdaa oppure attca
      */
     private attestationTypesCheck(): boolean{
         for(let i = 0; i < this.attestationTypes.length; i++) {
-            if (this.attestationTypes[i] < 15879 || this.attestationTypes[i] > 15882)
+            if (attestationTypesEnum[this.attestationTypes[i] as keyof typeof attestationTypesEnum] == undefined)
                 return false;
         }
         return true;
@@ -292,7 +247,7 @@ export class metadataKeysV2{
 
     /**
      * Controlli:
-     *          1) Verifica conformità campo userVerification di VerificationMethodDescriptor (https://fidoalliance.org/specs/fido-v2.0-rd-20180702/fido-metadata-statement-v2.0-rd-20180702.html#idl-def-VerificationMethodDescriptor)
+     *          1) Verifica conformità campo userVerification di VerificationMethodDescriptor (https://fidoalliance.org/specs/common-specs/fido-registry-v2.1-ps-20191217.html#user-verification-methods)
      */
     private userVerificationDetailsCheck(): boolean{
         for(let i = 0; i < this.userVerificationDetails.length; i++) {
@@ -304,14 +259,28 @@ export class metadataKeysV2{
 
     /**
      * Controlli:
-     *          1) Verifica conformità campo (https://fidoalliance.org/specs/fido-v2.0-rd-20180702/fido-registry-v2.0-rd-20180702.html#key-protection-types)
+     *          1) Verifica conformità campi (https://fidoalliance.org/specs/common-specs/fido-registry-v2.1-ps-20191217.html#key-protection-types)
      */
     private keyProtectionCheck(): boolean{
-        if(this.keyProtection < 1 || this.keyProtection > 24) // 16 + 8 -> 24, massimo num raggiungibile (This flag MUST be set in conjunction with one of the other KEY_PROTECTION flags...)
-            return false;
-        if(this.keyProtection == 3 || this.keyProtection == 5 || this.keyProtection == 9 ||
-            this.keyProtection == 12 || this.keyProtection == 16)
-            return false;
+        for(let i=0;i<this.keyProtection.length;i++){
+            if(keyProtectionEnum[this.keyProtection[i] as keyof typeof keyProtectionEnum] == undefined)
+                return false;
+        }
+
+        if(this.keyProtection.find(element => element === "software") != undefined){
+            if(this.keyProtection.find(element => element === "hardware") != undefined)
+                return false;
+            if(this.keyProtection.find(element => element === "tee") != undefined)
+                return false;
+            if(this.keyProtection.find(element => element === "secure_element") != undefined)
+                return false;    
+        }
+
+        if(this.keyProtection.find(element => element === "tee") != undefined){
+            if(this.keyProtection.find(element => element === "secure_element") != undefined)
+                return false;  
+        }
+
         return true;
     }
 
@@ -329,11 +298,21 @@ export class metadataKeysV2{
 
     /**
      * Controlli:
-     *          1) Verifica conformità campo (https://fidoalliance.org/specs/fido-v2.0-rd-20180702/fido-registry-v2.0-rd-20180702.html#matcher-protection-types)
+     *          1) Verifica conformità campo (https://fidoalliance.org/specs/common-specs/fido-registry-v2.1-ps-20191217.html#matcher-protection-types)
      */    
     private matcherProtectionCheck(): boolean{
-        if(this.matcherProtection < 1 || this.matcherProtection > 4 || this.matcherProtection == 3)
-            return false;
+        for(let i=0;i<this.matcherProtection.length;i++){
+            if(matcherProtectionEnum[this.matcherProtection[i] as keyof typeof matcherProtectionEnum] == undefined)
+                return false;
+        }
+        if(this.matcherProtection.find(element => element === "software") != undefined){
+            if(this.matcherProtection.find(element => element === "tee") != undefined || this.matcherProtection.find(element => element === "on_chip") != undefined)
+                return false;
+        }
+        if(this.matcherProtection.find(element => element === "tee") != undefined){
+            if(this.matcherProtection.find(element => element === "on_chip") != undefined)
+                return false;
+        }
         return true;
     }
 
@@ -351,23 +330,17 @@ export class metadataKeysV2{
 
     /**
      * Controlli:
-     *          1) che il campo stringa sia presente in operatingEnvEnum
-     */
-    private operatingEnvCheck(): boolean{
-        if(this.operatingEnv != undefined){
-            if(operatingEnvEnum[this.operatingEnv as keyof typeof operatingEnvEnum] == undefined)
-                return false;
-            }
-        return true;
-    }
-
-    /**
-     * Controlli:
      *          1) che il campo number presenti i valori corretti
      */
     private attachmentHintCheck(): boolean{
-        if(this.attachmentHint != (1 && 2 && 4 && 8 && 16 && 32 && 64 && 128 && 256))
-            return false;
+        for(let i=0;i<this.matcherProtection.length;i++){
+            if(attachmentHintEnum[this.attachmentHint[i] as keyof typeof attachmentHintEnum] == undefined)
+                return false;
+        }
+        if(this.matcherProtection.find(element => element == "internal") != undefined){
+            if(this.matcherProtection.find(element => element != "internal") != undefined)
+                return false;
+        }
         return true;
     }
 
@@ -379,10 +352,20 @@ export class metadataKeysV2{
     /**
      * Controlli:
      *          1) che il campo number presenti i valori corretti secondo: https://fidoalliance.org/specs/fido-v2.0-rd-20180702/fido-registry-v2.0-rd-20180702.html#transaction-confirmation-display-types
+     *          2) array vuoto -> the authenticator does not support a transaction confirmation display
      */
     private tcDisplayCheck(): boolean{
-        if(this.tcDisplay != (0 || 1 || 2 || 3 || 4 || 5 || 8 || 9 || 16 || 17 || 18 || 20 || 24)){
-            return false;
+        for(let i=0;i<this.tcDisplay.length;i++){
+            if(tcDisplayEnum[this.tcDisplay[i] as keyof typeof tcDisplayEnum] == undefined)
+                return false;
+        }
+        if(this.tcDisplay.find(element => element == "privileged_software") != undefined){
+            if(this.tcDisplay.find(element => element == "tee") != undefined || this.tcDisplay.find(element => element == "hardware") != undefined)
+                return false;
+        }
+        if(this.tcDisplay.find(element => element == "tee") != undefined){
+            if(this.tcDisplay.find(element => element == "hardware") != undefined)
+                return false;
         }
         return true;
     }
@@ -487,6 +470,81 @@ class Version{
     readonly minor: number;
 }
 
+enum tcDisplayEnum{
+    any,
+    privileged_software,
+    tee,
+    hardware,
+    remote,
+}
+
+enum attachmentHintEnum{
+    internal,
+    external,
+    wired,
+    wireless,
+    nfc,
+    bluetooth,
+    network,
+    ready,
+    wifi_direct,
+}
+
+enum matcherProtectionEnum{
+    software,
+    tee,
+    on_chip,
+}
+
+enum keyProtectionEnum{
+    software,
+    hardware,
+    tee,
+    secure_element,
+    remote_handle,
+}
+
+enum protocolFamilyEnum{
+    uaf,
+    u2f,
+    fido2,
+}
+
+enum authenticationAlgorithmsEnum{
+    secp256r1_ecdsa_sha256_raw,
+    secp256r1_ecdsa_sha256_der,
+    rsassa_pss_sha256_raw, //ALG_SIGN_RSASSA_PSS_SHA256_RAW 0x0003 "rsassa_pss_sha256_raw" typo?
+    rsassa_pss_sha256_der,
+    secp256k1_ecdsa_sha256_raw,
+    secp256k1_ecdsa_sha256_der,
+    sm2_sm3_raw,
+    rsa_emsa_pkcs1_sha256_raw,
+    rsa_emsa_pkcs1_sha256_der,
+    rsassa_pss_sha384_raw,
+    rsassa_pss_sha512_raw, //ALG_SIGN_RSASSA_PSS_SHA512_RAW 0x000B "rsassa_pss_sha256_raw" typo?
+    rsassa_pkcsv15_sha256_raw,
+    rsassa_pkcsv15_sha384_raw,
+    rsassa_pkcsv15_sha512_raw,
+    rsassa_pkcsv15_sha1_raw,
+    secp384r1_ecdsa_sha384_raw,
+    secp512r1_ecdsa_sha256_raw,
+    ed25519_eddsa_sha512_raw,
+}
+
+enum publicKeyAlgAndEncodingsEnum{
+    ecc_x962_raw,
+    ecc_x962_der,
+    rsa_2048_raw,
+    rsa_2048_der,
+    cose,
+}
+
+enum attestationTypesEnum{
+    basic_full,
+    basic_surrogate,
+    ecdaa,
+    attca,
+}
 
 enum tcDisplayContentTypeEnum{
     "application/octet-stream",
@@ -514,10 +572,20 @@ enum operatingEnvEnum{
     "Secure Element (SE)",
 }
 
-enum assertionSchemeEnum{
-    U2FV1BIN,
-    FIDOV2,
-    UAFV1TLV,
+enum VerificationMethodDescriptorUserVerificationMethodEnum{
+    presence_internal,
+    fingerprint_internal,
+    passcode_internal,
+    voiceprint_internal,
+    faceprint_internal,
+    location_internal,
+    eyeprint_internal,
+    pattern_internal,
+    handprint_internal,
+    passcode_external,
+    pattern_external,
+    none,
+    all,
 }
 
 class CodeAccuracyDescriptor{
@@ -561,24 +629,25 @@ class PatternAccuracyDescriptor{
 }
 
 class VerificationMethodDescriptor{
-    constructor(uv: number = 0, c?:CodeAccuracyDescriptor, b?:BiometricAccuracyDescriptor, p?:PatternAccuracyDescriptor){
+    constructor(uv: string, c?:CodeAccuracyDescriptor, b?:BiometricAccuracyDescriptor, p?:PatternAccuracyDescriptor){
         this.userVerification=uv;
         this.caDesc=c!;
         this.baDesc=b!;
         this.paDesc=p!;
     }
-    public userVerification: number;
+    public userVerification: string;
     public caDesc: CodeAccuracyDescriptor;
     public baDesc: BiometricAccuracyDescriptor;
     public paDesc: PatternAccuracyDescriptor;
 
     public validateData(): boolean{
-        if(this.userVerification == 0 || this.userVerification != 1024||512||256||128||64||32||16||8||4||2||1)
+        if(VerificationMethodDescriptorUserVerificationMethodEnum[this.userVerification as keyof typeof VerificationMethodDescriptorUserVerificationMethodEnum] == undefined)
             return false;
         else
             return true;
     }
 }
+
 
 class VerificationMethodANDCombinations{
     constructor(d:VerificationMethodDescriptor[]){
