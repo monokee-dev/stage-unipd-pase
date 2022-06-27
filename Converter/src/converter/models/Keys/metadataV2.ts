@@ -186,7 +186,7 @@ export class metadataKeysV2{
      *          1) essendo il campo unsigned short:  0 <= authenticatorVersion <= 65.535
      */
     private authenticatorVersionCheck(){
-        if(this.authenticatorVersion < 0 || this.authenticatorVersion > 65.535)
+        if(this.authenticatorVersion < 0 || this.authenticatorVersion > 65535)
             return false;
         return true;
     }
@@ -214,7 +214,7 @@ export class metadataKeysV2{
      */
      private upvCheck(){
         for(let i=0; i<this.upv.length;i++){
-            if(this.upv[i].major < 0 || this.upv[i].major > 65.535 || this.upv[i].minor < 0 || this.upv[i].minor > 65.535)
+            if(this.upv[i].major < 0 || this.upv[i].major > 65535 || this.upv[i].minor < 0 || this.upv[i].minor > 65535)
                 return false;
         }
         return true;
@@ -343,7 +343,7 @@ export class metadataKeysV2{
      */   
     private cryptoStrengthCeck(): boolean{
         if(this.cryptoStrength != undefined){
-            if(this.cryptoStrength < 0 || this.cryptoStrength > 65.535)
+            if(this.cryptoStrength < 0 || this.cryptoStrength > 65535)
                 return false;
         }
         return true;
@@ -365,9 +365,22 @@ export class metadataKeysV2{
      * Controlli:
      *          1) che il campo number presenti i valori corretti
      */
+    //idea alla base: dato il valore di this.attachmentHint tolgo il valore i, a partire da 256, fino a 1, per capire se sono stati utilizzati o meno i campi critici (internal->1 , external->2)
     private attachmentHintCheck(): boolean{
-        if(this.attachmentHint != (1 && 2 && 4 && 8 && 16 && 32 && 64 && 128 && 256))
-            return false;
+        let counter = 0;
+        let i = 256;
+        let tot = this.attachmentHint;
+        if(tot == 1)
+            return true;
+        while(i>0){
+            if((i==1 && counter >= 1) || (i==2 && counter == 0))
+                return false;
+            if(tot >= i){
+                tot = tot -i;
+                counter+=1;
+            }
+            i=i/2;
+        }
         return true;
     }
 
@@ -381,7 +394,7 @@ export class metadataKeysV2{
      *          1) che il campo number presenti i valori corretti secondo: https://fidoalliance.org/specs/fido-v2.0-rd-20180702/fido-registry-v2.0-rd-20180702.html#transaction-confirmation-display-types
      */
     private tcDisplayCheck(): boolean{
-        if(this.tcDisplay != (0 || 1 || 2 || 3 || 4 || 5 || 8 || 9 || 16 || 17 || 18 || 20 || 24)){
+        if(this.tcDisplay != (0 || 1 || 3 || 5 || 9 || 17 || 19 || 21 || 25)){
             return false;
         }
         return true;
@@ -515,9 +528,9 @@ enum operatingEnvEnum{
 }
 
 enum assertionSchemeEnum{
-    U2FV1BIN,
-    FIDOV2,
-    UAFV1TLV,
+    "U2FV1BIN",
+    "FIDOV2",
+    "UAFV1TLV",
 }
 
 class CodeAccuracyDescriptor{
@@ -703,10 +716,10 @@ export class ecdaaTrustAnchor {
 }
 
 enum G1CurveEnum{
-    BN_P256,
-    BN_P638,
-    BN_ISOP256,
-    BN_ISOP512,
+    "BN_P256",
+    "BN_P638",
+    "BN_ISOP256",
+    "BN_ISOP512",
 }
 
 

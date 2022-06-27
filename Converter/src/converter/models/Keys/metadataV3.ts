@@ -6,11 +6,11 @@ export class metadataKeysV3{
     constructor(description:string, authenticatorVersion:number, upv:Version[], authenticationAlgorithm:number, schema:number,
         publicKeyAlgAndEncoding:number, attestationTypes:string[], attestationCertificateKeyIdentifiers:string[],
         userVerificationDetails: VerificationMethodANDCombinations[], isSecondFactorOnly:boolean, authenticationAlgorithms: string[],  publicKeyAlgAndEncodings:string[],
-        keyProtection: string[], matcherProtection: string[], cryptoStrength:number | undefined = undefined, attachmentHint: string[], tcDisplay: string[], 
+        keyProtection: string[], matcherProtection: string[], cryptoStrength:number | undefined = undefined, attachmentHint: string[], tcDisplay: string[] | null, 
         attestationRootCertificates:string[], legalHeader:string, aaid?:string, aaguid?:string, alternativeDescriptions?:string, 
         protocolFamily:string="uaf", isKeyRestricted:boolean = true, isFreshUserVerificationRequired:boolean = true, operatingEnv?:string, 
         tcDisplayContentType?:string, tcDisplayPNGCharacteristics?:tcDisplayPNGCharacteristicsDescriptor, ecdaaTrustAnchors?:ecdaaTrustAnchor[], 
-        icon?:string, supportedExtensions?: supportedExtensions[]){
+        icon?:string, supportedExtensions?: ExtensionDescriptor[]){
 
             this.legalHeader=legalHeader;
             this.aaid=aaid;
@@ -32,7 +32,12 @@ export class metadataKeysV3{
             this.matcherProtection=Array.from(matcherProtection);
             this.cryptoStrength=cryptoStrength;
             this.attachmentHint=attachmentHint;
-            this.tcDisplay=Array.from(tcDisplay);                         
+            if(tcDisplay != null){
+                this.tcDisplay=Array.from(tcDisplay);
+            }
+            else{
+                this.tcDisplay = null;
+             }                        
             this.tcDisplayContentType=tcDisplayContentType;                            
             this.tcDisplayPNGCharacteristics=tcDisplayPNGCharacteristics;
             this.attestationRootCertificates=attestationRootCertificates;
@@ -66,14 +71,14 @@ export class metadataKeysV3{
     private matcherProtection: string[];
     private cryptoStrength: number | undefined;
     private attachmentHint: string[];
-    private tcDisplay: string[];
+    private tcDisplay: string[] | null; // null corrisponde a 0, ciò significa che transaction confirmation non è supportata dall'autenticatore
     private tcDisplayContentType: string | undefined;                               
     private tcDisplayPNGCharacteristics: tcDisplayPNGCharacteristicsDescriptor | undefined;
     private attestationRootCertificates: string[];
     private ecdaaTrustAnchors: ecdaaTrustAnchor[] | undefined;
     private icon: string | undefined;
-    private supportedExtensions: supportedExtensions[] | undefined;
-    private authenticatorGetInfo: AuthenticatorGetInfo;
+    private supportedExtensions: ExtensionDescriptor[] | undefined;
+    private authenticatorGetInfo: AuthenticatorGetInfo | undefined;
 
     //funzione validazione singolo campo
     //public validateData(): boolean{
@@ -88,8 +93,10 @@ export class metadataKeysV3{
         this.publicKeyAlgAndEncodingsCheck() && this.attestationTypesCheck() && this.userVerificationDetailsCheck() &&
         this.keyProtectionCheck() && this.matcherProtectionCheck() && this.cryptoStrengthCeck() && 
         this.attachmentHintCheck() && this.tcDisplayCheck() && this.tcDisplayContentTypeCheck() && 
-        this.tcDisplayPNGCharacteristicsCheck() && this.attestationRootCertificatesCheck() && this.ecdaaTrustAnchorsCheck() && this.iconCheck() &&
-        this.supportedExtensionsCheck()){
+        this.tcDisplayPNGCharacteristicsCheck() && this.attestationRootCertificatesCheck() && this.ecdaaTrustAnchorsCheck() && this.iconCheck() 
+        //&& this.supportedExtensionsCheck()
+        && this.authenticatorGetInfoCheck()
+        ){
             return true;
         }
         return false;        
@@ -165,8 +172,10 @@ export class metadataKeysV3{
      * Conrtolli:
      *          1) essendo il campo unsigned long:  0 <= authenticatorVersion <= 4294967295
      */
-    private authenticatorVersionCheck(){
+    private authenticatorVersionCheck(): boolean{
         if(this.authenticatorVersion < 0 || this.authenticatorVersion > 4294967295)
+            return false;
+        if(this.authenticatorGetInfo != undefined && this.authenticatorGetInfo.firmwareVersion != this.authenticatorVersion)
             return false;
         return true;
     }
@@ -188,7 +197,7 @@ export class metadataKeysV3{
      *          1) essendo il campo unsigned short:  0 <= authenticatorVersion <= 65.535
      */
     private schemaCheck(): boolean{
-        if(this.schema < 0 || this.schema > 65.535)
+        if(this.schema < 0 || this.schema > 65535)
             return false;
         return true;
     }
@@ -199,7 +208,7 @@ export class metadataKeysV3{
      */
      private upvCheck(){
         for(let i=0; i<this.upv.length;i++){
-            if(this.upv[i].major < 0 || this.upv[i].major > 65.535 || this.upv[i].minor < 0 || this.upv[i].minor > 65.535)
+            if(this.upv[i].major < 0 || this.upv[i].major > 65535 || this.upv[i].minor < 0 || this.upv[i].minor > 65535)
                 return false;
         }
         return true;
@@ -267,17 +276,17 @@ export class metadataKeysV3{
                 return false;
         }
 
-        if(this.keyProtection.find(element => element === "software") != undefined){
-            if(this.keyProtection.find(element => element === "hardware") != undefined)
+        if(this.keyProtection.find(element => element == "software") != undefined){
+            if(this.keyProtection.find(element => element == "hardware") != undefined)
                 return false;
-            if(this.keyProtection.find(element => element === "tee") != undefined)
+            if(this.keyProtection.find(element => element == "tee") != undefined)
                 return false;
-            if(this.keyProtection.find(element => element === "secure_element") != undefined)
+            if(this.keyProtection.find(element => element == "secure_element") != undefined)
                 return false;    
         }
 
-        if(this.keyProtection.find(element => element === "tee") != undefined){
-            if(this.keyProtection.find(element => element === "secure_element") != undefined)
+        if(this.keyProtection.find(element => element == "tee") != undefined){
+            if(this.keyProtection.find(element => element == "secure_element") != undefined)
                 return false;  
         }
 
@@ -305,12 +314,12 @@ export class metadataKeysV3{
             if(matcherProtectionEnum[this.matcherProtection[i] as keyof typeof matcherProtectionEnum] == undefined)
                 return false;
         }
-        if(this.matcherProtection.find(element => element === "software") != undefined){
-            if(this.matcherProtection.find(element => element === "tee") != undefined || this.matcherProtection.find(element => element === "on_chip") != undefined)
+        if(this.matcherProtection.find(element => element == "software") != undefined){
+            if(this.matcherProtection.find(element => element == "tee") != undefined || this.matcherProtection.find(element => element == "on_chip") != undefined)
                 return false;
         }
-        if(this.matcherProtection.find(element => element === "tee") != undefined){
-            if(this.matcherProtection.find(element => element === "on_chip") != undefined)
+        if(this.matcherProtection.find(element => element == "tee") != undefined){
+            if(this.matcherProtection.find(element => element == "on_chip") != undefined)
                 return false;
         }
         return true;
@@ -322,7 +331,7 @@ export class metadataKeysV3{
      */   
     private cryptoStrengthCeck(): boolean{
         if(this.cryptoStrength != undefined){
-            if(this.cryptoStrength < 0 || this.cryptoStrength > 65.535)
+            if(this.cryptoStrength < 0 || this.cryptoStrength > 65535)
                 return false;
         }
         return true;
@@ -337,8 +346,14 @@ export class metadataKeysV3{
             if(attachmentHintEnum[this.attachmentHint[i] as keyof typeof attachmentHintEnum] == undefined)
                 return false;
         }
+        //se c'è elemento internal insieme ad un altro elemento differente --> errore
         if(this.matcherProtection.find(element => element == "internal") != undefined){
             if(this.matcherProtection.find(element => element != "internal") != undefined)
+                return false;
+        }
+        //se si ha elemento external senza altri elementi si ha errore (il controllo su internal non è stato fatto in quanto fatto dall'if precedente)
+        if(this.matcherProtection.find(element => element == "external") != undefined){
+            if(this.matcherProtection.find(element => element != "external") == undefined)
                 return false;
         }
         return true;
@@ -352,31 +367,33 @@ export class metadataKeysV3{
     /**
      * Controlli:
      *          1) che il campo number presenti i valori corretti secondo: https://fidoalliance.org/specs/fido-v2.0-rd-20180702/fido-registry-v2.0-rd-20180702.html#transaction-confirmation-display-types
-     *          2) array vuoto -> the authenticator does not support a transaction confirmation display
+     *          2) campo null -> the authenticator does not support a transaction confirmation display
      */
     private tcDisplayCheck(): boolean{
-        for(let i=0;i<this.tcDisplay.length;i++){
-            if(tcDisplayEnum[this.tcDisplay[i] as keyof typeof tcDisplayEnum] == undefined)
-                return false;
-        }
-        if(this.tcDisplay.find(element => element == "privileged_software") != undefined){
-            if(this.tcDisplay.find(element => element == "tee") != undefined || this.tcDisplay.find(element => element == "hardware") != undefined)
-                return false;
-        }
-        if(this.tcDisplay.find(element => element == "tee") != undefined){
-            if(this.tcDisplay.find(element => element == "hardware") != undefined)
-                return false;
+        if(this.tcDisplay != null){
+            for(let i=0;i<this.tcDisplay.length;i++){
+                if(tcDisplayEnum[this.tcDisplay[i] as keyof typeof tcDisplayEnum] == undefined)
+                    return false;
+            }
+            if(this.tcDisplay.find(element => element == "privileged_software") != undefined){
+                if(this.tcDisplay.find(element => element == "tee") != undefined || this.tcDisplay.find(element => element == "hardware") != undefined)
+                    return false;
+            }
+            if(this.tcDisplay.find(element => element == "tee") != undefined){
+                if(this.tcDisplay.find(element => element == "hardware") != undefined)
+                    return false;
+            }
         }
         return true;
     }
 
     /**
      * Controlli:
-     *          1) che il campo sia presente nel caso lo sia anche tcDisplay (non 0)
+     *          1) che il campo sia presente nel caso lo sia anche tcDisplay (non undefined)
      *          2) che il campo presenti un valore tra quelli presentu in tcDisplayContentTypeEnum
      */
     private tcDisplayContentTypeCheck(): boolean{
-        if(this.tcDisplay != 0 && this.tcDisplayContentType == undefined)
+        if(this.tcDisplay != null && this.tcDisplayContentType == undefined)
             return false;
 
         if(this.tcDisplayContentType != undefined){
@@ -388,10 +405,10 @@ export class metadataKeysV3{
 
     /**
      * Controlli:
-     *          1) che il campo sia presente nel caso lo siano anche tcDisplay (non 0) e tcDisplayContentType (deve essere image/png)
+     *          1) che il campo sia presente nel caso lo siano anche tcDisplay (non null) e tcDisplayContentType (deve essere image/png)
      */
     private tcDisplayPNGCharacteristicsCheck(): boolean{ //(seconda parte: se variabile tcDisplayContentType è image/png)
-        if(this.tcDisplay != 0 && tcDisplayContentTypeEnum[this.tcDisplayContentType as keyof typeof tcDisplayContentTypeEnum] == tcDisplayContentTypeEnum["image/png" as keyof typeof tcDisplayContentTypeEnum] && this.tcDisplayPNGCharacteristics == undefined)
+        if(this.tcDisplay != null && tcDisplayContentTypeEnum[this.tcDisplayContentType as keyof typeof tcDisplayContentTypeEnum] == tcDisplayContentTypeEnum["image/png" as keyof typeof tcDisplayContentTypeEnum] && this.tcDisplayPNGCharacteristics == undefined)
             return false;
         return true;
     }
@@ -418,7 +435,7 @@ export class metadataKeysV3{
      *          2) Validazione campo G1Curve di  EcdaaTrustAnchor 
      */
     private ecdaaTrustAnchorsCheck(): boolean{
-        let temp: number | undefined = this.attestationTypes.find(element => element == 15881);
+        let temp: string | undefined = this.attestationTypes.find(element => element == "ecdaa");
         if(temp != undefined && this.ecdaaTrustAnchors == undefined || temp == undefined && this.ecdaaTrustAnchors != undefined)
             return false;
         
@@ -448,17 +465,19 @@ export class metadataKeysV3{
      * Controlli:
      *          1) che gli oggetti nell'array siamo di tipo ExtensionDescriptor
      */
-    private supportedExtensionsCheck(): boolean{
-        if(this.supportedExtensions != undefined){
-            for(let i=0;i<this.supportedExtensions.length;i++){
-                if(!(this.supportedExtensions[i] instanceof ExtensionDescriptor))
-                    return false;
-            }
-        }
-        
+//    private supportedExtensionsCheck(): boolean{
+//        return true;
+//    }
+
+    /**
+     * Controlli: 
+     *          1) Deve essere presente in caso di autenticatore fido2 (gli altri, uaf e u2f, non lo supportano)
+     */
+     private authenticatorGetInfoCheck(): boolean{
+        if(this.protocolFamily == "fido2" && this.authenticatorGetInfo == undefined || this.authenticatorGetInfo != undefined && !this.authenticatorGetInfo.validateData())
+            return false;
         return true;
     }
-
 }
 
 class Version{
@@ -470,80 +489,144 @@ class Version{
     readonly minor: number;
 }
 
+//controlli da fare
+class AuthenticatorGetInfo{
+    constructor(ver:string[], aag: string, ext?: string[], opt?:authenticatorOption, maxM?:number, pin?:number[],maxCc?: number, maxCIi?: number,
+        tra?: string[], alg?:algorithmAuthenticatorGetInfo, maxA?: number, def?: number, fir?: number){
+            this.version = Array.from(ver);
+            if(ext != undefined){
+                this.extensions = Array.from(ext);
+            }
+            this.aaguid=aag;
+            this.options=opt;
+
+    }
+    public version: string[];
+    public extensions: string[] | undefined;
+    public aaguid: string;
+    public options: authenticatorOption | undefined;
+    public maxMsgSize: number | undefined;
+    public pinUvAuthProtocols: number[] | undefined;
+    public maxCredentialCountInList: number | undefined;
+    public maxCredentialIdLength: number | undefined;
+    public transports: string[] | undefined;
+    public algorithms: algorithmAuthenticatorGetInfo | undefined;
+    public maxAuthenticatorConfigLength: number | undefined;
+    public defaultCredProtect: number | undefined;
+    public firmwareVersion: number | undefined;
+
+    public validateData(): boolean{
+        if(this.version.find(element => element != "FIDO_2_0") == undefined && this.version.find(element => element != "U2F_V2") == undefined)
+            return false;
+        
+        return true;
+    }
+}
+
+//controlli da fare
+class authenticatorOption{
+    constructor(p:boolean = false, r:boolean = false, c:boolean | null = null, up:boolean, uv:boolean | null = null,
+        uvT?:boolean, co?: boolean){
+            this.plat=p;
+            this.rk=r;
+            this.clientPin=c;
+            this.up=up;
+            this.uv=uv;
+            this.uvToken=uvT;
+            this.config=co;
+    }
+    public plat: boolean;
+    public rk: boolean;
+    public clientPin: boolean | null;
+    public up: boolean;
+    public uv: boolean | null;
+    public uvToken: boolean | undefined;
+    public config: boolean | undefined;
+}
+
+class algorithmAuthenticatorGetInfo{
+    constructor(type:string, alg:number){
+        this.type=type;
+        this.alg=alg;
+    }
+    public type:string;
+    public alg: number;
+}
+
 enum tcDisplayEnum{
-    any,
-    privileged_software,
-    tee,
-    hardware,
-    remote,
+    "any",
+    "privileged_software",
+    "tee",
+    "hardware",
+    "remote",
 }
 
 enum attachmentHintEnum{
-    internal,
-    external,
-    wired,
-    wireless,
-    nfc,
-    bluetooth,
-    network,
-    ready,
-    wifi_direct,
+    "internal",
+    "external",
+    "wired",
+    "wireless",
+    "nfc",
+    "bluetooth",
+    "network",
+    "ready",
+    "wifi_direct",
 }
 
 enum matcherProtectionEnum{
-    software,
-    tee,
-    on_chip,
+    "software",
+    "tee",
+    "on_chip",
 }
 
 enum keyProtectionEnum{
-    software,
-    hardware,
-    tee,
-    secure_element,
-    remote_handle,
+    "software",
+    "hardware",
+    "tee",
+    "secure_element",
+    "remote_handle",
 }
 
 enum protocolFamilyEnum{
-    uaf,
-    u2f,
-    fido2,
+    "uaf",
+    "u2f",
+    "fido2",
 }
 
 enum authenticationAlgorithmsEnum{
-    secp256r1_ecdsa_sha256_raw,
-    secp256r1_ecdsa_sha256_der,
-    rsassa_pss_sha256_raw, //ALG_SIGN_RSASSA_PSS_SHA256_RAW 0x0003 "rsassa_pss_sha256_raw" typo?
-    rsassa_pss_sha256_der,
-    secp256k1_ecdsa_sha256_raw,
-    secp256k1_ecdsa_sha256_der,
-    sm2_sm3_raw,
-    rsa_emsa_pkcs1_sha256_raw,
-    rsa_emsa_pkcs1_sha256_der,
-    rsassa_pss_sha384_raw,
-    rsassa_pss_sha512_raw, //ALG_SIGN_RSASSA_PSS_SHA512_RAW 0x000B "rsassa_pss_sha256_raw" typo?
-    rsassa_pkcsv15_sha256_raw,
-    rsassa_pkcsv15_sha384_raw,
-    rsassa_pkcsv15_sha512_raw,
-    rsassa_pkcsv15_sha1_raw,
-    secp384r1_ecdsa_sha384_raw,
-    secp512r1_ecdsa_sha256_raw,
-    ed25519_eddsa_sha512_raw,
+    "secp256r1_ecdsa_sha256_raw",
+    "secp256r1_ecdsa_sha256_der",
+    "rsassa_pss_sha256_raw",
+    "rsassa_pss_sha256_der",
+    "secp256k1_ecdsa_sha256_raw",
+    "secp256k1_ecdsa_sha256_der",
+    "sm2_sm3_raw",
+    "rsa_emsa_pkcs1_sha256_raw",
+    "rsa_emsa_pkcs1_sha256_der",
+    "rsassa_pss_sha384_raw",
+    "rsassa_pss_sha512_raw",
+    "rsassa_pkcsv15_sha256_raw",
+    "rsassa_pkcsv15_sha384_raw",
+    "rsassa_pkcsv15_sha512_raw",
+    "rsassa_pkcsv15_sha1_raw",
+    "secp384r1_ecdsa_sha384_raw",
+    "secp512r1_ecdsa_sha256_raw",
+    "ed25519_eddsa_sha512_raw",
 }
 
 enum publicKeyAlgAndEncodingsEnum{
-    ecc_x962_raw,
-    ecc_x962_der,
-    rsa_2048_raw,
-    rsa_2048_der,
-    cose,
+    "ecc_x962_raw",
+    "ecc_x962_der",
+    "rsa_2048_raw",
+    "rsa_2048_der",
+    "cose",
 }
 
 enum attestationTypesEnum{
-    basic_full,
-    basic_surrogate,
-    ecdaa,
-    attca,
+    "basic_full",
+    "basic_surrogate",
+    "ecdaa",
+    "attca",
 }
 
 enum tcDisplayContentTypeEnum{
@@ -573,19 +656,19 @@ enum operatingEnvEnum{
 }
 
 enum VerificationMethodDescriptorUserVerificationMethodEnum{
-    presence_internal,
-    fingerprint_internal,
-    passcode_internal,
-    voiceprint_internal,
-    faceprint_internal,
-    location_internal,
-    eyeprint_internal,
-    pattern_internal,
-    handprint_internal,
-    passcode_external,
-    pattern_external,
-    none,
-    all,
+    "presence_internal",
+    "fingerprint_internal",
+    "passcode_internal",
+    "voiceprint_internal",
+    "faceprint_internal",
+    "location_internal",
+    "eyeprint_internal",
+    "pattern_internal",
+    "handprint_internal",
+    "passcode_external",
+    "pattern_external",
+    "none",
+    "all",
 }
 
 class CodeAccuracyDescriptor{
@@ -647,7 +730,6 @@ class VerificationMethodDescriptor{
             return true;
     }
 }
-
 
 class VerificationMethodANDCombinations{
     constructor(d:VerificationMethodDescriptor[]){
@@ -772,10 +854,10 @@ export class ecdaaTrustAnchor {
 }
 
 enum G1CurveEnum{
-    BN_P256,
-    BN_P638,
-    BN_ISOP256,
-    BN_ISOP512,
+    "BN_P256",
+    "BN_P638",
+    "BN_ISOP256",
+    "BN_ISOP512",
 }
 
 
