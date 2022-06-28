@@ -189,6 +189,15 @@ export class metadataKeysV3{
             return false;
         if(protocolFamilyEnum[this.protocolFamily as keyof typeof protocolFamilyEnum] == undefined) 
             return false;
+        if(this.authenticatorGetInfo != undefined){
+            if(this.protocolFamily == "fido2" && (this.authenticatorGetInfo.version.find(element => element == "FIDO_2_1") == undefined && 
+                                                this.authenticatorGetInfo.version.find(element => element == "FIDO_2_0") == undefined &&
+                                                this.authenticatorGetInfo.version.find(element => element == "FIDO_2_1_PRE") == undefined))
+                return false;
+            if(this.protocolFamily == "u2f" && (this.authenticatorGetInfo.version.find(element => element == "U2F_V2") == undefined))
+                return false;
+        }  
+
         return true;
     }
 
@@ -452,9 +461,10 @@ export class metadataKeysV3{
      * Controlli: 
      *          1) formato con cui sono inserite le immagini tramite regular expression
      */
-    private iconCheck(): boolean{
+     private iconCheck(): boolean{
         if(this.icon != undefined){
-            if(!RegExp(/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/).test(this.icon)){
+            let temp = this.icon.replace(this.icon.substring(this.icon.indexOf("data:"), this.icon.indexOf("base64")+7), "");
+            if(!RegExp(/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/).test(temp)){
                 return false;
             }
         }
@@ -471,11 +481,12 @@ export class metadataKeysV3{
 
     /**
      * Controlli: 
-     *          1) Deve essere presente in caso di autenticatore fido2 (gli altri, uaf e u2f, non lo supportano)
+     *          1) Verifica correttezza campi
+     *          2) se presente c'è controllo in protocol family
      */
      private authenticatorGetInfoCheck(): boolean{
-        if(this.protocolFamily == "fido2" && this.authenticatorGetInfo == undefined || this.authenticatorGetInfo != undefined && !this.authenticatorGetInfo.validateData())
-            return false;
+        if(this.authenticatorGetInfo != undefined)
+            return this.authenticatorGetInfo.validateData();
         return true;
     }
 }
@@ -492,14 +503,33 @@ class Version{
 //controlli da fare
 class AuthenticatorGetInfo{
     constructor(ver:string[], aag: string, ext?: string[], opt?:authenticatorOption, maxM?:number, pin?:number[],maxCc?: number, maxCIi?: number,
-        tra?: string[], alg?:algorithmAuthenticatorGetInfo, maxA?: number, def?: number, fir?: number){
+        tra?: string[], alg?:algorithmAuthenticatorGetInfo, maxA?: number, def?: number, fir?: number, maxS?: number, force?: boolean, minP?: number,
+        maxCbl?: number, maxRpin?: number, pref?: number, uvM?: number, certif?: string[], remaining?: number, vendor?: number[]){
             this.version = Array.from(ver);
             if(ext != undefined){
                 this.extensions = Array.from(ext);
             }
             this.aaguid=aag;
             this.options=opt;
-
+            this.maxMsgSize=maxM;
+            this.pinUvAuthProtocols=pin;
+            this.maxCredentialCountInList=maxCc;
+            this.maxCredentialIdLength=maxCIi;
+            this.transports=tra;
+            this.algorithms=alg;
+            this.maxSerializedLargeBlobArray=maxS;
+            this.forcePINChange=force;
+            this.minPINLength=minP;
+            this.firmwareVersion=fir;
+            this.maxCredBlobLength=maxCbl;
+            this.maxRPIDsForSetMinPINLength=maxRpin;
+            this.preferredPlatformUvAttempts=pref;
+            this.uvModality=uvM;
+            this.certifications=certif;
+            this.remainingDiscoverableCredentials=remaining;
+            this.vendorPrototypeConfigCommands=vendor;
+            this.maxAuthenticatorConfigLength=maxA;
+            this.defaultCredProtect=def;
     }
     public version: string[];
     public extensions: string[] | undefined;
@@ -510,38 +540,122 @@ class AuthenticatorGetInfo{
     public maxCredentialCountInList: number | undefined;
     public maxCredentialIdLength: number | undefined;
     public transports: string[] | undefined;
+
+    //possibile aumentare i controlli: guardare https://w3c.github.io/webauthn/#dictdef-publickeycredentialparameters
     public algorithms: algorithmAuthenticatorGetInfo | undefined;
+    public maxSerializedLargeBlobArray: number | undefined;
+    public forcePINChange: boolean | undefined;
+    public minPINLength: number | undefined;
+    public firmwareVersion: number | undefined;
+    public maxCredBlobLength: number | undefined;
+    public maxRPIDsForSetMinPINLength: number | undefined;
+    public preferredPlatformUvAttempts: number | undefined;
+    public uvModality: number | undefined;
+    public certifications: string[] | undefined;
+    public remainingDiscoverableCredentials: number | undefined;
+    public vendorPrototypeConfigCommands: number[] | undefined;
     public maxAuthenticatorConfigLength: number | undefined;
     public defaultCredProtect: number | undefined;
-    public firmwareVersion: number | undefined;
 
     public validateData(): boolean{
-        if(this.version.find(element => element != "FIDO_2_0") == undefined && this.version.find(element => element != "U2F_V2") == undefined)
+        if(this.version.find(element => element == "FIDO_2_0") == undefined && this.version.find(element => element != "U2F_V2") == undefined && this.version.find(element => element != "FIDO_2_1") == undefined &&
+        this.version.find(element => element == "FIDO_2_1_PRE") == undefined)
+            return false;
+        if(this.extensions != undefined && this.extensions.find(element => element == "credProtect") == undefined && this.extensions.find(element => element == "credBlob") == undefined &&
+            this.extensions.find(element => element == "credProtect") == undefined && this.extensions.find(element => element == "largeBlobKey") == undefined &&
+            this.extensions.find(element => element == "minPinLength") == undefined && this.extensions.find(element => element == "hmac-secret"))
+            return false;
+        if(!RegExp(/^[0-9a-f]+$/).test(this.aaguid))
+            return false;
+        if(this.maxMsgSize != undefined && this.maxMsgSize < 0)
+            return false;
+        if(this.pinUvAuthProtocols != undefined){
+            for(let i=0; i<this.pinUvAuthProtocols.length;i++){
+                if(this.pinUvAuthProtocols[i] < 0)
+                    return false
+            }
+        }
+        if(this.maxCredentialCountInList != undefined && this.maxCredentialCountInList < 0)
+            return false;
+        if(this.maxCredentialIdLength != undefined && this.maxCredentialIdLength < 0)
+            return false;
+        if(this.transports != undefined && this.transports.find(element => element == "usb") == undefined && this.transports.find(element => element == "nfc") == undefined &&
+            this.transports.find(element => element == "ble") == undefined && this.transports.find(element => element == "internal") == undefined)
             return false;
         
+        if(this.maxSerializedLargeBlobArray != undefined && this.maxSerializedLargeBlobArray < 0)
+            return false;
+        if(this.minPINLength != undefined && this.minPINLength < 0)
+            return false;
+        if(this.firmwareVersion != undefined && this.firmwareVersion < 0)
+            return false;
+        if(this.maxCredBlobLength  != undefined && this.maxCredBlobLength  < 0)
+            return false;
+        if(this.maxRPIDsForSetMinPINLength != undefined && this.maxRPIDsForSetMinPINLength < 0)
+            return false;
+        if(this.preferredPlatformUvAttempts != undefined && this.preferredPlatformUvAttempts < 0)
+            return false;
+        if(this.certifications != undefined && this.certifications.find(element => element == "FIPS-CMVP-2") == undefined && this.certifications.find(element => element == "FIPS-CMVP-2") == undefined &&
+        this.certifications.find(element => element == "FIPS-CMVP-3") == undefined && this.certifications.find(element => element == "FIPS-CMVP-2-PHY") == undefined && 
+        this.certifications.find(element => element == "FIPS-CMVP-3-PHY") == undefined && this.certifications.find(element => element == "CC-EAL") == undefined &&
+        this.certifications.find(element => element == "FIDO") == undefined)
+            return false;
+        if(this.remainingDiscoverableCredentials != undefined && this.remainingDiscoverableCredentials < 0)
+            return false;
+        if(this.vendorPrototypeConfigCommands != undefined){
+            for(let i=0; i<this.vendorPrototypeConfigCommands.length;i++){
+                if(this.vendorPrototypeConfigCommands[i] < 0)
+                    return false
+            }
+        }
         return true;
     }
 }
 
 //controlli da fare
 class authenticatorOption{
-    constructor(p:boolean = false, r:boolean = false, c:boolean | null = null, up:boolean, uv:boolean | null = null,
-        uvT?:boolean, co?: boolean){
+    constructor(p:boolean = false, r:boolean = false, c:boolean | null = null, up:boolean=true, uv:boolean | null = null,
+        uvT?:boolean, no?: boolean, la?:boolean, ep?:boolean, bio?:boolean, user?:boolean, uvBio?:boolean, auth?:boolean, uva?:boolean,
+        cred?:boolean, crede?:boolean,setM?:boolean, make?:boolean, alw?:boolean){
             this.plat=p;
             this.rk=r;
             this.clientPin=c;
             this.up=up;
             this.uv=uv;
-            this.uvToken=uvT;
-            this.config=co;
+            this.pinUvAuthToken=uvT;
+            this.noMcGaPermissionsWithClientPin=no;
+            this.largeBlobs=la;
+            this.ep=ep;
+            this.bioEnroll=bio;
+            this.userVerificationMgmtPreview=user;
+            this.uvBioEnroll=uvBio;
+            this.authnrCfg=auth;
+            this.uvAcfg=uva;
+            this.credMgmt=cred;
+            this.credentialMgmtPreview=crede;
+            this.setMinPINLength=setM;
+            this.makeCredUvNotRqd=make;
+            this.alwaysUv=alw;
     }
     public plat: boolean;
     public rk: boolean;
     public clientPin: boolean | null;
     public up: boolean;
     public uv: boolean | null;
-    public uvToken: boolean | undefined;
-    public config: boolean | undefined;
+    public pinUvAuthToken: boolean | undefined;
+    public noMcGaPermissionsWithClientPin: boolean | undefined;
+    public largeBlobs: boolean | undefined;
+    public ep: boolean | undefined;
+    public bioEnroll: boolean | undefined;
+    public userVerificationMgmtPreview: boolean | undefined;
+    public uvBioEnroll: boolean | undefined;
+    public authnrCfg: boolean | undefined;
+    public uvAcfg: boolean | undefined;
+    public credMgmt: boolean | undefined;
+    public credentialMgmtPreview: boolean | undefined;
+    public setMinPINLength: boolean | undefined;
+    public makeCredUvNotRqd: boolean | undefined;
+    public alwaysUv: boolean | undefined;
 }
 
 class algorithmAuthenticatorGetInfo{

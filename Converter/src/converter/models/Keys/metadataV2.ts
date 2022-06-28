@@ -10,7 +10,7 @@ export class metadataKeysV2{
         alternativeDescriptions?:string, protocolFamily:string="uaf", authenticationAlgorithms?: number[],  publicKeyAlgAndEncodings?:number[],
         isKeyRestricted:boolean = true, isFreshUserVerificationRequired:boolean = true, operatingEnv?:string, 
         tcDisplayContentType?:string, tcDisplayPNGCharacteristics?:tcDisplayPNGCharacteristicsDescriptor, ecdaaTrustAnchors?:ecdaaTrustAnchor[], 
-        icon?:string, supportedExtensions?: supportedExtensions[]){
+        icon?:string, supportedExtensions?: ExtensionDescriptor[]){
 
             this.legalHeader=legalHeader;
             this.aaid=aaid;
@@ -51,8 +51,7 @@ export class metadataKeysV2{
             //controllo che supportedExtensions esista per assegnarlo a this.supportedExtensions
             if(supportedExtensions != undefined){
                 this.supportedExtensions=Array.from(supportedExtensions);
-            }
-            
+            }   
     }
 
     //dichiarazione di tutte le variabili con relativo tipo    
@@ -86,7 +85,7 @@ export class metadataKeysV2{
     private attestationRootCertificates: string[];
     private ecdaaTrustAnchors: ecdaaTrustAnchor[] | undefined;
     private icon: string | undefined;
-    private supportedExtensions: supportedExtensions[] | undefined;
+    private supportedExtensions: ExtensionDescriptor[] | undefined;
 
     //funzione validazione singolo campo
     //public validateData(): boolean{
@@ -101,8 +100,9 @@ export class metadataKeysV2{
         this.publicKeyAlgAndEncodingsCheck() && this.attestationTypesCheck() && this.userVerificationDetailsCheck() &&
         this.keyProtectionCheck() && this.matcherProtectionCheck() && this.cryptoStrengthCeck() && this.operatingEnvCheck() && 
         this.attachmentHintCheck() && this.tcDisplayCheck() && this.tcDisplayContentTypeCheck() && 
-        this.tcDisplayPNGCharacteristicsCheck() && this.attestationRootCertificatesCheck() && this.ecdaaTrustAnchorsCheck() && this.iconCheck() &&
-        this.supportedExtensionsCheck()){
+        this.tcDisplayPNGCharacteristicsCheck() && this.attestationRootCertificatesCheck() && this.ecdaaTrustAnchorsCheck() && this.iconCheck() 
+        // && this.supportedExtensionsCheck() basta che i campi dati siano conformi
+        ){
             return true;
         }
         return false;        
@@ -467,7 +467,8 @@ export class metadataKeysV2{
      */
     private iconCheck(): boolean{
         if(this.icon != undefined){
-            if(!RegExp(/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/).test(this.icon)){
+            let temp = this.icon.replace(this.icon.substring(this.icon.indexOf("data:"), this.icon.indexOf("base64")+7), "");
+            if(!RegExp(/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/).test(temp)){
                 return false;
             }
         }
@@ -478,17 +479,10 @@ export class metadataKeysV2{
      * Controlli:
      *          1) che gli oggetti nell'array siamo di tipo ExtensionDescriptor
      */
-    private supportedExtensionsCheck(): boolean{
-        if(this.supportedExtensions != undefined){
-            for(let i=0;i<this.supportedExtensions.length;i++){
-                if(!(this.supportedExtensions[i] instanceof ExtensionDescriptor))
-                    return false;
-            }
+        /*private supportedExtensionsCheck(): boolean{
+            return true;
         }
-        
-        return true;
-    }
-
+    */
 }
 
 class Version{

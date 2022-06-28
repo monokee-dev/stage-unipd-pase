@@ -1,9 +1,10 @@
 "use strict";
 exports.__esModule = true;
 exports.ecdaaTrustAnchor = exports.attestationRootCertificates = exports.tcDisplayPNGCharacteristicsDescriptor = exports.supportedExtensions = exports.userVerificationDetails = exports.metadataKeysV2 = void 0;
+var crypto_1 = require("crypto"); // per controllare attestationRootCertificates
 var metadataKeysV2 = /** @class */ (function () {
     //costruttore con tutti i campi, quelli richiesti sono obbligatori, gli altri facoltativi
-    function metadataKeysV2(description, authenticatorVersion, upv, assertionScheme, authenticationAlgorithm, publicKeyAlgAndEncoding, attestationTypes, userVerificationDetails, keyProtection, matcherProtection, cryptoStrength, attachmentHint, tcDisplay, attestationRootCertificates, legalHeader, aaid, aaguid, attestationCertificateKeyIdentifiers, alternativeDescriptions, protocolFamily, authenticationAlgorithms, publicKeyAlgAndEncodings, isKeyRestricted, isFreshUserVerificationRequired, operatingEnv, isSecondFactorOnly, tcDisplayContentType, tcDisplayPNGCharacteristics, ecdaaTrustAnchors, icon, supportedExtensions) {
+    function metadataKeysV2(description, authenticatorVersion, upv, assertionScheme, authenticationAlgorithm, publicKeyAlgAndEncoding, attestationTypes, userVerificationDetails, isSecondFactorOnly, keyProtection, matcherProtection, cryptoStrength, attachmentHint, tcDisplay, attestationRootCertificates, legalHeader, aaid, aaguid, attestationCertificateKeyIdentifiers, alternativeDescriptions, protocolFamily, authenticationAlgorithms, publicKeyAlgAndEncodings, isKeyRestricted, isFreshUserVerificationRequired, operatingEnv, tcDisplayContentType, tcDisplayPNGCharacteristics, ecdaaTrustAnchors, icon, supportedExtensions) {
         if (cryptoStrength === void 0) { cryptoStrength = undefined; }
         if (protocolFamily === void 0) { protocolFamily = "uaf"; }
         if (isKeyRestricted === void 0) { isKeyRestricted = true; }
@@ -19,10 +20,16 @@ var metadataKeysV2 = /** @class */ (function () {
         this.upv = Array.from(upv);
         this.assertionScheme = assertionScheme;
         this.authenticationAlgorithm = authenticationAlgorithm;
-        this.authenticationAlgorithms = Array.from(authenticationAlgorithms);
+        //controllo che authenticationAlgorithms esista per assegnarlo a this.authenticationAlgorithms
+        if (authenticationAlgorithms != undefined) {
+            this.authenticationAlgorithms = Array.from(authenticationAlgorithms);
+        }
         this.publicKeyAlgAndEncoding = publicKeyAlgAndEncoding;
-        this.publicKeyAlgAndEncodings = Array.from(publicKeyAlgAndEncodings);
-        this.attestationTypes = attestationTypes;
+        //controllo che publicKeyAlgAndEncodings esista per assegnarlo a this.publicKeyAlgAndEncodings
+        if (publicKeyAlgAndEncodings != undefined) {
+            this.publicKeyAlgAndEncodings = Array.from(publicKeyAlgAndEncodings);
+        }
+        this.attestationTypes = Array.from(attestationTypes);
         this.userVerificationDetails = userVerificationDetails;
         this.keyProtection = keyProtection;
         this.isKeyRestricted = isKeyRestricted;
@@ -38,22 +45,24 @@ var metadataKeysV2 = /** @class */ (function () {
         this.attestationRootCertificates = attestationRootCertificates;
         this.ecdaaTrustAnchors = Array.from(ecdaaTrustAnchors);
         this.icon = icon;
-        this.supportedExtensions = Array.from(supportedExtensions);
+        //controllo che supportedExtensions esista per assegnarlo a this.supportedExtensions
+        if (supportedExtensions != undefined) {
+            this.supportedExtensions = Array.from(supportedExtensions);
+        }
     }
     //funzione validazione singolo campo
-    metadataKeysV2.prototype.validateData = function () {
-        return true;
-    };
+    //public validateData(): boolean{
+    //    return true;
+    //}
     //funzione validazione per tutti i campi
     metadataKeysV2.prototype.validateAll = function () {
-        // legalHeader non controllato: è una stringa
         if (this.aaidCheck() && this.aaguidCheck() && this.attestationCertificateKeyIdentifiersCheck() && this.authenticatorVersionCheck() &&
             this.protocolFamilyCheck() && this.upvCheck() && this.assertionSchemeCheck() && this.authenticationAlgorithmCheck() &&
             this.authenticationAlgorithmsCheck() && this.publicKeyAlgAndEncodingCheck() &&
             this.publicKeyAlgAndEncodingsCheck() && this.attestationTypesCheck() && this.userVerificationDetailsCheck() &&
             this.keyProtectionCheck() && this.matcherProtectionCheck() && this.cryptoStrengthCeck() && this.operatingEnvCheck() &&
             this.attachmentHintCheck() && this.tcDisplayCheck() && this.tcDisplayContentTypeCheck() &&
-            this.tcDisplayPNGCharacteristicsCheck() && this.ecdaaTrustAnchorsCheck() && this.iconCheck() &&
+            this.tcDisplayPNGCharacteristicsCheck() && this.attestationRootCertificatesCheck() && this.ecdaaTrustAnchorsCheck() && this.iconCheck() &&
             this.supportedExtensionsCheck()) {
             return true;
         }
@@ -63,10 +72,6 @@ var metadataKeysV2 = /** @class */ (function () {
     /*
         jsonParsed[0]["minor"] == 1){
     */
-    // controllo cryptoStrength 
-    //isSecondFactorOnly non controllato, o bool o undefined
-    //capire attestationRootCertificates (da fare, validare certificato, guardare: https://nodejs.org/api/crypto.html#new-x509certificatebuffer)
-    //if(this.attestationRootCertificates)
     /**
      * Campo legalHeader non controllato:
      *          1) perché è opzionale
@@ -74,31 +79,31 @@ var metadataKeysV2 = /** @class */ (function () {
      */
     /**
      * Controlli:
-     *          1) che la stringa, se presente sia conforme a quanto riportato qui: https://fidoalliance.org/specs/fido-uaf-v1.2-rd-20171128/fido-uaf-protocol-v1.2-rd-20171128.html#authenticator-attestation-id-aaid-typedef
-     *          2) che il campo sia presente nel caso protocol family sia settato su "uaf"
+     *          1) che il campo sia presente nel caso protocol family sia settato su "uaf"
+     *          2) che la stringa, se presente sia conforme a quanto riportato qui: https://fidoalliance.org/specs/fido-uaf-v1.2-rd-20171128/fido-uaf-protocol-v1.2-rd-20171128.html#authenticator-attestation-id-aaid-typedef
      */
     metadataKeysV2.prototype.aaidCheck = function () {
-        if (this.aaid != undefined && !RegExp(/^[0-9A-F]{4}#[0-9A-F]{4}$/i).test(this.aaid))
-            return false;
         if (this.protocolFamily == "uaf" && this.aaid == undefined)
+            return false;
+        if (this.aaid != undefined && !RegExp(/^[0-9A-F]{4}#[0-9A-F]{4}$/i).test(this.aaid))
             return false;
         return true;
     };
     /**
      * Controlli:
-     *          1) che la stringa, se presente sia conforme a quanto ricavato qui: https://fidoalliance.org/specs/fido-v2.0-rd-20180702/fido-metadata-statement-v2.0-rd-20180702.html#fido2-example
-     *          2) che il campo sia presente nel caso protocol family sia settato su "fido2"
-     *          3) per questioni di compatibilità il campo aaguid non può essere presente se protocol family è settato su "uaf"
+     *          1) che il campo sia presente nel caso protocol family sia settato su "fido2"
+     *          2) per questioni di compatibilità il campo aaguid non può essere presente se protocol family è settato su "uaf"
+     *          3) che la stringa, se presente sia conforme a quanto ricavato qui: https://fidoalliance.org/specs/fido-v2.0-rd-20180702/fido-metadata-statement-v2.0-rd-20180702.html#fido2-example
      */
     metadataKeysV2.prototype.aaguidCheck = function () {
-        if (this.aaguid != undefined) {
-            if (this.aaguid.length != 36 || (this.aaguid.length == 36 && !RegExp(/^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/i).test(this.aaguid)))
-                return false;
-        }
         if (this.protocolFamily == "fido2" && this.aaguid == undefined)
             return false;
         if (this.protocolFamily == "uaf" && this.aaguid != undefined)
             return false;
+        if (this.aaguid != undefined) {
+            if (this.aaguid.length != 36 || (this.aaguid.length == 36 && !RegExp(/^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/i).test(this.aaguid)))
+                return false;
+        }
         return true;
     };
     /**
@@ -119,7 +124,7 @@ var metadataKeysV2 = /** @class */ (function () {
     };
     /**
      * Campo description non controllato:
-     *          1) perché è opzionale
+     *          1) perché è obbligatorio (controllato nel costruttore)
      *          2) perché è una stringa
      */
     /**
@@ -132,7 +137,7 @@ var metadataKeysV2 = /** @class */ (function () {
      *          1) essendo il campo unsigned short:  0 <= authenticatorVersion <= 65.535
      */
     metadataKeysV2.prototype.authenticatorVersionCheck = function () {
-        if (this.authenticatorVersion < 0 || this.authenticatorVersion > 65.535)
+        if (this.authenticatorVersion < 0 || this.authenticatorVersion > 65535)
             return false;
         return true;
     };
@@ -144,11 +149,11 @@ var metadataKeysV2 = /** @class */ (function () {
     metadataKeysV2.prototype.protocolFamilyCheck = function () {
         if (this.protocolFamily != undefined && this.protocolFamily != "uaf" && this.protocolFamily != "u2f" && this.protocolFamily != "fido2")
             return false;
-        if (this.assertionScheme == "FIDOV2" && this.protocolFamily != "fido2")
+        if (this.protocolFamily != "fido2" && this.assertionScheme == "FIDOV2")
             return false;
-        if (this.assertionScheme == "U2FV1BIN" && this.protocolFamily != "u2f")
+        if (this.protocolFamily != "u2f" && this.assertionScheme == "U2FV1BIN")
             return false;
-        if (this.assertionScheme == "UAFV1TLV" && this.protocolFamily != "uaf") // possibile perché in questo metadata se non si passa alcun valore c'è il parametro di default uaf
+        if ((this.protocolFamily != "uaf" && this.protocolFamily != undefined) && this.assertionScheme == "UAFV1TLV")
             return false;
         return true;
     };
@@ -158,7 +163,7 @@ var metadataKeysV2 = /** @class */ (function () {
      */
     metadataKeysV2.prototype.upvCheck = function () {
         for (var i = 0; i < this.upv.length; i++) {
-            if (this.upv[i].major < 0 || this.upv[i].major > 65.535 || this.upv[i].minor < 0 || this.upv[i].minor > 65.535)
+            if (this.upv[i].major < 0 || this.upv[i].major > 65535 || this.upv[i].minor < 0 || this.upv[i].minor > 65535)
                 return false;
         }
         return true;
@@ -243,7 +248,10 @@ var metadataKeysV2 = /** @class */ (function () {
      *          1) Verifica conformità campo (https://fidoalliance.org/specs/fido-v2.0-rd-20180702/fido-registry-v2.0-rd-20180702.html#key-protection-types)
      */
     metadataKeysV2.prototype.keyProtectionCheck = function () {
-        if (this.keyProtection < 1 || this.keyProtection > 16)
+        if (this.keyProtection < 1 || this.keyProtection > 24) // 16 + 8 -> 24, massimo num raggiungibile (This flag MUST be set in conjunction with one of the other KEY_PROTECTION flags...)
+            return false;
+        if (this.keyProtection == 3 || this.keyProtection == 5 || this.keyProtection == 9 ||
+            this.keyProtection == 12 || this.keyProtection == 16)
             return false;
         return true;
     };
@@ -272,7 +280,7 @@ var metadataKeysV2 = /** @class */ (function () {
      */
     metadataKeysV2.prototype.cryptoStrengthCeck = function () {
         if (this.cryptoStrength != undefined) {
-            if (this.cryptoStrength < 0 || this.cryptoStrength > 65.535)
+            if (this.cryptoStrength < 0 || this.cryptoStrength > 65535)
                 return false;
         }
         return true;
@@ -288,17 +296,47 @@ var metadataKeysV2 = /** @class */ (function () {
         }
         return true;
     };
+    /**
+     * Controlli:
+     *          1) che il campo number presenti i valori corretti
+     */
+    //idea alla base: dato il valore di this.attachmentHint tolgo il valore i, a partire da 256, fino a 1, per capire se sono stati utilizzati o meno i campi critici (internal->1 , external->2)
     metadataKeysV2.prototype.attachmentHintCheck = function () {
-        if (this.attachmentHint != (1 && 2 && 4 && 8 && 16 && 32 && 64 && 128 && 256))
-            return false;
+        var counter = 0;
+        var i = 256;
+        var tot = this.attachmentHint;
+        if (tot == 1)
+            return true;
+        while (i > 0) {
+            if ((i == 1 && counter >= 1) || (i == 2 && counter == 0))
+                return false;
+            if (tot >= i) {
+                tot = tot - i;
+                counter += 1;
+            }
+            i = i / 2;
+        }
         return true;
     };
+    /**
+     * Campo isSecondFactorOnly non controllato:
+     *          1) perché è un booleano obbligatorio
+     */
+    /**
+     * Controlli:
+     *          1) che il campo number presenti i valori corretti secondo: https://fidoalliance.org/specs/fido-v2.0-rd-20180702/fido-registry-v2.0-rd-20180702.html#transaction-confirmation-display-types
+     */
     metadataKeysV2.prototype.tcDisplayCheck = function () {
-        if (this.tcDisplay > 16 || this.tcDisplay < 0) {
+        if (this.tcDisplay != (0 || 1 || 3 || 5 || 9 || 17 || 19 || 21 || 25)) {
             return false;
         }
         return true;
     };
+    /**
+     * Controlli:
+     *          1) che il campo sia presente nel caso lo sia anche tcDisplay (non 0)
+     *          2) che il campo presenti un valore tra quelli presentu in tcDisplayContentTypeEnum
+     */
     metadataKeysV2.prototype.tcDisplayContentTypeCheck = function () {
         if (this.tcDisplay != 0 && this.tcDisplayContentType == undefined)
             return false;
@@ -308,12 +346,38 @@ var metadataKeysV2 = /** @class */ (function () {
         }
         return true;
     };
+    /**
+     * Controlli:
+     *          1) che il campo sia presente nel caso lo siano anche tcDisplay (non 0) e tcDisplayContentType (deve essere image/png)
+     */
     metadataKeysV2.prototype.tcDisplayPNGCharacteristicsCheck = function () {
         if (this.tcDisplay != 0 && tcDisplayContentTypeEnum[this.tcDisplayContentType] == tcDisplayContentTypeEnum["image/png"] && this.tcDisplayPNGCharacteristics == undefined)
             return false;
         return true;
     };
+    /**
+     * Controlli:
+     *          1)
+     *
+     * //ATTENZIONE: When supporting surrogate basic attestation only (see [UAFProtocol], section "Surrogate Basic Attestation"), no attestation trust anchor is required/used. So this array MUST be empty in that case.
+     */
+    metadataKeysV2.prototype.attestationRootCertificatesCheck = function () {
+        for (var i = 0; i < this.attestationRootCertificates.length; i++) {
+            var x509 = new crypto_1.X509Certificate(this.attestationRootCertificates[i]);
+            if (!x509.ca)
+                return false;
+        }
+        return true;
+    };
+    /**
+     * Controlli:
+     *          1) Se e solo se AttestationTypes include ATTESTATION_ECDAA (15881) ecdaaTrustAnchors deve essere presente
+     *          2) Validazione campo G1Curve di  EcdaaTrustAnchor
+     */
     metadataKeysV2.prototype.ecdaaTrustAnchorsCheck = function () {
+        var temp = this.attestationTypes.find(function (element) { return element == 15881; });
+        if (temp != undefined && this.ecdaaTrustAnchors == undefined || temp == undefined && this.ecdaaTrustAnchors != undefined)
+            return false;
         if (this.ecdaaTrustAnchors != undefined) {
             for (var i = 0; i < this.ecdaaTrustAnchors.length; i++) {
                 if (!this.ecdaaTrustAnchors[i].validateData())
@@ -322,6 +386,10 @@ var metadataKeysV2 = /** @class */ (function () {
         }
         return true;
     };
+    /**
+     * Controlli:
+     *          1) formato con cui sono inserite le immagini tramite regular expression
+     */
     metadataKeysV2.prototype.iconCheck = function () {
         if (this.icon != undefined) {
             if (!RegExp(/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/).test(this.icon)) {
@@ -330,9 +398,16 @@ var metadataKeysV2 = /** @class */ (function () {
         }
         return true;
     };
+    /**
+     * Controlli:
+     *          1) che gli oggetti nell'array siamo di tipo ExtensionDescriptor
+     */
     metadataKeysV2.prototype.supportedExtensionsCheck = function () {
         if (this.supportedExtensions != undefined) {
-            return false;
+            for (var i = 0; i < this.supportedExtensions.length; i++) {
+                if (!(this.supportedExtensions[i] instanceof ExtensionDescriptor))
+                    return false;
+            }
         }
         return true;
     };
@@ -378,10 +453,6 @@ var assertionSchemeEnum;
     assertionSchemeEnum[assertionSchemeEnum["FIDOV2"] = 1] = "FIDOV2";
     assertionSchemeEnum[assertionSchemeEnum["UAFV1TLV"] = 2] = "UAFV1TLV";
 })(assertionSchemeEnum || (assertionSchemeEnum = {}));
-function a(value) {
-    var result = assertionSchemeEnum[value];
-    return result;
-}
 var CodeAccuracyDescriptor = /** @class */ (function () {
     function CodeAccuracyDescriptor(ba, mL, mR, bl) {
         this.base = ba;
