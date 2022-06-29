@@ -62,8 +62,9 @@ var metadataKeysV2 = /** @class */ (function () {
             this.publicKeyAlgAndEncodingsCheck() && this.attestationTypesCheck() && this.userVerificationDetailsCheck() &&
             this.keyProtectionCheck() && this.matcherProtectionCheck() && this.cryptoStrengthCeck() && this.operatingEnvCheck() &&
             this.attachmentHintCheck() && this.tcDisplayCheck() && this.tcDisplayContentTypeCheck() &&
-            this.tcDisplayPNGCharacteristicsCheck() && this.attestationRootCertificatesCheck() && this.ecdaaTrustAnchorsCheck() && this.iconCheck() &&
-            this.supportedExtensionsCheck()) {
+            this.tcDisplayPNGCharacteristicsCheck() && this.attestationRootCertificatesCheck() && this.ecdaaTrustAnchorsCheck() && this.iconCheck()
+        // && this.supportedExtensionsCheck() basta che i campi dati siano conformi
+        ) {
             return true;
         }
         return false;
@@ -80,12 +81,13 @@ var metadataKeysV2 = /** @class */ (function () {
     /**
      * Controlli:
      *          1) che il campo sia presente nel caso protocol family sia settato su "uaf"
-     *          2) che la stringa, se presente sia conforme a quanto riportato qui: https://fidoalliance.org/specs/fido-uaf-v1.2-rd-20171128/fido-uaf-protocol-v1.2-rd-20171128.html#authenticator-attestation-id-aaid-typedef
+     *          2) per questioni di compatibilità il campo aaguid non può essere presente se protocol family è settato su "fido2"
+     *          3) che la stringa, se presente sia conforme a quanto riportato qui: https://fidoalliance.org/specs/fido-uaf-v1.2-rd-20171128/fido-uaf-protocol-v1.2-rd-20171128.html#authenticator-attestation-id-aaid-typedef
      */
     metadataKeysV2.prototype.aaidCheck = function () {
         if (this.protocolFamily == "uaf" && this.aaid == undefined)
             return false;
-        if (this.aaid != undefined && !RegExp(/^[0-9A-F]{4}#[0-9A-F]{4}$/i).test(this.aaid))
+        if (this.aaid != undefined && (!RegExp(/^[0-9A-F]{4}#[0-9A-F]{4}$/i).test(this.aaid) || this.protocolFamily == "fido2"))
             return false;
         return true;
     };
@@ -180,20 +182,26 @@ var metadataKeysV2 = /** @class */ (function () {
     /**
      * Controlli:
      *          1) che il campo numero sia compreso tra 1 e 18
+     *          2) FIDO U2F only supports one signature algorithm and encoding: ALG_SIGN_SECP256R1_ECDSA_SHA256_RAW
      */
     metadataKeysV2.prototype.authenticationAlgorithmCheck = function () {
         if (this.authenticationAlgorithm < 1 || this.authenticationAlgorithm > 18)
+            return false;
+        if (this.assertionScheme == "U2FV1BIN" && this.authenticationAlgorithm != 1)
             return false;
         return true;
     };
     /**
      * Controlli:
      *          1) che i campi numero siano compresi tra 1 e 18
+     *          2) FIDO U2F only supports one signature algorithm and encoding: ALG_SIGN_SECP256R1_ECDSA_SHA256_RAW
      */
     metadataKeysV2.prototype.authenticationAlgorithmsCheck = function () {
         if (this.authenticationAlgorithms != undefined) {
             for (var i = 0; i < this.authenticationAlgorithms.length; i++) {
                 if (this.authenticationAlgorithms[i] < 1 || this.authenticationAlgorithms[i] > 18)
+                    return false;
+                if (this.assertionScheme == "U2FV1BIN" && this.authenticationAlgorithm != 1)
                     return false;
             }
         }
@@ -202,20 +210,26 @@ var metadataKeysV2 = /** @class */ (function () {
     /**
      * Controlli:
      *          1) che il campo numero sia compreso tra 256 e 260
+     *          2) FIDO U2F only supports one signature algorithm and encoding: ALG_SIGN_SECP256R1_ECDSA_SHA256_RAW
      */
     metadataKeysV2.prototype.publicKeyAlgAndEncodingCheck = function () {
         if (this.publicKeyAlgAndEncoding < 256 || this.publicKeyAlgAndEncoding > 260)
+            return false;
+        if (this.assertionScheme == "U2FV1BIN" && this.authenticationAlgorithm != 256)
             return false;
         return true;
     };
     /**
      * Controlli:
      *          1) che i campi numero siano compresi tra 256 e 260
+     *          2) FIDO U2F only supports one signature algorithm and encoding: ALG_SIGN_SECP256R1_ECDSA_SHA256_RAW
      */
     metadataKeysV2.prototype.publicKeyAlgAndEncodingsCheck = function () {
         if (this.publicKeyAlgAndEncodings != undefined) {
             for (var i = 0; i < this.publicKeyAlgAndEncodings.length; i++) {
                 if (this.publicKeyAlgAndEncodings[i] < 256 || this.publicKeyAlgAndEncodings[i] > 260)
+                    return false;
+                if (this.assertionScheme == "U2FV1BIN" && this.authenticationAlgorithm != 256)
                     return false;
             }
         }
@@ -250,10 +264,10 @@ var metadataKeysV2 = /** @class */ (function () {
     metadataKeysV2.prototype.keyProtectionCheck = function () {
         if (this.keyProtection < 1 || this.keyProtection > 24) // 16 + 8 -> 24, massimo num raggiungibile (This flag MUST be set in conjunction with one of the other KEY_PROTECTION flags...)
             return false;
-        if (this.keyProtection == 3 || this.keyProtection == 5 || this.keyProtection == 9 ||
-            this.keyProtection == 12 || this.keyProtection == 16)
+        if (this.keyProtection == (1 || 2 || 4 || 6 || 8 || 10 || 11 || 17 || 18 || 20 || 24))
+            return true;
+        else
             return false;
-        return true;
     };
     /**
      * Campo isKeyRestricted non controllato:
@@ -300,12 +314,13 @@ var metadataKeysV2 = /** @class */ (function () {
      * Controlli:
      *          1) che il campo number presenti i valori corretti
      */
-    //idea alla base: dato il valore di this.attachmentHint tolgo il valore i, a partire da 256, fino a 1, per capire se sono stati utilizzati o meno i campi critici (internal->1 , external->2)
+    //idea alla base: dato il valore di this.attachmentHint tolgo il valore i, a partire da 256, fino a 1, 
+    //per capire se sono stati utilizzati o meno i campi critici (internal->1 , external->2)
     metadataKeysV2.prototype.attachmentHintCheck = function () {
         var counter = 0;
         var i = 256;
         var tot = this.attachmentHint;
-        if (tot == 1)
+        if (tot == 1) //superfluo
             return true;
         while (i > 0) {
             if ((i == 1 && counter >= 1) || (i == 2 && counter == 0))
@@ -327,7 +342,7 @@ var metadataKeysV2 = /** @class */ (function () {
      *          1) che il campo number presenti i valori corretti secondo: https://fidoalliance.org/specs/fido-v2.0-rd-20180702/fido-registry-v2.0-rd-20180702.html#transaction-confirmation-display-types
      */
     metadataKeysV2.prototype.tcDisplayCheck = function () {
-        if (this.tcDisplay != (0 || 1 || 3 || 5 || 9 || 17 || 19 || 21 || 25)) {
+        if (this.tcDisplay == (6 || 10 || 12)) {
             return false;
         }
         return true;
@@ -376,7 +391,7 @@ var metadataKeysV2 = /** @class */ (function () {
      */
     metadataKeysV2.prototype.ecdaaTrustAnchorsCheck = function () {
         var temp = this.attestationTypes.find(function (element) { return element == 15881; });
-        if (temp != undefined && this.ecdaaTrustAnchors == undefined || temp == undefined && this.ecdaaTrustAnchors != undefined)
+        if ((temp != undefined && this.ecdaaTrustAnchors == undefined) || (temp == undefined && this.ecdaaTrustAnchors != undefined))
             return false;
         if (this.ecdaaTrustAnchors != undefined) {
             for (var i = 0; i < this.ecdaaTrustAnchors.length; i++) {
@@ -392,21 +407,12 @@ var metadataKeysV2 = /** @class */ (function () {
      */
     metadataKeysV2.prototype.iconCheck = function () {
         if (this.icon != undefined) {
-            if (!RegExp(/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/).test(this.icon)) {
-                return false;
+            var temp = this.icon;
+            if (this.icon.indexOf("data:") != -1) {
+                temp = this.icon.replace(this.icon.substring(this.icon.indexOf("data:"), this.icon.indexOf("base64") + 7), "");
             }
-        }
-        return true;
-    };
-    /**
-     * Controlli:
-     *          1) che gli oggetti nell'array siamo di tipo ExtensionDescriptor
-     */
-    metadataKeysV2.prototype.supportedExtensionsCheck = function () {
-        if (this.supportedExtensions != undefined) {
-            for (var i = 0; i < this.supportedExtensions.length; i++) {
-                if (!(this.supportedExtensions[i] instanceof ExtensionDescriptor))
-                    return false;
+            if (!RegExp(/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/).test(temp)) {
+                return false;
             }
         }
         return true;
@@ -602,6 +608,7 @@ var ecdaaTrustAnchor = /** @class */ (function () {
     return ecdaaTrustAnchor;
 }());
 exports.ecdaaTrustAnchor = ecdaaTrustAnchor;
+//nome completo curve sarebbe "TPM_ECC_BN_...." e "ECC_BN_...."
 var G1CurveEnum;
 (function (G1CurveEnum) {
     G1CurveEnum[G1CurveEnum["BN_P256"] = 0] = "BN_P256";

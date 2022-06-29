@@ -41,11 +41,19 @@ export class metadataKeysV3{
             this.tcDisplayContentType=tcDisplayContentType;                            
             this.tcDisplayPNGCharacteristics=tcDisplayPNGCharacteristics;
             this.attestationRootCertificates=attestationRootCertificates;
-            this.ecdaaTrustAnchors=Array.from(ecdaaTrustAnchors!);
+            if(ecdaaTrustAnchors != undefined){
+                this.ecdaaTrustAnchors=Array.from(ecdaaTrustAnchors);
+            }
+            else{
+                this.ecdaaTrustAnchors = undefined;
+            }
             this.icon=icon;
             //controllo che supportedExtensions esista per assegnarlo a this.supportedExtensions
             if(supportedExtensions != undefined){
                 this.supportedExtensions=Array.from(supportedExtensions);
+            }
+            else{
+                this.supportedExtensions = undefined;
             }
             
     }
@@ -116,12 +124,14 @@ export class metadataKeysV3{
     /**
      * Controlli:
      *          1) che il campo sia presente nel caso protocol family sia settato su "uaf"
-     *          2) che la stringa, se presente sia conforme a quanto riportato qui: https://fidoalliance.org/specs/fido-uaf-v1.2-rd-20171128/fido-uaf-protocol-v1.2-rd-20171128.html#authenticator-attestation-id-aaid-typedef
+     *          2) per questioni di compatibilità il campo aaguid non può essere presente se protocol family è settato su "fido2"
+     *          3) che la stringa, se presente sia conforme a quanto riportato qui: https://fidoalliance.org/specs/fido-uaf-v1.2-rd-20171128/fido-uaf-protocol-v1.2-rd-20171128.html#authenticator-attestation-id-aaid-typedef
      */
     private aaidCheck(): boolean{
         if(this.protocolFamily == "uaf" && this.aaid == undefined)
             return false;
-        if(this.aaid != undefined && !RegExp(/^[0-9A-F]{4}#[0-9A-F]{4}$/i).test(this.aaid))
+        //no distinzione upper-lower case
+        if(this.aaid != undefined && (!RegExp(/^[0-9A-F]{4}#[0-9A-F]{4}$/i).test(this.aaid) || this.protocolFamily == "fido2"))
             return false;        
         return true;
     }
@@ -133,7 +143,7 @@ export class metadataKeysV3{
      *          3) che la stringa, se presente sia conforme a quanto ricavato qui: https://fidoalliance.org/specs/fido-v2.0-rd-20180702/fido-metadata-statement-v2.0-rd-20180702.html#fido2-example  
      */
     private aaguidCheck(): boolean{
-        if(this.protocolFamily == "fido2" && this.aaguid == undefined)
+        if((this.protocolFamily == "fido2" && this.aaguid == undefined) || (this.protocolFamily == "uaf" && this.aaguid != undefined))
             return false;
         if(this.aaguid != undefined){
             if(this.aaguid.length != 36 || (this.aaguid.length == 36 && !RegExp(/^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/i).test(this.aaguid)))
@@ -171,6 +181,7 @@ export class metadataKeysV3{
     /**
      * Conrtolli:
      *          1) essendo il campo unsigned long:  0 <= authenticatorVersion <= 4294967295
+     *          2) controllo uguaglianza firmwareVersion non svolto perché non sempre è vero
      */
     private authenticatorVersionCheck(): boolean{
         if(this.authenticatorVersion < 0 || this.authenticatorVersion > 4294967295)
@@ -183,6 +194,7 @@ export class metadataKeysV3{
     /**
      * Controlli:
      *          1) che campo sia una delle seguenti stringhe "uaf", "u2f", e "fido2"
+     *          2) controllo corrispondenza con campo "version" di authenticatorgetinfo
      */
     private protocolFamilyCheck(): boolean{
         if(this.protocolFamily == undefined )
@@ -197,7 +209,6 @@ export class metadataKeysV3{
             if(this.protocolFamily == "u2f" && (this.authenticatorGetInfo.version.find(element => element == "U2F_V2") == undefined))
                 return false;
         }  
-
         return true;
     }
 
@@ -214,6 +225,7 @@ export class metadataKeysV3{
     /**
      * Controlli: 
      *          1) che i campi di Version siano unsigned short: 0 <= Campi Version upv <= 65.535
+     *          2) controlli specifici non effettuati sulla versione nei casi UAF, U2F e FIDO2/CTAP2
      */
      private upvCheck(){
         for(let i=0; i<this.upv.length;i++){
@@ -225,12 +237,15 @@ export class metadataKeysV3{
 
     /**
      * Controlli:
-     *          1) che i campi numero siano compresi tra 1 e 18
+     *          1) che i campi corrispondano ad un algoritmo valido
+     *          2) che nel caso si usi u2f l'algoritmo utilizzato non sia altro che secp256r1_ecdsa_sha256_raw
      */
     private authenticationAlgorithmsCheck(): boolean{
         if(this.authenticationAlgorithms != undefined){    
             for(let i = 0; i < this.authenticationAlgorithms.length; i++) {
                 if (authenticationAlgorithmsEnum[this.authenticationAlgorithms[i] as keyof typeof authenticationAlgorithmsEnum] == undefined)
+                    return false;
+                if(this.protocolFamily == "u2f" && this.authenticationAlgorithms[i] != "secp256r1_ecdsa_sha256_raw")
                     return false;
             }
         }
@@ -239,13 +254,16 @@ export class metadataKeysV3{
 
     /**
      * Controlli:
-     *          1) che i campi numero siano compresi tra 256 e 260
+     *          1) che i campi corrispondano ad un algoritmo valido
+     *          2) che nel caso si usi u2f l'algoritmo utilizzato non sia altro che ecc_x962_raw
      */
     private publicKeyAlgAndEncodingsCheck(): boolean{
         if(this.publicKeyAlgAndEncodings != undefined){
             for(let i = 0; i < this.publicKeyAlgAndEncodings.length; i++) {
                 if (publicKeyAlgAndEncodingsEnum[this.publicKeyAlgAndEncodings[i] as keyof typeof publicKeyAlgAndEncodingsEnum] == undefined)
                     return false;
+                if(this.protocolFamily == "u2f" && this.publicKeyAlgAndEncodings[i] != "ecc_x962_raw")
+            return false;
             }
         }
         return true;
@@ -299,6 +317,11 @@ export class metadataKeysV3{
                 return false;  
         }
 
+        //(remote_handle) MUST be set in conjunction with one of the other KEY_PROTECTION flags 
+        if(this.keyProtection.find(element => element == "remote_handle") != undefined){
+            if(this.keyProtection.find(element => element != "remote_handle") == undefined)
+                return false;  
+        }
         return true;
     }
 
@@ -500,7 +523,6 @@ class Version{
     readonly minor: number;
 }
 
-//controlli da fare
 class AuthenticatorGetInfo{
     constructor(ver:string[], aag: string, ext?: string[], opt?:authenticatorOption, maxM?:number, pin?:number[],maxCc?: number, maxCIi?: number,
         tra?: string[], alg?:algorithmAuthenticatorGetInfo, maxA?: number, def?: number, fir?: number, maxS?: number, force?: boolean, minP?: number,
@@ -847,12 +869,12 @@ class VerificationMethodDescriptor{
 
 class VerificationMethodANDCombinations{
     constructor(d:VerificationMethodDescriptor[]){
-        this.data=Array.from(d);
+        this.VerificationMethodDescriptorObj=Array.from(d);
     }
-    public data: VerificationMethodDescriptor[];
+    public VerificationMethodDescriptorObj: VerificationMethodDescriptor[];
     public validateData(): boolean{
-        for(let i = 0; i < this.data.length; i++){
-            if(!this.data[i].validateData())
+        for(let i = 0; i < this.VerificationMethodDescriptorObj.length; i++){
+            if(!this.VerificationMethodDescriptorObj[i].validateData())
                 return false;
         }
         return true;

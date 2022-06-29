@@ -15,7 +15,12 @@ export class metadataKeysV2{
             this.legalHeader=legalHeader;
             this.aaid=aaid;
             this.aaguid=aaguid;
-            this.attestationCertificateKeyIdentifiers=attestationCertificateKeyIdentifiers;
+            if(attestationCertificateKeyIdentifiers != undefined){
+                this.attestationCertificateKeyIdentifiers=Array.from(attestationCertificateKeyIdentifiers);
+            }
+            else{
+                this.attestationCertificateKeyIdentifiers = undefined;
+            }
             this.description=description;
             this.alternativeDescriptions=alternativeDescriptions;
             this.authenticatorVersion=authenticatorVersion;
@@ -27,10 +32,16 @@ export class metadataKeysV2{
             if(authenticationAlgorithms != undefined){
                 this.authenticationAlgorithms=Array.from(authenticationAlgorithms);
             }
+            else{
+                this.authenticationAlgorithms = undefined;
+            }
             this.publicKeyAlgAndEncoding=publicKeyAlgAndEncoding;
             //controllo che publicKeyAlgAndEncodings esista per assegnarlo a this.publicKeyAlgAndEncodings
             if(publicKeyAlgAndEncodings != undefined){
                 this.publicKeyAlgAndEncodings=Array.from(publicKeyAlgAndEncodings);
+            }
+            else{
+                this.publicKeyAlgAndEncodings = undefined;
             }
             this.attestationTypes=Array.from(attestationTypes);
             this.userVerificationDetails=userVerificationDetails;
@@ -46,12 +57,20 @@ export class metadataKeysV2{
             this.tcDisplayContentType=tcDisplayContentType;                            
             this.tcDisplayPNGCharacteristics=tcDisplayPNGCharacteristics;
             this.attestationRootCertificates=attestationRootCertificates;
-            this.ecdaaTrustAnchors=Array.from(ecdaaTrustAnchors!);
+            if(ecdaaTrustAnchors != undefined){
+                this.ecdaaTrustAnchors=Array.from(ecdaaTrustAnchors);
+            }
+            else{
+                this.ecdaaTrustAnchors = undefined;
+            }
             this.icon=icon;
             //controllo che supportedExtensions esista per assegnarlo a this.supportedExtensions
             if(supportedExtensions != undefined){
                 this.supportedExtensions=Array.from(supportedExtensions);
-            }   
+            }
+            else{
+                this.supportedExtensions = undefined;
+            }  
     }
 
     //dichiarazione di tutte le variabili con relativo tipo    
@@ -123,12 +142,13 @@ export class metadataKeysV2{
     /**
      * Controlli:
      *          1) che il campo sia presente nel caso protocol family sia settato su "uaf"
-     *          2) che la stringa, se presente sia conforme a quanto riportato qui: https://fidoalliance.org/specs/fido-uaf-v1.2-rd-20171128/fido-uaf-protocol-v1.2-rd-20171128.html#authenticator-attestation-id-aaid-typedef          
+     *          2) per questioni di compatibilità il campo aaguid non può essere presente se protocol family è settato su "fido2"
+     *          3) che la stringa, se presente sia conforme a quanto riportato qui: https://fidoalliance.org/specs/fido-uaf-v1.2-rd-20171128/fido-uaf-protocol-v1.2-rd-20171128.html#authenticator-attestation-id-aaid-typedef          
      */
     private aaidCheck(): boolean{
         if(this.protocolFamily == "uaf" && this.aaid == undefined)
             return false;
-        if(this.aaid != undefined && !RegExp(/^[0-9A-F]{4}#[0-9A-F]{4}$/i).test(this.aaid))
+        if(this.aaid != undefined && (!RegExp(/^[0-9A-F]{4}#[0-9A-F]{4}$/i).test(this.aaid) || this.protocolFamily == "fido2"))
             return false;
         return true;
     }
@@ -233,9 +253,12 @@ export class metadataKeysV2{
     /**
      * Controlli:
      *          1) che il campo numero sia compreso tra 1 e 18
+     *          2) FIDO U2F only supports one signature algorithm and encoding: ALG_SIGN_SECP256R1_ECDSA_SHA256_RAW
      */
     private authenticationAlgorithmCheck(): boolean{
         if(this.authenticationAlgorithm < 1 || this.authenticationAlgorithm > 18)
+            return false;
+        if(this.assertionScheme == "U2FV1BIN" && this.authenticationAlgorithm != 1)
             return false;
         return true;
     }
@@ -243,11 +266,14 @@ export class metadataKeysV2{
     /**
      * Controlli:
      *          1) che i campi numero siano compresi tra 1 e 18
+     *          2) FIDO U2F only supports one signature algorithm and encoding: ALG_SIGN_SECP256R1_ECDSA_SHA256_RAW
      */
     private authenticationAlgorithmsCheck(): boolean{
         if(this.authenticationAlgorithms != undefined){    
             for(let i = 0; i < this.authenticationAlgorithms.length; i++) {
                 if (this.authenticationAlgorithms[i] < 1 || this.authenticationAlgorithms[i] > 18)
+                    return false;
+                if(this.assertionScheme == "U2FV1BIN" && this.authenticationAlgorithm != 1)
                     return false;
             }
         }
@@ -257,9 +283,12 @@ export class metadataKeysV2{
     /**
      * Controlli:
      *          1) che il campo numero sia compreso tra 256 e 260
+     *          2) FIDO U2F only supports one signature algorithm and encoding: ALG_SIGN_SECP256R1_ECDSA_SHA256_RAW
      */
     private publicKeyAlgAndEncodingCheck(): boolean{
         if(this.publicKeyAlgAndEncoding < 256 || this.publicKeyAlgAndEncoding > 260)
+            return false;
+        if(this.assertionScheme == "U2FV1BIN" && this.authenticationAlgorithm != 256)
             return false;
         return true;
     }
@@ -267,11 +296,14 @@ export class metadataKeysV2{
     /**
      * Controlli:
      *          1) che i campi numero siano compresi tra 256 e 260
+     *          2) FIDO U2F only supports one signature algorithm and encoding: ALG_SIGN_SECP256R1_ECDSA_SHA256_RAW
      */
     private publicKeyAlgAndEncodingsCheck(): boolean{
         if(this.publicKeyAlgAndEncodings != undefined){
             for(let i = 0; i < this.publicKeyAlgAndEncodings.length; i++) {
                 if (this.publicKeyAlgAndEncodings[i] < 256 || this.publicKeyAlgAndEncodings[i] > 260)
+                    return false;
+                if(this.assertionScheme == "U2FV1BIN" && this.authenticationAlgorithm != 256)
                     return false;
             }
         }
@@ -309,10 +341,10 @@ export class metadataKeysV2{
     private keyProtectionCheck(): boolean{
         if(this.keyProtection < 1 || this.keyProtection > 24) // 16 + 8 -> 24, massimo num raggiungibile (This flag MUST be set in conjunction with one of the other KEY_PROTECTION flags...)
             return false;
-        if(this.keyProtection == 3 || this.keyProtection == 5 || this.keyProtection == 9 ||
-            this.keyProtection == 12 || this.keyProtection == 16)
+        if(this.keyProtection == (1 || 2 || 4 || 6 || 8 || 10 || 11 || 17 || 18 || 20 || 24))
+            return true;
+        else    
             return false;
-        return true;
     }
 
     /**
@@ -365,12 +397,13 @@ export class metadataKeysV2{
      * Controlli:
      *          1) che il campo number presenti i valori corretti
      */
-    //idea alla base: dato il valore di this.attachmentHint tolgo il valore i, a partire da 256, fino a 1, per capire se sono stati utilizzati o meno i campi critici (internal->1 , external->2)
+    //idea alla base: dato il valore di this.attachmentHint tolgo il valore i, a partire da 256, fino a 1, 
+    //per capire se sono stati utilizzati o meno i campi critici (internal->1 , external->2)
     private attachmentHintCheck(): boolean{
         let counter = 0;
         let i = 256;
         let tot = this.attachmentHint;
-        if(tot == 1)
+        if(tot == 1)//superfluo
             return true;
         while(i>0){
             if((i==1 && counter >= 1) || (i==2 && counter == 0))
@@ -394,7 +427,7 @@ export class metadataKeysV2{
      *          1) che il campo number presenti i valori corretti secondo: https://fidoalliance.org/specs/fido-v2.0-rd-20180702/fido-registry-v2.0-rd-20180702.html#transaction-confirmation-display-types
      */
     private tcDisplayCheck(): boolean{
-        if(this.tcDisplay != (0 || 1 || 3 || 5 || 9 || 17 || 19 || 21 || 25)){
+        if(this.tcDisplay == (6 || 10 || 12)){
             return false;
         }
         return true;
@@ -449,9 +482,8 @@ export class metadataKeysV2{
      */
     private ecdaaTrustAnchorsCheck(): boolean{
         let temp: number | undefined = this.attestationTypes.find(element => element == 15881);
-        if(temp != undefined && this.ecdaaTrustAnchors == undefined || temp == undefined && this.ecdaaTrustAnchors != undefined)
+        if((temp != undefined && this.ecdaaTrustAnchors == undefined) || (temp == undefined && this.ecdaaTrustAnchors != undefined))
             return false;
-        
         if(this.ecdaaTrustAnchors != undefined){
             for(let i=0;i<this.ecdaaTrustAnchors.length;i++){
                 if(!this.ecdaaTrustAnchors[i].validateData())
@@ -467,7 +499,10 @@ export class metadataKeysV2{
      */
     private iconCheck(): boolean{
         if(this.icon != undefined){
-            let temp = this.icon.replace(this.icon.substring(this.icon.indexOf("data:"), this.icon.indexOf("base64")+7), "");
+            let temp:string=this.icon;
+            if(this.icon.indexOf("data:") != -1){
+                temp = this.icon.replace(this.icon.substring(this.icon.indexOf("data:"), this.icon.indexOf("base64")+7), "");
+            }
             if(!RegExp(/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/).test(temp)){
                 return false;
             }
@@ -477,7 +512,7 @@ export class metadataKeysV2{
 
     /**
      * Controlli:
-     *          1) che gli oggetti nell'array siamo di tipo ExtensionDescriptor
+     *          1) Basta che i campi dati siano compatibili con ExstensionDescriptor
      */
         /*private supportedExtensionsCheck(): boolean{
             return true;
@@ -709,6 +744,7 @@ export class ecdaaTrustAnchor {
     }
 }
 
+//nome completo curve sarebbe "TPM_ECC_BN_...." e "ECC_BN_...."
 enum G1CurveEnum{
     "BN_P256",
     "BN_P638",
