@@ -74,37 +74,37 @@ export class metadataKeysV2{
     }
 
     //dichiarazione di tutte le variabili con relativo tipo    
-    private legalHeader: string | undefined;
-    private aaid: string | undefined; 
-    private aaguid: string | undefined; 
-    private attestationCertificateKeyIdentifiers: string[] | undefined; 
-    private description: string;
-    private alternativeDescriptions: string | undefined;
-    private authenticatorVersion: number; 
-    private protocolFamily: string;
-    private upv: Version[];
-    private assertionScheme: string;
-    private authenticationAlgorithm: number;                 
-    private authenticationAlgorithms: number[] | undefined; 
-    private publicKeyAlgAndEncoding: number;
-    private publicKeyAlgAndEncodings: number[] | undefined;
-    private attestationTypes: number[];
-    private userVerificationDetails: VerificationMethodANDCombinations[];
-    private keyProtection: number;
-    private isKeyRestricted: boolean;
-    private isFreshUserVerificationRequired: boolean;
-    private matcherProtection: number;
-    private cryptoStrength: number | undefined;
-    private operatingEnv: string | undefined;
-    private attachmentHint: number;
-    private isSecondFactorOnly: boolean;   
-    private tcDisplay: number;
-    private tcDisplayContentType: string | undefined;                               
-    private tcDisplayPNGCharacteristics: tcDisplayPNGCharacteristicsDescriptor | undefined;
-    private attestationRootCertificates: string[];
-    private ecdaaTrustAnchors: ecdaaTrustAnchor[] | undefined;
-    private icon: string | undefined;
-    private supportedExtensions: ExtensionDescriptor[] | undefined;
+    public legalHeader: string | undefined;
+    public aaid: string | undefined; 
+    public aaguid: string | undefined; 
+    public attestationCertificateKeyIdentifiers: string[] | undefined; 
+    public description: string;
+    public alternativeDescriptions: string | undefined;
+    public authenticatorVersion: number; 
+    public protocolFamily: string;
+    public upv: Version[];
+    public assertionScheme: string;
+    public authenticationAlgorithm: number;                 
+    public authenticationAlgorithms: number[] | undefined; 
+    public publicKeyAlgAndEncoding: number;
+    public publicKeyAlgAndEncodings: number[] | undefined;
+    public attestationTypes: number[];
+    public userVerificationDetails: VerificationMethodANDCombinations[];
+    public keyProtection: number;
+    public isKeyRestricted: boolean;
+    public isFreshUserVerificationRequired: boolean;
+    public matcherProtection: number;
+    public cryptoStrength: number | undefined;
+    public operatingEnv: string | undefined;
+    public attachmentHint: number;
+    public isSecondFactorOnly: boolean;   
+    public tcDisplay: number;
+    public tcDisplayContentType: string | undefined;                               
+    public tcDisplayPNGCharacteristics: tcDisplayPNGCharacteristicsDescriptor | undefined;
+    public attestationRootCertificates: string[];
+    public ecdaaTrustAnchors: ecdaaTrustAnchor[] | undefined;
+    public icon: string | undefined;
+    public supportedExtensions: ExtensionDescriptor[] | undefined;
 
     //funzione validazione singolo campo
     //public validateData(): boolean{
@@ -179,7 +179,6 @@ export class metadataKeysV2{
     private attestationCertificateKeyIdentifiersCheck(): boolean{
         if(this.aaid == undefined && this.aaguid == undefined && this.attestationCertificateKeyIdentifiers == undefined)
             return false;
-
         if(this.attestationCertificateKeyIdentifiers != undefined){
             for(let i = 0; i < this.attestationCertificateKeyIdentifiers.length; i++) {
                 if (!RegExp(/^[0-9a-f]+$/).test(this.attestationCertificateKeyIdentifiers[i]))
@@ -465,13 +464,30 @@ export class metadataKeysV2{
      * 
      * //ATTENZIONE: When supporting surrogate basic attestation only (see [UAFProtocol], section "Surrogate Basic Attestation"), no attestation trust anchor is required/used. So this array MUST be empty in that case. 
      */
-    private attestationRootCertificatesCheck(): boolean{
-        for(let i=0;i<this.attestationRootCertificates.length;i++){
-            const x509 = new X509Certificate(this.attestationRootCertificates[i])
-            if(!x509.ca)
-                return false;  
+    private attestationRootCertificatesCheck(): boolean {
+        for (let i = 0; i < this.attestationRootCertificates.length; i++) {
+            const testCert: X509Certificate = new X509Certificate(this.attestationRootCertificates[i]);
+            if (testCert.ca) {
+                // caso 1 CA o intermediate ca
+                if (testCert.verify(testCert.publicKey)) {
+                    console.log("attestationRootCertificate[" + i + "]" + ": root CA");
+                } else {
+                    console.log("attestationRootCertificate[" + i + "]" + ": intermediate CA");
+                }
+            }
+            //this can be achieved by either specifying the AAID or AAGUID in the attestation certificate
+            else {
+                // using the extension id-fido-gen-ce-aaid { 1 3 6 1 4 1 45724 1 1 1 }
+                if(this.aaid != undefined && testCert.keyUsage != undefined && testCert.keyUsage.find(element => element == "1.3.6.1.4.1.45724.1.1.1") != undefined)
+                    return false;
+                // id-fido-gen-ce-aaguid { 1 3 6 1 4 1 45724 1 1 4 } or - when neither AAID nor AAGUID are defined -
+                if(this.aaguid != undefined && testCert.keyUsage != undefined && testCert.keyUsage.find(element => element == "1.3.6.1.4.1.45724.1.1.4") != undefined)
+                    return false;
+                // or by using the attestationCertificateKeyIdentifier method => ???
+                //console.debug(testCert);
+                console.log("attestationRootCertificate[" + i + "]" + ": leaf");
+            }
         }
-        
         return true;
     }
 

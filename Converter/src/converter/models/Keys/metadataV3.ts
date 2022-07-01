@@ -59,34 +59,34 @@ export class metadataKeysV3{
     }
 
     //dichiarazione di tutte le variabili con relativo tipo    
-    private legalHeader: string;
-    private aaid: string | undefined; 
-    private aaguid: string | undefined; 
-    private attestationCertificateKeyIdentifiers: string[]; 
-    private description: string;
-    private alternativeDescriptions: string | undefined;
-    private authenticatorVersion: number; 
-    private protocolFamily: string;
-    private schema: number;
-    private upv: Version[];              
-    private authenticationAlgorithms: string[];
-    private publicKeyAlgAndEncodings: string[];
-    private attestationTypes: string[];
-    private userVerificationDetails: VerificationMethodANDCombinations[];
-    private keyProtection: string[];
-    private isKeyRestricted: boolean;
-    private isFreshUserVerificationRequired: boolean;
-    private matcherProtection: string[];
-    private cryptoStrength: number | undefined;
-    private attachmentHint: string[];
-    private tcDisplay: string[] | null; // null corrisponde a 0, ciò significa che transaction confirmation non è supportata dall'autenticatore
-    private tcDisplayContentType: string | undefined;                               
-    private tcDisplayPNGCharacteristics: tcDisplayPNGCharacteristicsDescriptor | undefined;
-    private attestationRootCertificates: string[];
-    private ecdaaTrustAnchors: ecdaaTrustAnchor[] | undefined;
-    private icon: string | undefined;
-    private supportedExtensions: ExtensionDescriptor[] | undefined;
-    private authenticatorGetInfo: AuthenticatorGetInfo | undefined;
+    public legalHeader: string;
+    public aaid: string | undefined; 
+    public aaguid: string | undefined; 
+    public attestationCertificateKeyIdentifiers: string[]; 
+    public description: string;
+    public alternativeDescriptions: string | undefined;
+    public authenticatorVersion: number; 
+    public protocolFamily: string;
+    public schema: number;
+    public upv: Version[];              
+    public authenticationAlgorithms: string[];
+    public publicKeyAlgAndEncodings: string[];
+    public attestationTypes: string[];
+    public userVerificationDetails: VerificationMethodANDCombinations[];
+    public keyProtection: string[];
+    public isKeyRestricted: boolean;
+    public isFreshUserVerificationRequired: boolean;
+    public matcherProtection: string[];
+    public cryptoStrength: number | undefined;
+    public attachmentHint: string[];
+    public tcDisplay: string[] | null; // null corrisponde a 0, ciò significa che transaction confirmation non è supportata dall'autenticatore
+    public tcDisplayContentType: string | undefined;                               
+    public tcDisplayPNGCharacteristics: tcDisplayPNGCharacteristicsDescriptor | undefined;
+    public attestationRootCertificates: string[];
+    public ecdaaTrustAnchors: ecdaaTrustAnchor[] | undefined;
+    public icon: string | undefined;
+    public supportedExtensions: ExtensionDescriptor[] | undefined;
+    public authenticatorGetInfo: AuthenticatorGetInfo | undefined;
 
     //funzione validazione singolo campo
     //public validateData(): boolean{
@@ -451,13 +451,30 @@ export class metadataKeysV3{
      * 
      * //ATTENZIONE: When supporting surrogate basic attestation only (see [UAFProtocol], section "Surrogate Basic Attestation"), no attestation trust anchor is required/used. So this array MUST be empty in that case. 
      */
-    private attestationRootCertificatesCheck(): boolean{
-        for(let i=0;i<this.attestationRootCertificates.length;i++){
-            const x509 = new X509Certificate(this.attestationRootCertificates[i])
-            if(!x509.ca)
-                return false;  
+    private attestationRootCertificatesCheck(): boolean {
+        for (let i = 0; i < this.attestationRootCertificates.length; i++) {
+            const testCert: X509Certificate = new X509Certificate(this.attestationRootCertificates[i]);
+            if (testCert.ca) {
+                // caso 1 CA o intermediate ca
+                if (testCert.verify(testCert.publicKey)) {
+                    console.log("attestationRootCertificate[" + i + "]" + ": root CA");
+                } else {
+                    console.log("attestationRootCertificate[" + i + "]" + ": intermediate CA");
+                }
+            }
+            //this can be achieved by either specifying the AAID or AAGUID in the attestation certificate
+            else {
+                // using the extension id-fido-gen-ce-aaid { 1 3 6 1 4 1 45724 1 1 1 }
+                if(this.aaid != undefined  && testCert.keyUsage != undefined && testCert.keyUsage.find(element => element == "1.3.6.1.4.1.45724.1.1.1") != undefined)
+                    return false;
+                // id-fido-gen-ce-aaguid { 1 3 6 1 4 1 45724 1 1 4 } or - when neither AAID nor AAGUID are defined -
+                if(this.aaguid != undefined && testCert.keyUsage != undefined && testCert.keyUsage.find(element => element == "1.3.6.1.4.1.45724.1.1.4") != undefined)
+                    return false;
+                // or by using the attestationCertificateKeyIdentifier method => ???
+                //console.debug(testCert);
+                console.log("attestationRootCertificate[" + i + "]" + ": leaf");
+            }
         }
-        
         return true;
     }
 
@@ -729,6 +746,7 @@ enum protocolFamilyEnum{
     "fido2",
 }
 
+//errore documentazione: 0x000B == 0x003 (solo nome tra virgolette)
 enum authenticationAlgorithmsEnum{
     "secp256r1_ecdsa_sha256_raw",
     "secp256r1_ecdsa_sha256_der",
@@ -995,9 +1013,3 @@ enum G1CurveEnum{
     "BN_ISOP256",
     "BN_ISOP512",
 }
-
-
-
-
-
-

@@ -12,7 +12,12 @@ var metadataKeysV2 = /** @class */ (function () {
         this.legalHeader = legalHeader;
         this.aaid = aaid;
         this.aaguid = aaguid;
-        this.attestationCertificateKeyIdentifiers = attestationCertificateKeyIdentifiers;
+        if (attestationCertificateKeyIdentifiers != undefined) {
+            this.attestationCertificateKeyIdentifiers = Array.from(attestationCertificateKeyIdentifiers);
+        }
+        else {
+            this.attestationCertificateKeyIdentifiers = undefined;
+        }
         this.description = description;
         this.alternativeDescriptions = alternativeDescriptions;
         this.authenticatorVersion = authenticatorVersion;
@@ -24,10 +29,16 @@ var metadataKeysV2 = /** @class */ (function () {
         if (authenticationAlgorithms != undefined) {
             this.authenticationAlgorithms = Array.from(authenticationAlgorithms);
         }
+        else {
+            this.authenticationAlgorithms = undefined;
+        }
         this.publicKeyAlgAndEncoding = publicKeyAlgAndEncoding;
         //controllo che publicKeyAlgAndEncodings esista per assegnarlo a this.publicKeyAlgAndEncodings
         if (publicKeyAlgAndEncodings != undefined) {
             this.publicKeyAlgAndEncodings = Array.from(publicKeyAlgAndEncodings);
+        }
+        else {
+            this.publicKeyAlgAndEncodings = undefined;
         }
         this.attestationTypes = Array.from(attestationTypes);
         this.userVerificationDetails = userVerificationDetails;
@@ -43,11 +54,19 @@ var metadataKeysV2 = /** @class */ (function () {
         this.tcDisplayContentType = tcDisplayContentType;
         this.tcDisplayPNGCharacteristics = tcDisplayPNGCharacteristics;
         this.attestationRootCertificates = attestationRootCertificates;
-        this.ecdaaTrustAnchors = Array.from(ecdaaTrustAnchors);
+        if (ecdaaTrustAnchors != undefined) {
+            this.ecdaaTrustAnchors = Array.from(ecdaaTrustAnchors);
+        }
+        else {
+            this.ecdaaTrustAnchors = undefined;
+        }
         this.icon = icon;
         //controllo che supportedExtensions esista per assegnarlo a this.supportedExtensions
         if (supportedExtensions != undefined) {
             this.supportedExtensions = Array.from(supportedExtensions);
+        }
+        else {
+            this.supportedExtensions = undefined;
         }
     }
     //funzione validazione singolo campo
@@ -378,9 +397,28 @@ var metadataKeysV2 = /** @class */ (function () {
      */
     metadataKeysV2.prototype.attestationRootCertificatesCheck = function () {
         for (var i = 0; i < this.attestationRootCertificates.length; i++) {
-            var x509 = new crypto_1.X509Certificate(this.attestationRootCertificates[i]);
-            if (!x509.ca)
-                return false;
+            var testCert = new crypto_1.X509Certificate(this.attestationRootCertificates[i]);
+            if (testCert.ca) {
+                // caso 1 CA o intermediate ca
+                if (testCert.verify(testCert.publicKey)) {
+                    console.log("attestationRootCertificate[" + i + "]" + ": root CA");
+                }
+                else {
+                    console.log("attestationRootCertificate[" + i + "]" + ": intermediate CA");
+                }
+            }
+            //this can be achieved by either specifying the AAID or AAGUID in the attestation certificate
+            else {
+                // using the extension id-fido-gen-ce-aaid { 1 3 6 1 4 1 45724 1 1 1 }
+                if (this.aaid != undefined && testCert.keyUsage != undefined && testCert.keyUsage.find(function (element) { return element == "1.3.6.1.4.1.45724.1.1.1"; }) != undefined)
+                    return false;
+                // id-fido-gen-ce-aaguid { 1 3 6 1 4 1 45724 1 1 4 } or - when neither AAID nor AAGUID are defined -
+                if (this.aaguid != undefined && testCert.keyUsage != undefined && testCert.keyUsage.find(function (element) { return element == "1.3.6.1.4.1.45724.1.1.4"; }) != undefined)
+                    return false;
+                // or by using the attestationCertificateKeyIdentifier method => ???
+                //console.debug(testCert);
+                console.log("attestationRootCertificate[" + i + "]" + ": leaf");
+            }
         }
         return true;
     };
