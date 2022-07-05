@@ -1,14 +1,15 @@
 import { X509Certificate } from 'crypto'; // per controllare attestationRootCertificates
+import { metadataKeysV2 } from './metadataV2';
 
 export class metadataKeysV3{
 
     //costruttore con tutti i campi, quelli richiesti sono obbligatori, gli altri facoltativi
-    constructor(description:string, authenticatorVersion:number, upv:Version[], authenticationAlgorithm:number, schema:number,
-        publicKeyAlgAndEncoding:number, attestationTypes:string[], attestationCertificateKeyIdentifiers:string[],
-        userVerificationDetails: VerificationMethodANDCombinations[], isSecondFactorOnly:boolean, authenticationAlgorithms: string[],  publicKeyAlgAndEncodings:string[],
+    constructor(description:string, authenticatorVersion:number, upv:Version[], schema:number,
+        attestationTypes:string[], attestationCertificateKeyIdentifiers:string[],
+        userVerificationDetails: VerificationMethodANDCombinations[], authenticationAlgorithms: string[],  publicKeyAlgAndEncodings:string[],
         keyProtection: string[], matcherProtection: string[], cryptoStrength:number | undefined = undefined, attachmentHint: string[], tcDisplay: string[] | undefined, 
         attestationRootCertificates:string[], legalHeader:string, aaid?:string, aaguid?:string, alternativeDescriptions?:string, 
-        protocolFamily:string="uaf", isKeyRestricted:boolean = true, isFreshUserVerificationRequired:boolean = true, operatingEnv?:string, 
+        protocolFamily:string="uaf", isKeyRestricted:boolean = true, isFreshUserVerificationRequired:boolean = true, 
         tcDisplayContentType?:string, tcDisplayPNGCharacteristics?:tcDisplayPNGCharacteristicsDescriptor, ecdaaTrustAnchors?:ecdaaTrustAnchor[], 
         icon?:string, supportedExtensions?: ExtensionDescriptor[]){
 
@@ -87,80 +88,91 @@ export class metadataKeysV3{
     public icon: string | undefined;
     public supportedExtensions: ExtensionDescriptor[] | undefined;
     public authenticatorGetInfo: AuthenticatorGetInfo | undefined;
-
+/*
+    //medodo statico per generazione metadata V2
+    public static fromV3toV2(metadata : metadataKeysV3): metadataKeysV2 {
+        let result: metadataKeysV2;
+        if(!metadata.validateAll())
+            throw "Errore, metadata versione 3 non valido";
+        else{
+            result = new metadataKeysV2();
+        }
+        return result;
+    }
+*/
     //funzione validazione singolo campo
     //attenzione, lo switch deve corrispondere all'enum
     public validateData(str:string): boolean{
         switch(V3FunctionName[str as keyof typeof V3FunctionName]){
-            case 0:
-                return this.aaidCheck()
-                break;
             case 1:
-                return this.aaguidCheck()
-                break;
+                return this.aaidCheck()
+                
             case 2:
-                return this.attestationCertificateKeyIdentifiersCheck();
-                break;
+                return this.aaguidCheck()
+                
             case 3:
-                return this.authenticatorVersionCheck();
-                break;
+                return this.attestationCertificateKeyIdentifiersCheck();
+                
             case 4:
-                return this.protocolFamilyCheck()
-                break;
+                return this.authenticatorVersionCheck();
+                
             case 5:
-                return this.schemaCheck();
-                break;
+                return this.protocolFamilyCheck()
+                
             case 6:
-                return this.upvCheck();
-                break;
+                return this.schemaCheck();
+                
             case 7:
-                return this.authenticationAlgorithmsCheck();
-                break;
+                return this.upvCheck();
+                
             case 8:
-                return this.publicKeyAlgAndEncodingsCheck();
-                break;
+                return this.authenticationAlgorithmsCheck();
+                
             case 9:
-                return this.attestationTypesCheck();
-                break;
+                return this.publicKeyAlgAndEncodingsCheck();
+                
             case 10:
-                return this.userVerificationDetailsCheck();
-                break;
+                return this.attestationTypesCheck();
+                
             case 11:
-                return this.keyProtectionCheck();
-                break;
+                return this.userVerificationDetailsCheck();
+                
             case 12:
-                return this.matcherProtectionCheck();
-                break;
+                return this.keyProtectionCheck();
+                
             case 13:
-                return this.cryptoStrengthCeck();
-                break;
+                return this.matcherProtectionCheck();
+                
             case 14:
-                return this.attachmentHintCheck();
-                break;
+                return this.cryptoStrengthCeck();
+                
             case 15:
-                return this.tcDisplayCheck();
-                break;
+                return this.attachmentHintCheck();
+                
             case 16:
-                return this.tcDisplayContentTypeCheck();
-                break;
+                return this.tcDisplayCheck();
+                
             case 17:
-                return this.tcDisplayPNGCharacteristicsCheck();
-                break;
+                return this.tcDisplayContentTypeCheck();
+                
             case 18:
-                return this.attestationRootCertificatesCheck();
-                break;
+                return this.tcDisplayPNGCharacteristicsCheck();
+                
             case 19:
-                return this.ecdaaTrustAnchorsCheck();
-                break;
+                return this.attestationRootCertificatesCheck();
+                
             case 20:
-                return this.iconCheck();
-                break;
+                return this.ecdaaTrustAnchorsCheck();
+                
             case 21:
+                return this.iconCheck();
+                
+            case 22:
                 return this.authenticatorGetInfoCheck();
-                break;
-            //case 22:
+                
+            //case 23:
             //      return this.supportedExtensionsCheck();
-            //      break;
+            //      
         }
         throw "La stringa " + str + " non è una funzione di controllo";
     }
@@ -669,9 +681,14 @@ export class AuthenticatorGetInfo{
     public defaultCredProtect: number | undefined;
 
     public validateData(): boolean{
-        if(this.version.find(element => element == "FIDO_2_0") == undefined && this.version.find(element => element != "U2F_V2") == undefined && this.version.find(element => element != "FIDO_2_1") == undefined &&
+        //se i valori non sono tra quelli consentiti
+        if(this.version.find(element => element == "FIDO_2_0") == undefined && this.version.find(element => element == "U2F_V2") == undefined && this.version.find(element => element == "FIDO_2_1") == undefined &&
         this.version.find(element => element == "FIDO_2_1_PRE") == undefined)
             return false;
+        //non è possibile che come valore ci sia soltanto U2F_V2 senza almeno FIDO_2_0, perché "FIDO UAF and FIDO U2F authenticators do not support authenticatorGetInfo" (https://fidoalliance.org/specs/mds/fido-metadata-statement-v3.0-ps-20210518.html#dom-metadatastatement-authenticatorgetinfo)
+        if(this.version.find(element => element == "U2F_V2") != undefined && this.version.find(element => element == "FIDO_2_0") == undefined)
+            return false;
+        //se extension no ha un valore tra quelli consentiti
         if(this.extensions != undefined && this.extensions.find(element => element == "credProtect") == undefined && this.extensions.find(element => element == "credBlob") == undefined &&
             this.extensions.find(element => element == "credProtect") == undefined && this.extensions.find(element => element == "largeBlobKey") == undefined &&
             this.extensions.find(element => element == "minPinLength") == undefined && this.extensions.find(element => element == "hmac-secret"))
@@ -779,29 +796,29 @@ class algorithmAuthenticatorGetInfo{
 }
 
 enum V3FunctionName{
-    "aaidCheck",
-    "aaguidCheck",
-    "attestationCertificateKeyIdentifiersCheck",
-    "authenticatorVersionCheck",
-    "protocolFamilyCheck",
-    "schemaCheck",
-    "upvCheck",
-    "authenticationAlgorithmsCheck",
-    "publicKeyAlgAndEncodingsCheck",
-    "attestationTypesCheck",
-    "userVerificationDetailsCheck",
-    "keyProtectionCheck",
-    "matcherProtectionCheck",
-    "cryptoStrengthCeck",
-    "attachmentHintCheck",
-    "tcDisplayCheck",
-    "tcDisplayContentTypeCheck",
-    "tcDisplayPNGCharacteristicsCheck",
-    "attestationRootCertificatesCheck",
-    "ecdaaTrustAnchorsCheck",
-    "iconCheck",
-    "authenticatorGetInfoCheck",
-    //supportedExtensionsCheck,
+    "aaidCheck" = 1,
+    "aaguidCheck" = 2,
+    "attestationCertificateKeyIdentifiersCheck" = 3,
+    "authenticatorVersionCheck" = 4,
+    "protocolFamilyCheck" = 5,
+    "schemaCheck" = 6,
+    "upvCheck" = 7,
+    "authenticationAlgorithmsCheck" = 8,
+    "publicKeyAlgAndEncodingsCheck" = 9,
+    "attestationTypesCheck" = 10,
+    "userVerificationDetailsCheck" = 11,
+    "keyProtectionCheck" = 12,
+    "matcherProtectionCheck" = 13,
+    "cryptoStrengthCeck" = 14,
+    "attachmentHintCheck" = 15,
+    "tcDisplayCheck" = 16,
+    "tcDisplayContentTypeCheck" = 17,
+    "tcDisplayPNGCharacteristicsCheck" = 18,
+    "attestationRootCertificatesCheck" = 19,
+    "ecdaaTrustAnchorsCheck" = 20,
+    "iconCheck" = 21,
+    "authenticatorGetInfoCheck" = 22,
+    //supportedExtensionsCheck = 23,
 }
 
 enum tcDisplayEnum{

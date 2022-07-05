@@ -1,5 +1,6 @@
 import { X509Certificate } from 'crypto'; // per controllare attestationRootCertificates
 import { metadataKeysV3 } from './metadataV3';
+import * as  conversion  from './../FieldConverter/V2toV3'
 
 export class metadataKeysV2{
 
@@ -10,7 +11,7 @@ export class metadataKeysV2{
         attestationRootCertificates:string[], legalHeader?:string, aaid?:string, aaguid?:string, attestationCertificateKeyIdentifiers?:string[],  
         alternativeDescriptions?:string, protocolFamily:string="uaf", authenticationAlgorithms?: number[],  publicKeyAlgAndEncodings?:number[],
         isKeyRestricted:boolean = true, isFreshUserVerificationRequired:boolean = true, operatingEnv?:string, 
-        tcDisplayContentType?:string, tcDisplayPNGCharacteristics?:tcDisplayPNGCharacteristicsDescriptor, ecdaaTrustAnchors?:ecdaaTrustAnchor[], 
+        tcDisplayContentType?:string, tcDisplayPNGCharacteristics?:tcDisplayPNGCharacteristicsDescriptor[], ecdaaTrustAnchors?:ecdaaTrustAnchor[], 
         icon?:string, supportedExtensions?: ExtensionDescriptor[]){
 
             this.legalHeader=legalHeader;
@@ -55,8 +56,13 @@ export class metadataKeysV2{
             this.attachmentHint=attachmentHint;
             this.isSecondFactorOnly=isSecondFactorOnly;
             this.tcDisplay=tcDisplay;                         
-            this.tcDisplayContentType=tcDisplayContentType;                            
-            this.tcDisplayPNGCharacteristics=tcDisplayPNGCharacteristics;
+            this.tcDisplayContentType=tcDisplayContentType;
+            if(tcDisplayPNGCharacteristics != undefined){                            
+                this.tcDisplayPNGCharacteristics=Array.from(tcDisplayPNGCharacteristics);
+            }
+            else{
+                this.tcDisplayPNGCharacteristics=undefined;
+            }
             this.attestationRootCertificates=attestationRootCertificates;
             if(ecdaaTrustAnchors != undefined){
                 this.ecdaaTrustAnchors=Array.from(ecdaaTrustAnchors);
@@ -101,98 +107,193 @@ export class metadataKeysV2{
     public isSecondFactorOnly: boolean;   
     public tcDisplay: number;
     public tcDisplayContentType: string | undefined;                               
-    public tcDisplayPNGCharacteristics: tcDisplayPNGCharacteristicsDescriptor | undefined;
+    public tcDisplayPNGCharacteristics: tcDisplayPNGCharacteristicsDescriptor[] | undefined;
     public attestationRootCertificates: string[];
     public ecdaaTrustAnchors: ecdaaTrustAnchor[] | undefined;
     public icon: string | undefined;
     public supportedExtensions: ExtensionDescriptor[] | undefined;
-/*
-    public static fromV3(metadata : metadataKeysV3): metadataKeysV2 {
-        let result: metadataKeysV2 = new metadataKeysV2()
 
+    //medodo statico per generazione metadata V2
+    public static fromV2toV3(m : metadataKeysV2): metadataKeysV3 {
+        let result: metadataKeysV3;
+        if(!m.validateAll())
+            throw "Errore, metadata versione 3 non valido";
+        else{
 
-        return result
+            let legalHeader = m.legalHeader != undefined ? m.legalHeader : "https://fidoalliance.org/metadata/metadata-statement-legal-header/";
+            let aaid = m.aaid != undefined ? m.aaid : undefined;
+            let aaguid = m.aaguid != undefined ? m.aaguid : undefined;
+            let attestationCertificateKeyIdentifiers = m.attestationCertificateKeyIdentifiers != undefined ? Array.from(m.attestationCertificateKeyIdentifiers) : undefined; //
+            let description = m.description;
+            let alternativeDescriptions = m.alternativeDescriptions != undefined ? m.alternativeDescriptions : undefined;
+            let authenticatorVersion = m.authenticatorVersion; // semplice uguaglianza in quanto c'è conversione unsigned int -> unsigned long
+            //in v2 protocolFamily non è obbligatorio -> per ottenere il campo viene utilizzato assertionscheme
+            let protocolFamily: string;
+            if(m.assertionScheme == "U2FV1BIN")
+                protocolFamily = "u2f";
+            else if(m.assertionScheme == "FIDOV2")
+                protocolFamily = "fido2";
+            else//UAFV1TLV
+                protocolFamily = "u2f";
+            let upv = Array.from(m.upv);
+
+            //authenticationAlgorithms: array ricavato da elementi presenti in m.authenticationAlgorithms e/o valore singolo ricavato da m.authenticationAlgorithm 
+            let authenticationAlgorithms: string[];
+            authenticationAlgorithms = new Array();
+            //se l'array in m non è vuoto:
+            if(m.authenticationAlgorithms != undefined){
+                //aggiungo alla variabile authenticationAlgorithms gli elementi presenti nell'array dell'oggetto
+                for(let i = 0; i < m.authenticationAlgorithms.length; i++){
+                    let temp = conversion.convertauthenticationAlgorithmV2toV3(m.authenticationAlgorithms[i]);
+                    if(temp != undefined)
+                        authenticationAlgorithms.push(temp)
+                }
+                //inoltre se all'interno dell'array di m c'è un algoritmo non inserito nella variabile authenticationAlgorithms lo aggiungo
+                if(authenticationAlgorithms.find(element => element == conversion.convertauthenticationAlgorithmV2toV3(m.authenticationAlgorithm) != undefined)){
+                    let temp = conversion.convertauthenticationAlgorithmV2toV3(m.authenticationAlgorithm);
+                    if(temp != undefined)
+                        authenticationAlgorithms.push(temp)
+                }
+            }
+            else{
+                let temp = conversion.convertauthenticationAlgorithmV2toV3(m.authenticationAlgorithm);
+                if(temp != undefined)
+                    authenticationAlgorithms.push(temp)
+            }
+
+            let publicKeyAlgAndEncodings: string[];
+            publicKeyAlgAndEncodings = new Array();
+            if(m.publicKeyAlgAndEncodings != undefined){
+                for(let i = 0; i < m.publicKeyAlgAndEncodings.length; i++){
+                    let temp = conversion.convertauthenticationAlgorithmV2toV3(m.publicKeyAlgAndEncodings[i]);
+                    if(temp != undefined)
+                        publicKeyAlgAndEncodings.push()
+                }
+                if(publicKeyAlgAndEncodings.find(element => element == conversion.convertauthenticationAlgorithmV2toV3(m.publicKeyAlgAndEncoding) != undefined)){
+                    let temp = conversion.convertauthenticationAlgorithmV2toV3(m.publicKeyAlgAndEncoding);
+                    if(temp != undefined)
+                        publicKeyAlgAndEncodings.push()
+                }
+            }
+            else{
+                let temp = conversion.convertauthenticationAlgorithmV2toV3(m.publicKeyAlgAndEncoding);
+                if(temp != undefined)
+                    authenticationAlgorithms.push()
+            }
+
+            let attestationTypes = m.attestationTypes;
+            let userVerificationDetails = Array.from(m.userVerificationDetails);
+            let keyProtection = conversion.convertKeyProtectionV2toV3(m.keyProtection);
+            let isKeyRestricted: boolean | undefined = m.isKeyRestricted != undefined ? m.isKeyRestricted : undefined;
+            let isFreshUserVerificationRequired: boolean | undefined = m.isFreshUserVerificationRequired != undefined ? m.isFreshUserVerificationRequired : undefined;
+            let matcherProtection: string[] | undefined = conversion.convertMatcherProtectionV2toV3(m.matcherProtection);
+            let cryptoStrength: number | undefined = m.cryptoStrength != undefined ? m.cryptoStrength : undefined;
+            let attachmentHint: string[] | undefined = conversion.convertAttachmentHintV2toV3(m.attachmentHint);
+            let tcDisplay: string[] | undefined = conversion.convertTcDisplayV2toV3(m.tcDisplay);
+            let tcDisplayContentType: string | undefined = m.tcDisplayContentType != undefined ? m.tcDisplayContentType : undefined;
+            let tcDisplayPNGCharacteristics: tcDisplayPNGCharacteristicsDescriptor[] | undefined = m.tcDisplayPNGCharacteristics != undefined ? Array.from(m.tcDisplayPNGCharacteristics) : undefined;//?
+            let attestationRootCertificates: string[] = Array.from(m.attestationRootCertificates);
+            let ecdaaTrustAnchors: ecdaaTrustAnchor[] | undefined = m.ecdaaTrustAnchors != undefined ? Array.from(m.ecdaaTrustAnchors) : undefined;
+            let icon: string | undefined = m.icon != undefined ? m.icon : undefined;
+            let supportedExtensions: ExtensionDescriptor[] | undefined = m.supportedExtensions != undefined ? Array.from(m.supportedExtensions) : undefined;
+            let schema:number = conversion.convertSchemaV2toV3();
+            let authenticatorgetinfo;
+            if(m.aaguid == undefined){
+                if(m.assertionScheme == "FIDOV2")
+                    throw "Errore, campo assertionScheme presente con valore FidoV2, perciò authenticatorgetinfo è obbligatorio: il campo aaguid non è presente"
+                else
+                    authenticatorgetinfo = undefined;
+            }
+            else
+                authenticatorgetinfo = conversion.convertAuthenticatorGetInfoV2toV3(m.aaguid, m.assertionScheme);
+
+            result = new metadataKeysV3(description,authenticatorVersion,upv,schema,attestationTypes,attestationCertificateKeyIdentifiers,userVerificationDetails,
+                authenticationAlgorithms,publicKeyAlgAndEncodings,keyProtection,matcherProtection,cryptoStrength,attachmentHint,tcDisplay,attestationRootCertificates,
+                legalHeader,aaid,aaguid,alternativeDescriptions,protocolFamily,isKeyRestricted,isFreshUserVerificationRequired,tcDisplayContentType,tcDisplayPNGCharacteristics,ecdaaTrustAnchors,
+                icon,supportedExtensions);
+        }
+        return result;
     }
-*/
+
     //funzione validazione singolo campo
     //attenzione, lo switch deve corrispondere all'enum
     public validateData(str:string): boolean{
         switch(V2FunctionName[str as keyof typeof V2FunctionName]){
-            case 0:
-                return this.aaidCheck()
-                break;
             case 1:
-                return this.aaguidCheck()
-                break;
+                return this.aaidCheck()
+                
             case 2:
-                return this.attestationCertificateKeyIdentifiersCheck();
-                break;
+                return this.aaguidCheck()
+                
             case 3:
-                return this.authenticatorVersionCheck();
-                break;
+                return this.attestationCertificateKeyIdentifiersCheck();
+                
             case 4:
-                return this.protocolFamilyCheck()
-                break;
+                return this.authenticatorVersionCheck();
+                
             case 5:
-                return this.upvCheck();
-                break;
+                return this.protocolFamilyCheck()
+                
             case 6:
-                return this.assertionSchemeCheck();
-                break;
+                return this.upvCheck();
+                
             case 7:
-                return this.authenticationAlgorithmCheck();
-                break;
+                return this.assertionSchemeCheck();
+                
             case 8:
-                return this.authenticationAlgorithmsCheck();
-                break;
+                return this.authenticationAlgorithmCheck();
+                
             case 9:
-                return this.publicKeyAlgAndEncodingCheck();
-                break;
+                return this.authenticationAlgorithmsCheck();
+                
             case 10:
-                return this.publicKeyAlgAndEncodingsCheck();
-                break;
+                return this.publicKeyAlgAndEncodingCheck();
+                
             case 11:
-                return this.attestationTypesCheck();
-                break;
+                return this.publicKeyAlgAndEncodingsCheck();
+                
             case 12:
-                return this.userVerificationDetailsCheck();
-                break;
+                return this.attestationTypesCheck();
+                
             case 13:
-                return this.keyProtectionCheck();
-                break;
+                return this.userVerificationDetailsCheck();
+                
             case 14:
-                return this.matcherProtectionCheck();
-                break;
+                return this.keyProtectionCheck();
+                
             case 15:
-                return this.cryptoStrengthCeck();
-                break;
+                return this.matcherProtectionCheck();
+                
             case 16:
-                return this.operatingEnvCheck();
-                break;
+                return this.cryptoStrengthCeck();
+                
             case 17:
-                return this.attachmentHintCheck();
-                break;
+                return this.operatingEnvCheck();
+                
             case 18:
-                return this.tcDisplayCheck();
-                break;
+                return this.attachmentHintCheck();
+                
             case 19:
-                return this.tcDisplayContentTypeCheck();
-                break;
+                return this.tcDisplayCheck();
+                
             case 20:
-                return this.tcDisplayPNGCharacteristicsCheck();
-                break;
+                return this.tcDisplayContentTypeCheck();
+                
             case 21:
-                return this.attestationRootCertificatesCheck();
-                break;
+                return this.tcDisplayPNGCharacteristicsCheck();
+                
             case 22:
-                return this.ecdaaTrustAnchorsCheck();
-                break;
+                return this.attestationRootCertificatesCheck();
+                
             case 23:
+                return this.ecdaaTrustAnchorsCheck();
+                
+            case 24:
                 return this.iconCheck();
-                break;
-            //case 24:
+                
+            //case 25:
             //    return this.supportedExtensionsCheck();
-            //    break;
+            //    
         }
         throw "La stringa " + str + " non è una funzione di controllo";
     }
@@ -632,31 +733,31 @@ class Version{
 }
 
 enum V2FunctionName{
-    "aaidCheck",
-    "aaguidCheck",
-    "attestationCertificateKeyIdentifiersCheck",
-    "authenticatorVersionCheck",
-    "protocolFamilyCheck",
-    "upvCheck",
-    "assertionSchemeCheck",
-    "authenticationAlgorithmCheck",
-    "authenticationAlgorithmsCheck",
-    "publicKeyAlgAndEncodingCheck",
-    "publicKeyAlgAndEncodingsCheck",
-    "attestationTypesCheck",
-    "userVerificationDetailsCheck",
-    "keyProtectionCheck",
-    "matcherProtectionCheck",
-    "cryptoStrengthCeck",
-    "operatingEnvCheck",
-    "attachmentHintCheck",
-    "tcDisplayCheck",
-    "tcDisplayContentTypeCheck",
-    "tcDisplayPNGCharacteristicsCheck",
-    "attestationRootCertificatesCheck",
-    "ecdaaTrustAnchorsCheck",
-    "iconCheck",
-    //supportedExtensionsCheck,
+    "aaidCheck" = 1,
+    "aaguidCheck" = 2,
+    "attestationCertificateKeyIdentifiersCheck" = 3,
+    "authenticatorVersionCheck" = 4,
+    "protocolFamilyCheck" = 5,
+    "upvCheck" = 6,
+    "assertionSchemeCheck" = 7,
+    "authenticationAlgorithmCheck" = 8,
+    "authenticationAlgorithmsCheck" = 9,
+    "publicKeyAlgAndEncodingCheck" = 10,
+    "publicKeyAlgAndEncodingsCheck" = 11,
+    "attestationTypesCheck" = 12,
+    "userVerificationDetailsCheck" = 13,
+    "keyProtectionCheck" = 14,
+    "matcherProtectionCheck" = 15,
+    "cryptoStrengthCeck" = 16,
+    "operatingEnvCheck" = 17,
+    "attachmentHintCheck" = 18,
+    "tcDisplayCheck" = 19,
+    "tcDisplayContentTypeCheck" = 20,
+    "tcDisplayPNGCharacteristicsCheck" = 21,
+    "attestationRootCertificatesCheck" = 22,
+    "ecdaaTrustAnchorsCheck" = 23,
+    "iconCheck" = 24,
+    //supportedExtensionsCheck = 25,
         
 }
 

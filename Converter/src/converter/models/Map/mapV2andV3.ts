@@ -147,8 +147,8 @@ enum userVerificationDetailsEnumMap{
     "handprint_internal" = 256,
     "none" = 512,
     "all" = 1024,
-    "passcode_external" = 2048,
-    "pattern_external" = 4096,
+    "passcode_external" = 2048, // non presente in V2
+    "pattern_external" = 4096, // non presente in V2
 }
 
 enum keyProtectionEnumMap{

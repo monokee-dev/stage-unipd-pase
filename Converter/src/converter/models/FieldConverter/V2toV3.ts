@@ -1,23 +1,9 @@
-import * as KeysV2 from "./Keys/metadataV2"
-import * as KeysV3 from "./Keys/metadataV3"
-import * as V2toV3 from "./Map/mapV2andV3"
-import * as fs from 'node:fs';
-import { getFunctionName } from "inversify/lib/utils/serialization";
-
-//PRIMA di convertire i metadata eseguire il controllo di validità (validateAll())
-/*
-export function MetadataConverterV2toV3(mv2: KeysV2.metadataKeysV2){
-    if(!mv2.validateAll())
-        throw "Errore: il metadata inserito non rispetta le condizioni per i campi";
-    else{
-        //return new KeysV3.metadataKeysV3();
-    }
-}
-*/
+import * as KeysV3 from "./../Keys/metadataV3"
+import * as V2toV3 from "./../Map/mapV2andV3"
 
 //funzioni SOLO conversione: il cotrollo dovrà essere fatto in seguito
 
-function convertAttestationTypesV2toV3(attestationTypes:number[]):string[] | undefined{
+export function convertAttestationTypesV2toV3(attestationTypes:number[]):string[] | undefined{
     var temp: string[] = new Array();
     for(var obj of attestationTypes){
         temp.push(String(V2toV3.attestationTypesConverter(obj)));
@@ -26,12 +12,12 @@ function convertAttestationTypesV2toV3(attestationTypes:number[]):string[] | und
 }
 
 // funzione singola, da iterare per fare la conversione completa
-function convertUserVerificationDetailsV2toV3(userVerification:number): string | undefined{
+export function convertUserVerificationDetailsV2toV3(userVerification:number): string | undefined{
     return String(V2toV3.userVerificationDetailsConverter(userVerification));
 }
 
 //funzione per ottenere tutti i campi keyprotection
-function convertKeyProtectionV2toV3(keyProtection: number): string[] | undefined{
+export function convertKeyProtectionV2toV3(keyProtection: number): string[] | undefined{
     let keyV3: string[] = new Array();
     let temp:number = keyProtection;
     /**
@@ -56,7 +42,8 @@ function convertKeyProtectionV2toV3(keyProtection: number): string[] | undefined
 }
 
 //funzione per ottenere tutti i campi matcherProtection
-function convertMatcherProtectionV2toV3(matcherProtection: number): string[] | undefined{
+//non è stato fatto alcun ciclo in quanto essendo i campi mutuamente esclusivi nonostante il contenitore sia un array
+export function convertMatcherProtectionV2toV3(matcherProtection: number): string[] | undefined{
     let keyV3: string[] = new Array();
     
     keyV3.push(String(V2toV3.matcherProtectionConverter((matcherProtection))))
@@ -67,7 +54,7 @@ function convertMatcherProtectionV2toV3(matcherProtection: number): string[] | u
 }
 
 //funzione per ottenere tutti i campi attachmentHint
-function convertAttachmentHintV2toV3(attachmentHint: number): string[] | undefined{
+export function convertAttachmentHintV2toV3(attachmentHint: number): string[] | undefined{
     let keyV3: string[] = new Array();
     let temp:number = attachmentHint;
 
@@ -85,7 +72,7 @@ function convertAttachmentHintV2toV3(attachmentHint: number): string[] | undefin
 }
 
 //funzione per ottenere tutti i campi attachmentHint
-function convertTcDisplayV2toV3(tcDisplay: number): string[] | undefined{
+export function convertTcDisplayV2toV3(tcDisplay: number): string[] | undefined{
     let keyV3: string[] = new Array();
     let temp:number = tcDisplay;
  
@@ -103,12 +90,19 @@ function convertTcDisplayV2toV3(tcDisplay: number): string[] | undefined{
 
 //funzione per ottenere il campo schema
 //essendo conversione da MV2 a MV3 il campo schema sarà sempre di valore 3
-function convertSchemaV2toV3(): number{
+export function convertSchemaV2toV3(): number{
     return 3;
 }
 
 //funzione per ottenere il campo AuthenticatorGetInfo
-function convertAuthenticatorGetInfoV2toV3(aaguid:string, assertionScheme:string): KeysV3.AuthenticatorGetInfo | undefined{
+/**
+ * ATTENZIONE:
+ *      - il campo version avrebbe più valori possibili (es FIDO_2_1,..) in base alla versione CTAP
+ *        (maggiorni informazioni qui: https://fidoalliance.org/specs/fido-v2.1-rd-20210309/fido-client-to-authenticator-protocol-v2.1-rd-20210309.html#authenticatorGetInfo) 
+ * 
+ *      - U2F_V2 non è mai da solo nel campo version, solitamente è posto insieme a FIDO_2_0
+ */
+export function convertAuthenticatorGetInfoV2toV3(aaguid:string, assertionScheme:string): KeysV3.AuthenticatorGetInfo | undefined{
     let version: string[] = new Array();
     let aa: string = aaguid.replace("-","");
     if(assertionScheme=="FIDOV2"){
@@ -123,4 +117,12 @@ function convertAuthenticatorGetInfoV2toV3(aaguid:string, assertionScheme:string
     return new KeysV3.AuthenticatorGetInfo(version, aa);
 }
 
-console.log(convertTcDisplayV2toV3(17))
+// funzione singola per conversione dei codici degli algoritmi
+export function convertauthenticationAlgorithmV2toV3(authenticationAlgorithm:number): string | undefined{
+    return String(V2toV3.authenticationAlgorithmsConverter(authenticationAlgorithm));
+}
+
+// funzione singola per conversione dei codici delle chiavicodifica
+export function convertpublicKeyAlgAndEncodingV2toV3(publicKeyAlgAndEncoding:number): string | undefined{
+    return String(V2toV3.publicKeyAlgAndEncodingsConverter(publicKeyAlgAndEncoding));
+}
