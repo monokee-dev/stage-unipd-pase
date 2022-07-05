@@ -70,9 +70,86 @@ var metadataKeysV2 = /** @class */ (function () {
         }
     }
     //funzione validazione singolo campo
-    //public validateData(): boolean{
-    //    return true;
-    //}
+    metadataKeysV2.prototype.validateData = function (str) {
+        switch (V2FunctionName[str]) {
+            case 0:
+                return this.aaidCheck();
+                break;
+            case 1:
+                return this.aaguidCheck();
+                break;
+            case 2:
+                return this.attestationCertificateKeyIdentifiersCheck();
+                break;
+            case 3:
+                return this.authenticatorVersionCheck();
+                break;
+            case 4:
+                return this.protocolFamilyCheck();
+                break;
+            case 5:
+                return this.upvCheck();
+                break;
+            case 6:
+                return this.assertionSchemeCheck();
+                break;
+            case 7:
+                return this.authenticationAlgorithmCheck();
+                break;
+            case 8:
+                return this.authenticationAlgorithmsCheck();
+                break;
+            case 9:
+                return this.publicKeyAlgAndEncodingCheck();
+                break;
+            case 10:
+                return this.publicKeyAlgAndEncodingsCheck();
+                break;
+            case 11:
+                return this.attestationTypesCheck();
+                break;
+            case 12:
+                return this.userVerificationDetailsCheck();
+                break;
+            case 13:
+                return this.keyProtectionCheck();
+                break;
+            case 14:
+                return this.matcherProtectionCheck();
+                break;
+            case 15:
+                return this.cryptoStrengthCeck();
+                break;
+            case 16:
+                return this.operatingEnvCheck();
+                break;
+            case 17:
+                return this.attachmentHintCheck();
+                break;
+            case 18:
+                return this.tcDisplayCheck();
+                break;
+            case 19:
+                return this.tcDisplayContentTypeCheck();
+                break;
+            case 20:
+                return this.tcDisplayPNGCharacteristicsCheck();
+                break;
+            case 21:
+                return this.attestationRootCertificatesCheck();
+                break;
+            case 22:
+                return this.ecdaaTrustAnchorsCheck();
+                break;
+            case 23:
+                return this.iconCheck();
+                break;
+            //case 24:
+            //    return this.supportedExtensionsCheck();
+            //    break;
+        }
+        throw "La stringa " + str + " non è una funzione di controllo";
+    };
     //funzione validazione per tutti i campi
     metadataKeysV2.prototype.validateAll = function () {
         if (this.aaidCheck() && this.aaguidCheck() && this.attestationCertificateKeyIdentifiersCheck() && this.authenticatorVersionCheck() &&
@@ -283,10 +360,9 @@ var metadataKeysV2 = /** @class */ (function () {
     metadataKeysV2.prototype.keyProtectionCheck = function () {
         if (this.keyProtection < 1 || this.keyProtection > 24) // 16 + 8 -> 24, massimo num raggiungibile (This flag MUST be set in conjunction with one of the other KEY_PROTECTION flags...)
             return false;
-        if (this.keyProtection == (1 || 2 || 4 || 6 || 8 || 10 || 11 || 17 || 18 || 20 || 24))
-            return true;
-        else
+        if (this.keyProtection != (1 || 2 || 4 || 6 || 8 || 10 || 11 || 17 || 18 || 20 || 24))
             return false;
+        return true;
     };
     /**
      * Campo isKeyRestricted non controllato:
@@ -465,6 +541,34 @@ var Version = /** @class */ (function () {
     }
     return Version;
 }());
+var V2FunctionName;
+(function (V2FunctionName) {
+    V2FunctionName[V2FunctionName["aaidCheck"] = 0] = "aaidCheck";
+    V2FunctionName[V2FunctionName["aaguidCheck"] = 1] = "aaguidCheck";
+    V2FunctionName[V2FunctionName["attestationCertificateKeyIdentifiersCheck"] = 2] = "attestationCertificateKeyIdentifiersCheck";
+    V2FunctionName[V2FunctionName["authenticatorVersionCheck"] = 3] = "authenticatorVersionCheck";
+    V2FunctionName[V2FunctionName["protocolFamilyCheck"] = 4] = "protocolFamilyCheck";
+    V2FunctionName[V2FunctionName["upvCheck"] = 5] = "upvCheck";
+    V2FunctionName[V2FunctionName["assertionSchemeCheck"] = 6] = "assertionSchemeCheck";
+    V2FunctionName[V2FunctionName["authenticationAlgorithmCheck"] = 7] = "authenticationAlgorithmCheck";
+    V2FunctionName[V2FunctionName["authenticationAlgorithmsCheck"] = 8] = "authenticationAlgorithmsCheck";
+    V2FunctionName[V2FunctionName["publicKeyAlgAndEncodingCheck"] = 9] = "publicKeyAlgAndEncodingCheck";
+    V2FunctionName[V2FunctionName["publicKeyAlgAndEncodingsCheck"] = 10] = "publicKeyAlgAndEncodingsCheck";
+    V2FunctionName[V2FunctionName["attestationTypesCheck"] = 11] = "attestationTypesCheck";
+    V2FunctionName[V2FunctionName["userVerificationDetailsCheck"] = 12] = "userVerificationDetailsCheck";
+    V2FunctionName[V2FunctionName["keyProtectionCheck"] = 13] = "keyProtectionCheck";
+    V2FunctionName[V2FunctionName["matcherProtectionCheck"] = 14] = "matcherProtectionCheck";
+    V2FunctionName[V2FunctionName["cryptoStrengthCeck"] = 15] = "cryptoStrengthCeck";
+    V2FunctionName[V2FunctionName["operatingEnvCheck"] = 16] = "operatingEnvCheck";
+    V2FunctionName[V2FunctionName["attachmentHintCheck"] = 17] = "attachmentHintCheck";
+    V2FunctionName[V2FunctionName["tcDisplayCheck"] = 18] = "tcDisplayCheck";
+    V2FunctionName[V2FunctionName["tcDisplayContentTypeCheck"] = 19] = "tcDisplayContentTypeCheck";
+    V2FunctionName[V2FunctionName["tcDisplayPNGCharacteristicsCheck"] = 20] = "tcDisplayPNGCharacteristicsCheck";
+    V2FunctionName[V2FunctionName["attestationRootCertificatesCheck"] = 21] = "attestationRootCertificatesCheck";
+    V2FunctionName[V2FunctionName["ecdaaTrustAnchorsCheck"] = 22] = "ecdaaTrustAnchorsCheck";
+    V2FunctionName[V2FunctionName["iconCheck"] = 23] = "iconCheck";
+    //supportedExtensionsCheck,
+})(V2FunctionName || (V2FunctionName = {}));
 var tcDisplayContentTypeEnum;
 (function (tcDisplayContentTypeEnum) {
     tcDisplayContentTypeEnum[tcDisplayContentTypeEnum["application/octet-stream"] = 0] = "application/octet-stream";

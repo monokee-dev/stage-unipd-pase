@@ -48,7 +48,6 @@ export function keyProtectionConverter(x: number | string): number | string | un
     }
 }
 
-
 export function matcherProtectionConverter(x: number | string): number | string | undefined {
     //controllo tipo: se number si ritorna il nome dell'algoritmo
     if(typeof x === "number"){
@@ -96,7 +95,6 @@ export function tcDisplayConverter(x: number | string): number | string | undefi
         return undefined;
     }
 }
-
 
 export function authenticationAlgorithmsConverter(x: number | string): number | string | undefined{
     //controllo tipo: se number si ritorna il nome dell'algoritmo

@@ -1,6 +1,6 @@
 "use strict";
 exports.__esModule = true;
-exports.ecdaaTrustAnchor = exports.attestationRootCertificates = exports.tcDisplayPNGCharacteristicsDescriptor = exports.supportedExtensions = exports.userVerificationDetails = exports.metadataKeysV3 = void 0;
+exports.ecdaaTrustAnchor = exports.attestationRootCertificates = exports.tcDisplayPNGCharacteristicsDescriptor = exports.supportedExtensions = exports.userVerificationDetails = exports.AuthenticatorGetInfo = exports.metadataKeysV3 = void 0;
 var crypto_1 = require("crypto"); // per controllare attestationRootCertificates
 var metadataKeysV3 = /** @class */ (function () {
     //costruttore con tutti i campi, quelli richiesti sono obbligatori, gli altri facoltativi
@@ -29,11 +29,11 @@ var metadataKeysV3 = /** @class */ (function () {
         this.matcherProtection = Array.from(matcherProtection);
         this.cryptoStrength = cryptoStrength;
         this.attachmentHint = attachmentHint;
-        if (tcDisplay != null) {
+        if (tcDisplay != undefined) {
             this.tcDisplay = Array.from(tcDisplay);
         }
         else {
-            this.tcDisplay = null;
+            this.tcDisplay = undefined;
         }
         this.tcDisplayContentType = tcDisplayContentType;
         this.tcDisplayPNGCharacteristics = tcDisplayPNGCharacteristics;
@@ -54,9 +54,80 @@ var metadataKeysV3 = /** @class */ (function () {
         }
     }
     //funzione validazione singolo campo
-    //public validateData(): boolean{
-    //    return true;
-    //}
+    metadataKeysV3.prototype.validateData = function (str) {
+        switch (V3FunctionName[str]) {
+            case 0:
+                return this.aaidCheck();
+                break;
+            case 1:
+                return this.aaguidCheck();
+                break;
+            case 2:
+                return this.attestationCertificateKeyIdentifiersCheck();
+                break;
+            case 3:
+                return this.authenticatorVersionCheck();
+                break;
+            case 4:
+                return this.protocolFamilyCheck();
+                break;
+            case 5:
+                return this.schemaCheck();
+                break;
+            case 6:
+                return this.upvCheck();
+                break;
+            case 7:
+                return this.authenticationAlgorithmsCheck();
+                break;
+            case 8:
+                return this.publicKeyAlgAndEncodingsCheck();
+                break;
+            case 9:
+                return this.attestationTypesCheck();
+                break;
+            case 10:
+                return this.userVerificationDetailsCheck();
+                break;
+            case 11:
+                return this.keyProtectionCheck();
+                break;
+            case 12:
+                return this.matcherProtectionCheck();
+                break;
+            case 13:
+                return this.cryptoStrengthCeck();
+                break;
+            case 14:
+                return this.attachmentHintCheck();
+                break;
+            case 15:
+                return this.tcDisplayCheck();
+                break;
+            case 16:
+                return this.tcDisplayContentTypeCheck();
+                break;
+            case 17:
+                return this.tcDisplayPNGCharacteristicsCheck();
+                break;
+            case 18:
+                return this.attestationRootCertificatesCheck();
+                break;
+            case 19:
+                return this.ecdaaTrustAnchorsCheck();
+                break;
+            case 20:
+                return this.iconCheck();
+                break;
+            case 21:
+                return this.authenticatorGetInfoCheck();
+                break;
+            //case 22:
+            //      return this.supportedExtensionsCheck();
+            //      break;
+        }
+        throw "La stringa " + str + " non è una funzione di controllo";
+    };
     //funzione validazione per tutti i campi
     metadataKeysV3.prototype.validateAll = function () {
         if (this.aaidCheck() && this.aaguidCheck() && this.attestationCertificateKeyIdentifiersCheck() && this.authenticatorVersionCheck() &&
@@ -336,10 +407,10 @@ var metadataKeysV3 = /** @class */ (function () {
     /**
      * Controlli:
      *          1) che il campo number presenti i valori corretti secondo: https://fidoalliance.org/specs/fido-v2.0-rd-20180702/fido-registry-v2.0-rd-20180702.html#transaction-confirmation-display-types
-     *          2) campo null -> the authenticator does not support a transaction confirmation display
+     *          2) campo undefined -> the authenticator does not support a transaction confirmation display
      */
     metadataKeysV3.prototype.tcDisplayCheck = function () {
-        if (this.tcDisplay != null) {
+        if (this.tcDisplay != undefined) {
             for (var i = 0; i < this.tcDisplay.length; i++) {
                 if (tcDisplayEnum[this.tcDisplay[i]] == undefined)
                     return false;
@@ -361,7 +432,7 @@ var metadataKeysV3 = /** @class */ (function () {
      *          2) che il campo presenti un valore tra quelli presentu in tcDisplayContentTypeEnum
      */
     metadataKeysV3.prototype.tcDisplayContentTypeCheck = function () {
-        if (this.tcDisplay != null && this.tcDisplayContentType == undefined)
+        if (this.tcDisplay != undefined && this.tcDisplayContentType == undefined)
             return false;
         if (this.tcDisplayContentType != undefined) {
             if (tcDisplayContentTypeEnum[this.tcDisplayContentType] == undefined)
@@ -371,10 +442,10 @@ var metadataKeysV3 = /** @class */ (function () {
     };
     /**
      * Controlli:
-     *          1) che il campo sia presente nel caso lo siano anche tcDisplay (non null) e tcDisplayContentType (deve essere image/png)
+     *          1) che il campo sia presente nel caso lo siano anche tcDisplay (non undefined) e tcDisplayContentType (deve essere image/png)
      */
     metadataKeysV3.prototype.tcDisplayPNGCharacteristicsCheck = function () {
-        if (this.tcDisplay != null && tcDisplayContentTypeEnum[this.tcDisplayContentType] == tcDisplayContentTypeEnum["image/png"] && this.tcDisplayPNGCharacteristics == undefined)
+        if (this.tcDisplay != undefined && tcDisplayContentTypeEnum[this.tcDisplayContentType] == tcDisplayContentTypeEnum["image/png"] && this.tcDisplayPNGCharacteristics == undefined)
             return false;
         return true;
     };
@@ -550,6 +621,7 @@ var AuthenticatorGetInfo = /** @class */ (function () {
     };
     return AuthenticatorGetInfo;
 }());
+exports.AuthenticatorGetInfo = AuthenticatorGetInfo;
 //controlli da fare
 var authenticatorOption = /** @class */ (function () {
     function authenticatorOption(p, r, c, up, uv, uvT, no, la, ep, bio, user, uvBio, auth, uva, cred, crede, setM, make, alw) {
@@ -587,6 +659,32 @@ var algorithmAuthenticatorGetInfo = /** @class */ (function () {
     }
     return algorithmAuthenticatorGetInfo;
 }());
+var V3FunctionName;
+(function (V3FunctionName) {
+    V3FunctionName[V3FunctionName["aaidCheck"] = 0] = "aaidCheck";
+    V3FunctionName[V3FunctionName["aaguidCheck"] = 1] = "aaguidCheck";
+    V3FunctionName[V3FunctionName["attestationCertificateKeyIdentifiersCheck"] = 2] = "attestationCertificateKeyIdentifiersCheck";
+    V3FunctionName[V3FunctionName["authenticatorVersionCheck"] = 3] = "authenticatorVersionCheck";
+    V3FunctionName[V3FunctionName["protocolFamilyCheck"] = 4] = "protocolFamilyCheck";
+    V3FunctionName[V3FunctionName["schemaCheck"] = 5] = "schemaCheck";
+    V3FunctionName[V3FunctionName["upvCheck"] = 6] = "upvCheck";
+    V3FunctionName[V3FunctionName["authenticationAlgorithmsCheck"] = 7] = "authenticationAlgorithmsCheck";
+    V3FunctionName[V3FunctionName["publicKeyAlgAndEncodingsCheck"] = 8] = "publicKeyAlgAndEncodingsCheck";
+    V3FunctionName[V3FunctionName["attestationTypesCheck"] = 9] = "attestationTypesCheck";
+    V3FunctionName[V3FunctionName["userVerificationDetailsCheck"] = 10] = "userVerificationDetailsCheck";
+    V3FunctionName[V3FunctionName["keyProtectionCheck"] = 11] = "keyProtectionCheck";
+    V3FunctionName[V3FunctionName["matcherProtectionCheck"] = 12] = "matcherProtectionCheck";
+    V3FunctionName[V3FunctionName["cryptoStrengthCeck"] = 13] = "cryptoStrengthCeck";
+    V3FunctionName[V3FunctionName["attachmentHintCheck"] = 14] = "attachmentHintCheck";
+    V3FunctionName[V3FunctionName["tcDisplayCheck"] = 15] = "tcDisplayCheck";
+    V3FunctionName[V3FunctionName["tcDisplayContentTypeCheck"] = 16] = "tcDisplayContentTypeCheck";
+    V3FunctionName[V3FunctionName["tcDisplayPNGCharacteristicsCheck"] = 17] = "tcDisplayPNGCharacteristicsCheck";
+    V3FunctionName[V3FunctionName["attestationRootCertificatesCheck"] = 18] = "attestationRootCertificatesCheck";
+    V3FunctionName[V3FunctionName["ecdaaTrustAnchorsCheck"] = 19] = "ecdaaTrustAnchorsCheck";
+    V3FunctionName[V3FunctionName["iconCheck"] = 20] = "iconCheck";
+    V3FunctionName[V3FunctionName["authenticatorGetInfoCheck"] = 21] = "authenticatorGetInfoCheck";
+    //supportedExtensionsCheck,
+})(V3FunctionName || (V3FunctionName = {}));
 var tcDisplayEnum;
 (function (tcDisplayEnum) {
     tcDisplayEnum[tcDisplayEnum["any"] = 0] = "any";

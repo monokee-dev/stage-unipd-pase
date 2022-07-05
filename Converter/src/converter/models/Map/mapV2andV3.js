@@ -1,217 +1,217 @@
 "use strict";
 exports.__esModule = true;
-exports.publicKeyAlgAndEncodingsMap = exports.authenticationAlgorithmsMap = exports.tcDisplayMap = exports.attachmentHintMap = exports.matcherProtectionMap = exports.keyProtectionMap = exports.userVerificationDetailsMap = exports.attestationTypesMap = void 0;
-function attestationTypesMap(x) {
+exports.publicKeyAlgAndEncodingsConverter = exports.authenticationAlgorithmsConverter = exports.tcDisplayConverter = exports.attachmentHintConverter = exports.matcherProtectionConverter = exports.keyProtectionConverter = exports.userVerificationDetailsConverter = exports.attestationTypesConverter = void 0;
+function attestationTypesConverter(x) {
     //controllo tipo: se number si ritorna il nome dell'algoritmo
     if (typeof x === "number") {
-        return attestationTypesEnumConverter[x];
+        return attestationTypesEnumMap[x];
     }
     //se stringa si ritorna il valore numerico
     else if (typeof x === "string") {
-        for (var iter in attestationTypesEnumConverter) {
+        for (var iter in attestationTypesEnumMap) {
             if (iter === x) {
-                return attestationTypesEnumConverter[iter];
+                return attestationTypesEnumMap[iter];
             }
         }
         return undefined;
     }
 }
-exports.attestationTypesMap = attestationTypesMap;
-function userVerificationDetailsMap(x) {
+exports.attestationTypesConverter = attestationTypesConverter;
+function userVerificationDetailsConverter(x) {
     //controllo tipo: se number si ritorna il nome dell'algoritmo
     if (typeof x === "number") {
-        return userVerificationDetailsEnumConverter[x];
+        return userVerificationDetailsEnumMap[x];
     }
     //se stringa si ritorna il valore numerico
     else if (typeof x === "string") {
-        for (var iter in userVerificationDetailsEnumConverter) {
+        for (var iter in userVerificationDetailsEnumMap) {
             if (iter === x) {
-                return userVerificationDetailsEnumConverter[iter];
+                return userVerificationDetailsEnumMap[iter];
             }
         }
         return undefined;
     }
 }
-exports.userVerificationDetailsMap = userVerificationDetailsMap;
-function keyProtectionMap(x) {
+exports.userVerificationDetailsConverter = userVerificationDetailsConverter;
+function keyProtectionConverter(x) {
     //controllo tipo: se number si ritorna il nome dell'algoritmo
     if (typeof x === "number") {
-        return keyProtectionEnumConverter[x];
+        return keyProtectionEnumMap[x];
     }
     //se stringa si ritorna il valore numerico
     else if (typeof x === "string") {
-        for (var iter in keyProtectionEnumConverter) {
+        for (var iter in keyProtectionEnumMap) {
             if (iter === x) {
-                return keyProtectionEnumConverter[iter];
+                return keyProtectionEnumMap[iter];
             }
         }
         return undefined;
     }
 }
-exports.keyProtectionMap = keyProtectionMap;
-function matcherProtectionMap(x) {
+exports.keyProtectionConverter = keyProtectionConverter;
+function matcherProtectionConverter(x) {
     //controllo tipo: se number si ritorna il nome dell'algoritmo
     if (typeof x === "number") {
-        return matcherProtectionEnumConvereter[x];
+        return matcherProtectionEnumMap[x];
     }
     //se stringa si ritorna il valore numerico
     else if (typeof x === "string") {
-        for (var iter in matcherProtectionEnumConvereter) {
+        for (var iter in matcherProtectionEnumMap) {
             if (iter === x) {
-                return matcherProtectionEnumConvereter[iter];
+                return matcherProtectionEnumMap[iter];
             }
         }
         return undefined;
     }
 }
-exports.matcherProtectionMap = matcherProtectionMap;
-function attachmentHintMap(x) {
+exports.matcherProtectionConverter = matcherProtectionConverter;
+function attachmentHintConverter(x) {
     //controllo tipo: se number si ritorna il nome dell'algoritmo
     if (typeof x === "number") {
-        return attachmentHintEnumConverter[x];
+        return attachmentHintEnumMap[x];
     }
     //se stringa si ritorna il valore numerico
     else if (typeof x === "string") {
-        for (var iter in attachmentHintEnumConverter) {
+        for (var iter in attachmentHintEnumMap) {
             if (iter === x) {
-                return attachmentHintEnumConverter[iter];
+                return attachmentHintEnumMap[iter];
             }
         }
         return undefined;
     }
 }
-exports.attachmentHintMap = attachmentHintMap;
-function tcDisplayMap(x) {
+exports.attachmentHintConverter = attachmentHintConverter;
+function tcDisplayConverter(x) {
     //controllo tipo: se number si ritorna il nome dell'algoritmo
     if (typeof x === "number") {
-        return tcDisplayEnumConverter[x];
+        return tcDisplayEnumMap[x];
     }
     //se stringa si ritorna il valore numerico
     else if (typeof x === "string") {
-        for (var iter in tcDisplayEnumConverter) {
+        for (var iter in tcDisplayEnumMap) {
             if (iter === x) {
-                return tcDisplayEnumConverter[iter];
+                return tcDisplayEnumMap[iter];
             }
         }
         return undefined;
     }
 }
-exports.tcDisplayMap = tcDisplayMap;
-function authenticationAlgorithmsMap(x) {
+exports.tcDisplayConverter = tcDisplayConverter;
+function authenticationAlgorithmsConverter(x) {
     //controllo tipo: se number si ritorna il nome dell'algoritmo
     if (typeof x === "number") {
-        return authenticationAlgorithmsEnumConverter[x];
+        return authenticationAlgorithmsEnumMap[x];
     }
     //se stringa si ritorna il valore numerico
     else if (typeof x === "string") {
-        for (var iter in authenticationAlgorithmsEnumConverter) {
+        for (var iter in authenticationAlgorithmsEnumMap) {
             if (iter === x) {
-                return authenticationAlgorithmsEnumConverter[iter];
+                return authenticationAlgorithmsEnumMap[iter];
             }
         }
         return undefined;
     }
 }
-exports.authenticationAlgorithmsMap = authenticationAlgorithmsMap;
-function publicKeyAlgAndEncodingsMap(x) {
+exports.authenticationAlgorithmsConverter = authenticationAlgorithmsConverter;
+function publicKeyAlgAndEncodingsConverter(x) {
     //controllo tipo: se number si ritorna il nome dell'algoritmo
     if (typeof x === "number") {
-        return publicKeyAlgAndEncodingsEnumConverter[x];
+        return publicKeyAlgAndEncodingsEnumMap[x];
     }
     //se stringa si ritorna il valore numerico
     else if (typeof x === "string") {
-        for (var iter in publicKeyAlgAndEncodingsEnumConverter) {
+        for (var iter in publicKeyAlgAndEncodingsEnumMap) {
             if (iter === x) {
-                return publicKeyAlgAndEncodingsEnumConverter[iter];
+                return publicKeyAlgAndEncodingsEnumMap[iter];
             }
         }
         return undefined;
     }
 }
-exports.publicKeyAlgAndEncodingsMap = publicKeyAlgAndEncodingsMap;
-var attestationTypesEnumConverter;
-(function (attestationTypesEnumConverter) {
-    attestationTypesEnumConverter[attestationTypesEnumConverter["basic_full"] = 15879] = "basic_full";
-    attestationTypesEnumConverter[attestationTypesEnumConverter["basic_surrogate"] = 15880] = "basic_surrogate";
-    attestationTypesEnumConverter[attestationTypesEnumConverter["ecdaa"] = 15881] = "ecdaa";
-    attestationTypesEnumConverter[attestationTypesEnumConverter["attca"] = 15882] = "attca";
-})(attestationTypesEnumConverter || (attestationTypesEnumConverter = {}));
-var userVerificationDetailsEnumConverter;
-(function (userVerificationDetailsEnumConverter) {
-    userVerificationDetailsEnumConverter[userVerificationDetailsEnumConverter["presence_internal"] = 1] = "presence_internal";
-    userVerificationDetailsEnumConverter[userVerificationDetailsEnumConverter["fingerprint_internal"] = 2] = "fingerprint_internal";
-    userVerificationDetailsEnumConverter[userVerificationDetailsEnumConverter["passcode_internal"] = 4] = "passcode_internal";
-    userVerificationDetailsEnumConverter[userVerificationDetailsEnumConverter["voiceprint_internal"] = 8] = "voiceprint_internal";
-    userVerificationDetailsEnumConverter[userVerificationDetailsEnumConverter["faceprint_internal"] = 16] = "faceprint_internal";
-    userVerificationDetailsEnumConverter[userVerificationDetailsEnumConverter["location_internal"] = 32] = "location_internal";
-    userVerificationDetailsEnumConverter[userVerificationDetailsEnumConverter["eyeprint_internal"] = 64] = "eyeprint_internal";
-    userVerificationDetailsEnumConverter[userVerificationDetailsEnumConverter["pattern_internal"] = 128] = "pattern_internal";
-    userVerificationDetailsEnumConverter[userVerificationDetailsEnumConverter["handprint_internal"] = 256] = "handprint_internal";
-    userVerificationDetailsEnumConverter[userVerificationDetailsEnumConverter["none"] = 512] = "none";
-    userVerificationDetailsEnumConverter[userVerificationDetailsEnumConverter["all"] = 1024] = "all";
-    userVerificationDetailsEnumConverter[userVerificationDetailsEnumConverter["passcode_external"] = 2048] = "passcode_external";
-    userVerificationDetailsEnumConverter[userVerificationDetailsEnumConverter["pattern_external"] = 4096] = "pattern_external";
-})(userVerificationDetailsEnumConverter || (userVerificationDetailsEnumConverter = {}));
-var keyProtectionEnumConverter;
-(function (keyProtectionEnumConverter) {
-    keyProtectionEnumConverter[keyProtectionEnumConverter["software"] = 1] = "software";
-    keyProtectionEnumConverter[keyProtectionEnumConverter["hardware"] = 2] = "hardware";
-    keyProtectionEnumConverter[keyProtectionEnumConverter["tee"] = 4] = "tee";
-    keyProtectionEnumConverter[keyProtectionEnumConverter["secure_element"] = 8] = "secure_element";
-    keyProtectionEnumConverter[keyProtectionEnumConverter["remote_handle"] = 16] = "remote_handle";
-})(keyProtectionEnumConverter || (keyProtectionEnumConverter = {}));
-var matcherProtectionEnumConvereter;
-(function (matcherProtectionEnumConvereter) {
-    matcherProtectionEnumConvereter[matcherProtectionEnumConvereter["software"] = 1] = "software";
-    matcherProtectionEnumConvereter[matcherProtectionEnumConvereter["tee"] = 2] = "tee";
-    matcherProtectionEnumConvereter[matcherProtectionEnumConvereter["on_chip"] = 4] = "on_chip";
-})(matcherProtectionEnumConvereter || (matcherProtectionEnumConvereter = {}));
-var attachmentHintEnumConverter;
-(function (attachmentHintEnumConverter) {
-    attachmentHintEnumConverter[attachmentHintEnumConverter["internal"] = 1] = "internal";
-    attachmentHintEnumConverter[attachmentHintEnumConverter["external"] = 2] = "external";
-    attachmentHintEnumConverter[attachmentHintEnumConverter["wired"] = 4] = "wired";
-    attachmentHintEnumConverter[attachmentHintEnumConverter["wireless"] = 8] = "wireless";
-    attachmentHintEnumConverter[attachmentHintEnumConverter["nfc"] = 16] = "nfc";
-    attachmentHintEnumConverter[attachmentHintEnumConverter["bluetooth"] = 32] = "bluetooth";
-    attachmentHintEnumConverter[attachmentHintEnumConverter["network"] = 64] = "network";
-    attachmentHintEnumConverter[attachmentHintEnumConverter["ready"] = 128] = "ready";
-    attachmentHintEnumConverter[attachmentHintEnumConverter["wifi_direct"] = 256] = "wifi_direct";
-})(attachmentHintEnumConverter || (attachmentHintEnumConverter = {}));
-var tcDisplayEnumConverter;
-(function (tcDisplayEnumConverter) {
-    tcDisplayEnumConverter[tcDisplayEnumConverter["any"] = 1] = "any";
-    tcDisplayEnumConverter[tcDisplayEnumConverter["privileged_software"] = 2] = "privileged_software";
-    tcDisplayEnumConverter[tcDisplayEnumConverter["tee"] = 4] = "tee";
-    tcDisplayEnumConverter[tcDisplayEnumConverter["hardware"] = 8] = "hardware";
-    tcDisplayEnumConverter[tcDisplayEnumConverter["remote"] = 16] = "remote";
-})(tcDisplayEnumConverter || (tcDisplayEnumConverter = {}));
-var authenticationAlgorithmsEnumConverter;
-(function (authenticationAlgorithmsEnumConverter) {
-    authenticationAlgorithmsEnumConverter[authenticationAlgorithmsEnumConverter["secp256r1_ecdsa_sha256_raw"] = 1] = "secp256r1_ecdsa_sha256_raw";
-    authenticationAlgorithmsEnumConverter[authenticationAlgorithmsEnumConverter["secp256r1_ecdsa_sha256_der"] = 2] = "secp256r1_ecdsa_sha256_der";
-    authenticationAlgorithmsEnumConverter[authenticationAlgorithmsEnumConverter["rsassa_pss_sha256_raw"] = 3] = "rsassa_pss_sha256_raw";
-    authenticationAlgorithmsEnumConverter[authenticationAlgorithmsEnumConverter["rsassa_pss_sha256_der"] = 4] = "rsassa_pss_sha256_der";
-    authenticationAlgorithmsEnumConverter[authenticationAlgorithmsEnumConverter["esecp256k1_ecdsa_sha256_raw"] = 5] = "esecp256k1_ecdsa_sha256_raw";
-    authenticationAlgorithmsEnumConverter[authenticationAlgorithmsEnumConverter["secp256k1_ecdsa_sha256_der"] = 6] = "secp256k1_ecdsa_sha256_der";
-    authenticationAlgorithmsEnumConverter[authenticationAlgorithmsEnumConverter["sm2_sm3_raw"] = 7] = "sm2_sm3_raw";
-    authenticationAlgorithmsEnumConverter[authenticationAlgorithmsEnumConverter["rsa_emsa_pkcs1_sha256_raw"] = 8] = "rsa_emsa_pkcs1_sha256_raw";
-    authenticationAlgorithmsEnumConverter[authenticationAlgorithmsEnumConverter["rsa_emsa_pkcs1_sha256_der"] = 9] = "rsa_emsa_pkcs1_sha256_der";
-    authenticationAlgorithmsEnumConverter[authenticationAlgorithmsEnumConverter["rsassa_pss_sha384_raw"] = 10] = "rsassa_pss_sha384_raw";
-    authenticationAlgorithmsEnumConverter[authenticationAlgorithmsEnumConverter["rsassa_pss_sha512_raw"] = 11] = "rsassa_pss_sha512_raw";
-    authenticationAlgorithmsEnumConverter[authenticationAlgorithmsEnumConverter["rsassa_pkcsv15_sha256_raw"] = 12] = "rsassa_pkcsv15_sha256_raw";
-    authenticationAlgorithmsEnumConverter[authenticationAlgorithmsEnumConverter["rsassa_pkcsv15_sha384_raw"] = 13] = "rsassa_pkcsv15_sha384_raw";
-    authenticationAlgorithmsEnumConverter[authenticationAlgorithmsEnumConverter["rsassa_pkcsv15_sha512_raw"] = 14] = "rsassa_pkcsv15_sha512_raw";
-    authenticationAlgorithmsEnumConverter[authenticationAlgorithmsEnumConverter["rsassa_pkcsv15_sha1_raw"] = 15] = "rsassa_pkcsv15_sha1_raw";
-    authenticationAlgorithmsEnumConverter[authenticationAlgorithmsEnumConverter["secp384r1_ecdsa_sha384_raw"] = 16] = "secp384r1_ecdsa_sha384_raw";
-    authenticationAlgorithmsEnumConverter[authenticationAlgorithmsEnumConverter["secp512r1_ecdsa_sha256_raw"] = 17] = "secp512r1_ecdsa_sha256_raw";
-    authenticationAlgorithmsEnumConverter[authenticationAlgorithmsEnumConverter["ed25519_eddsa_sha512_raw"] = 18] = "ed25519_eddsa_sha512_raw";
-})(authenticationAlgorithmsEnumConverter || (authenticationAlgorithmsEnumConverter = {}));
-var publicKeyAlgAndEncodingsEnumConverter;
-(function (publicKeyAlgAndEncodingsEnumConverter) {
-    publicKeyAlgAndEncodingsEnumConverter[publicKeyAlgAndEncodingsEnumConverter["ecc_x962_raw"] = 256] = "ecc_x962_raw";
-    publicKeyAlgAndEncodingsEnumConverter[publicKeyAlgAndEncodingsEnumConverter["ecc_x962_der"] = 257] = "ecc_x962_der";
-    publicKeyAlgAndEncodingsEnumConverter[publicKeyAlgAndEncodingsEnumConverter["rsa_2048_raw"] = 258] = "rsa_2048_raw";
-    publicKeyAlgAndEncodingsEnumConverter[publicKeyAlgAndEncodingsEnumConverter["rsa_2048_der"] = 259] = "rsa_2048_der";
-    publicKeyAlgAndEncodingsEnumConverter[publicKeyAlgAndEncodingsEnumConverter["cose"] = 260] = "cose";
-})(publicKeyAlgAndEncodingsEnumConverter || (publicKeyAlgAndEncodingsEnumConverter = {}));
+exports.publicKeyAlgAndEncodingsConverter = publicKeyAlgAndEncodingsConverter;
+var attestationTypesEnumMap;
+(function (attestationTypesEnumMap) {
+    attestationTypesEnumMap[attestationTypesEnumMap["basic_full"] = 15879] = "basic_full";
+    attestationTypesEnumMap[attestationTypesEnumMap["basic_surrogate"] = 15880] = "basic_surrogate";
+    attestationTypesEnumMap[attestationTypesEnumMap["ecdaa"] = 15881] = "ecdaa";
+    attestationTypesEnumMap[attestationTypesEnumMap["attca"] = 15882] = "attca";
+})(attestationTypesEnumMap || (attestationTypesEnumMap = {}));
+var userVerificationDetailsEnumMap;
+(function (userVerificationDetailsEnumMap) {
+    userVerificationDetailsEnumMap[userVerificationDetailsEnumMap["presence_internal"] = 1] = "presence_internal";
+    userVerificationDetailsEnumMap[userVerificationDetailsEnumMap["fingerprint_internal"] = 2] = "fingerprint_internal";
+    userVerificationDetailsEnumMap[userVerificationDetailsEnumMap["passcode_internal"] = 4] = "passcode_internal";
+    userVerificationDetailsEnumMap[userVerificationDetailsEnumMap["voiceprint_internal"] = 8] = "voiceprint_internal";
+    userVerificationDetailsEnumMap[userVerificationDetailsEnumMap["faceprint_internal"] = 16] = "faceprint_internal";
+    userVerificationDetailsEnumMap[userVerificationDetailsEnumMap["location_internal"] = 32] = "location_internal";
+    userVerificationDetailsEnumMap[userVerificationDetailsEnumMap["eyeprint_internal"] = 64] = "eyeprint_internal";
+    userVerificationDetailsEnumMap[userVerificationDetailsEnumMap["pattern_internal"] = 128] = "pattern_internal";
+    userVerificationDetailsEnumMap[userVerificationDetailsEnumMap["handprint_internal"] = 256] = "handprint_internal";
+    userVerificationDetailsEnumMap[userVerificationDetailsEnumMap["none"] = 512] = "none";
+    userVerificationDetailsEnumMap[userVerificationDetailsEnumMap["all"] = 1024] = "all";
+    userVerificationDetailsEnumMap[userVerificationDetailsEnumMap["passcode_external"] = 2048] = "passcode_external";
+    userVerificationDetailsEnumMap[userVerificationDetailsEnumMap["pattern_external"] = 4096] = "pattern_external";
+})(userVerificationDetailsEnumMap || (userVerificationDetailsEnumMap = {}));
+var keyProtectionEnumMap;
+(function (keyProtectionEnumMap) {
+    keyProtectionEnumMap[keyProtectionEnumMap["software"] = 1] = "software";
+    keyProtectionEnumMap[keyProtectionEnumMap["hardware"] = 2] = "hardware";
+    keyProtectionEnumMap[keyProtectionEnumMap["tee"] = 4] = "tee";
+    keyProtectionEnumMap[keyProtectionEnumMap["secure_element"] = 8] = "secure_element";
+    keyProtectionEnumMap[keyProtectionEnumMap["remote_handle"] = 16] = "remote_handle";
+})(keyProtectionEnumMap || (keyProtectionEnumMap = {}));
+var matcherProtectionEnumMap;
+(function (matcherProtectionEnumMap) {
+    matcherProtectionEnumMap[matcherProtectionEnumMap["software"] = 1] = "software";
+    matcherProtectionEnumMap[matcherProtectionEnumMap["tee"] = 2] = "tee";
+    matcherProtectionEnumMap[matcherProtectionEnumMap["on_chip"] = 4] = "on_chip";
+})(matcherProtectionEnumMap || (matcherProtectionEnumMap = {}));
+var attachmentHintEnumMap;
+(function (attachmentHintEnumMap) {
+    attachmentHintEnumMap[attachmentHintEnumMap["internal"] = 1] = "internal";
+    attachmentHintEnumMap[attachmentHintEnumMap["external"] = 2] = "external";
+    attachmentHintEnumMap[attachmentHintEnumMap["wired"] = 4] = "wired";
+    attachmentHintEnumMap[attachmentHintEnumMap["wireless"] = 8] = "wireless";
+    attachmentHintEnumMap[attachmentHintEnumMap["nfc"] = 16] = "nfc";
+    attachmentHintEnumMap[attachmentHintEnumMap["bluetooth"] = 32] = "bluetooth";
+    attachmentHintEnumMap[attachmentHintEnumMap["network"] = 64] = "network";
+    attachmentHintEnumMap[attachmentHintEnumMap["ready"] = 128] = "ready";
+    attachmentHintEnumMap[attachmentHintEnumMap["wifi_direct"] = 256] = "wifi_direct";
+})(attachmentHintEnumMap || (attachmentHintEnumMap = {}));
+var tcDisplayEnumMap;
+(function (tcDisplayEnumMap) {
+    tcDisplayEnumMap[tcDisplayEnumMap["any"] = 1] = "any";
+    tcDisplayEnumMap[tcDisplayEnumMap["privileged_software"] = 2] = "privileged_software";
+    tcDisplayEnumMap[tcDisplayEnumMap["tee"] = 4] = "tee";
+    tcDisplayEnumMap[tcDisplayEnumMap["hardware"] = 8] = "hardware";
+    tcDisplayEnumMap[tcDisplayEnumMap["remote"] = 16] = "remote";
+})(tcDisplayEnumMap || (tcDisplayEnumMap = {}));
+var authenticationAlgorithmsEnumMap;
+(function (authenticationAlgorithmsEnumMap) {
+    authenticationAlgorithmsEnumMap[authenticationAlgorithmsEnumMap["secp256r1_ecdsa_sha256_raw"] = 1] = "secp256r1_ecdsa_sha256_raw";
+    authenticationAlgorithmsEnumMap[authenticationAlgorithmsEnumMap["secp256r1_ecdsa_sha256_der"] = 2] = "secp256r1_ecdsa_sha256_der";
+    authenticationAlgorithmsEnumMap[authenticationAlgorithmsEnumMap["rsassa_pss_sha256_raw"] = 3] = "rsassa_pss_sha256_raw";
+    authenticationAlgorithmsEnumMap[authenticationAlgorithmsEnumMap["rsassa_pss_sha256_der"] = 4] = "rsassa_pss_sha256_der";
+    authenticationAlgorithmsEnumMap[authenticationAlgorithmsEnumMap["esecp256k1_ecdsa_sha256_raw"] = 5] = "esecp256k1_ecdsa_sha256_raw";
+    authenticationAlgorithmsEnumMap[authenticationAlgorithmsEnumMap["secp256k1_ecdsa_sha256_der"] = 6] = "secp256k1_ecdsa_sha256_der";
+    authenticationAlgorithmsEnumMap[authenticationAlgorithmsEnumMap["sm2_sm3_raw"] = 7] = "sm2_sm3_raw";
+    authenticationAlgorithmsEnumMap[authenticationAlgorithmsEnumMap["rsa_emsa_pkcs1_sha256_raw"] = 8] = "rsa_emsa_pkcs1_sha256_raw";
+    authenticationAlgorithmsEnumMap[authenticationAlgorithmsEnumMap["rsa_emsa_pkcs1_sha256_der"] = 9] = "rsa_emsa_pkcs1_sha256_der";
+    authenticationAlgorithmsEnumMap[authenticationAlgorithmsEnumMap["rsassa_pss_sha384_raw"] = 10] = "rsassa_pss_sha384_raw";
+    authenticationAlgorithmsEnumMap[authenticationAlgorithmsEnumMap["rsassa_pss_sha512_raw"] = 11] = "rsassa_pss_sha512_raw";
+    authenticationAlgorithmsEnumMap[authenticationAlgorithmsEnumMap["rsassa_pkcsv15_sha256_raw"] = 12] = "rsassa_pkcsv15_sha256_raw";
+    authenticationAlgorithmsEnumMap[authenticationAlgorithmsEnumMap["rsassa_pkcsv15_sha384_raw"] = 13] = "rsassa_pkcsv15_sha384_raw";
+    authenticationAlgorithmsEnumMap[authenticationAlgorithmsEnumMap["rsassa_pkcsv15_sha512_raw"] = 14] = "rsassa_pkcsv15_sha512_raw";
+    authenticationAlgorithmsEnumMap[authenticationAlgorithmsEnumMap["rsassa_pkcsv15_sha1_raw"] = 15] = "rsassa_pkcsv15_sha1_raw";
+    authenticationAlgorithmsEnumMap[authenticationAlgorithmsEnumMap["secp384r1_ecdsa_sha384_raw"] = 16] = "secp384r1_ecdsa_sha384_raw";
+    authenticationAlgorithmsEnumMap[authenticationAlgorithmsEnumMap["secp512r1_ecdsa_sha256_raw"] = 17] = "secp512r1_ecdsa_sha256_raw";
+    authenticationAlgorithmsEnumMap[authenticationAlgorithmsEnumMap["ed25519_eddsa_sha512_raw"] = 18] = "ed25519_eddsa_sha512_raw";
+})(authenticationAlgorithmsEnumMap || (authenticationAlgorithmsEnumMap = {}));
+var publicKeyAlgAndEncodingsEnumMap;
+(function (publicKeyAlgAndEncodingsEnumMap) {
+    publicKeyAlgAndEncodingsEnumMap[publicKeyAlgAndEncodingsEnumMap["ecc_x962_raw"] = 256] = "ecc_x962_raw";
+    publicKeyAlgAndEncodingsEnumMap[publicKeyAlgAndEncodingsEnumMap["ecc_x962_der"] = 257] = "ecc_x962_der";
+    publicKeyAlgAndEncodingsEnumMap[publicKeyAlgAndEncodingsEnumMap["rsa_2048_raw"] = 258] = "rsa_2048_raw";
+    publicKeyAlgAndEncodingsEnumMap[publicKeyAlgAndEncodingsEnumMap["rsa_2048_der"] = 259] = "rsa_2048_der";
+    publicKeyAlgAndEncodingsEnumMap[publicKeyAlgAndEncodingsEnumMap["cose"] = 260] = "cose";
+})(publicKeyAlgAndEncodingsEnumMap || (publicKeyAlgAndEncodingsEnumMap = {}));

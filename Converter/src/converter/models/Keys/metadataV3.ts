@@ -6,7 +6,7 @@ export class metadataKeysV3{
     constructor(description:string, authenticatorVersion:number, upv:Version[], authenticationAlgorithm:number, schema:number,
         publicKeyAlgAndEncoding:number, attestationTypes:string[], attestationCertificateKeyIdentifiers:string[],
         userVerificationDetails: VerificationMethodANDCombinations[], isSecondFactorOnly:boolean, authenticationAlgorithms: string[],  publicKeyAlgAndEncodings:string[],
-        keyProtection: string[], matcherProtection: string[], cryptoStrength:number | undefined = undefined, attachmentHint: string[], tcDisplay: string[] | null, 
+        keyProtection: string[], matcherProtection: string[], cryptoStrength:number | undefined = undefined, attachmentHint: string[], tcDisplay: string[] | undefined, 
         attestationRootCertificates:string[], legalHeader:string, aaid?:string, aaguid?:string, alternativeDescriptions?:string, 
         protocolFamily:string="uaf", isKeyRestricted:boolean = true, isFreshUserVerificationRequired:boolean = true, operatingEnv?:string, 
         tcDisplayContentType?:string, tcDisplayPNGCharacteristics?:tcDisplayPNGCharacteristicsDescriptor, ecdaaTrustAnchors?:ecdaaTrustAnchor[], 
@@ -32,11 +32,11 @@ export class metadataKeysV3{
             this.matcherProtection=Array.from(matcherProtection);
             this.cryptoStrength=cryptoStrength;
             this.attachmentHint=attachmentHint;
-            if(tcDisplay != null){
+            if(tcDisplay != undefined){
                 this.tcDisplay=Array.from(tcDisplay);
             }
             else{
-                this.tcDisplay = null;
+                this.tcDisplay = undefined;
              }                        
             this.tcDisplayContentType=tcDisplayContentType;                            
             this.tcDisplayPNGCharacteristics=tcDisplayPNGCharacteristics;
@@ -79,7 +79,7 @@ export class metadataKeysV3{
     public matcherProtection: string[];
     public cryptoStrength: number | undefined;
     public attachmentHint: string[];
-    public tcDisplay: string[] | null; // null corrisponde a 0, ciò significa che transaction confirmation non è supportata dall'autenticatore
+    public tcDisplay: string[] | undefined; // undefined corrisponde all'array vuoto, ciò significa che transaction confirmation non è supportata dall'autenticatore
     public tcDisplayContentType: string | undefined;                               
     public tcDisplayPNGCharacteristics: tcDisplayPNGCharacteristicsDescriptor | undefined;
     public attestationRootCertificates: string[];
@@ -89,9 +89,81 @@ export class metadataKeysV3{
     public authenticatorGetInfo: AuthenticatorGetInfo | undefined;
 
     //funzione validazione singolo campo
-    //public validateData(): boolean{
-    //    return true;
-    //}
+    //attenzione, lo switch deve corrispondere all'enum
+    public validateData(str:string): boolean{
+        switch(V3FunctionName[str as keyof typeof V3FunctionName]){
+            case 0:
+                return this.aaidCheck()
+                break;
+            case 1:
+                return this.aaguidCheck()
+                break;
+            case 2:
+                return this.attestationCertificateKeyIdentifiersCheck();
+                break;
+            case 3:
+                return this.authenticatorVersionCheck();
+                break;
+            case 4:
+                return this.protocolFamilyCheck()
+                break;
+            case 5:
+                return this.schemaCheck();
+                break;
+            case 6:
+                return this.upvCheck();
+                break;
+            case 7:
+                return this.authenticationAlgorithmsCheck();
+                break;
+            case 8:
+                return this.publicKeyAlgAndEncodingsCheck();
+                break;
+            case 9:
+                return this.attestationTypesCheck();
+                break;
+            case 10:
+                return this.userVerificationDetailsCheck();
+                break;
+            case 11:
+                return this.keyProtectionCheck();
+                break;
+            case 12:
+                return this.matcherProtectionCheck();
+                break;
+            case 13:
+                return this.cryptoStrengthCeck();
+                break;
+            case 14:
+                return this.attachmentHintCheck();
+                break;
+            case 15:
+                return this.tcDisplayCheck();
+                break;
+            case 16:
+                return this.tcDisplayContentTypeCheck();
+                break;
+            case 17:
+                return this.tcDisplayPNGCharacteristicsCheck();
+                break;
+            case 18:
+                return this.attestationRootCertificatesCheck();
+                break;
+            case 19:
+                return this.ecdaaTrustAnchorsCheck();
+                break;
+            case 20:
+                return this.iconCheck();
+                break;
+            case 21:
+                return this.authenticatorGetInfoCheck();
+                break;
+            //case 22:
+            //      return this.supportedExtensionsCheck();
+            //      break;
+        }
+        throw "La stringa " + str + " non è una funzione di controllo";
+    }
 
     //funzione validazione per tutti i campi
     public validateAll(): boolean{
@@ -399,10 +471,10 @@ export class metadataKeysV3{
     /**
      * Controlli:
      *          1) che il campo number presenti i valori corretti secondo: https://fidoalliance.org/specs/fido-v2.0-rd-20180702/fido-registry-v2.0-rd-20180702.html#transaction-confirmation-display-types
-     *          2) campo null -> the authenticator does not support a transaction confirmation display
+     *          2) campo undefined -> the authenticator does not support a transaction confirmation display
      */
     private tcDisplayCheck(): boolean{
-        if(this.tcDisplay != null){
+        if(this.tcDisplay != undefined){
             for(let i=0;i<this.tcDisplay.length;i++){
                 if(tcDisplayEnum[this.tcDisplay[i] as keyof typeof tcDisplayEnum] == undefined)
                     return false;
@@ -425,7 +497,7 @@ export class metadataKeysV3{
      *          2) che il campo presenti un valore tra quelli presentu in tcDisplayContentTypeEnum
      */
     private tcDisplayContentTypeCheck(): boolean{
-        if(this.tcDisplay != null && this.tcDisplayContentType == undefined)
+        if(this.tcDisplay != undefined && this.tcDisplayContentType == undefined)
             return false;
 
         if(this.tcDisplayContentType != undefined){
@@ -437,10 +509,10 @@ export class metadataKeysV3{
 
     /**
      * Controlli:
-     *          1) che il campo sia presente nel caso lo siano anche tcDisplay (non null) e tcDisplayContentType (deve essere image/png)
+     *          1) che il campo sia presente nel caso lo siano anche tcDisplay (non undefined) e tcDisplayContentType (deve essere image/png)
      */
     private tcDisplayPNGCharacteristicsCheck(): boolean{ //(seconda parte: se variabile tcDisplayContentType è image/png)
-        if(this.tcDisplay != null && tcDisplayContentTypeEnum[this.tcDisplayContentType as keyof typeof tcDisplayContentTypeEnum] == tcDisplayContentTypeEnum["image/png" as keyof typeof tcDisplayContentTypeEnum] && this.tcDisplayPNGCharacteristics == undefined)
+        if(this.tcDisplay != undefined && tcDisplayContentTypeEnum[this.tcDisplayContentType as keyof typeof tcDisplayContentTypeEnum] == tcDisplayContentTypeEnum["image/png" as keyof typeof tcDisplayContentTypeEnum] && this.tcDisplayPNGCharacteristics == undefined)
             return false;
         return true;
     }
@@ -540,7 +612,7 @@ class Version{
     readonly minor: number;
 }
 
-class AuthenticatorGetInfo{
+export class AuthenticatorGetInfo{
     constructor(ver:string[], aag: string, ext?: string[], opt?:authenticatorOption, maxM?:number, pin?:number[],maxCc?: number, maxCIi?: number,
         tra?: string[], alg?:algorithmAuthenticatorGetInfo, maxA?: number, def?: number, fir?: number, maxS?: number, force?: boolean, minP?: number,
         maxCbl?: number, maxRpin?: number, pref?: number, uvM?: number, certif?: string[], remaining?: number, vendor?: number[]){
@@ -704,6 +776,32 @@ class algorithmAuthenticatorGetInfo{
     }
     public type:string;
     public alg: number;
+}
+
+enum V3FunctionName{
+    "aaidCheck",
+    "aaguidCheck",
+    "attestationCertificateKeyIdentifiersCheck",
+    "authenticatorVersionCheck",
+    "protocolFamilyCheck",
+    "schemaCheck",
+    "upvCheck",
+    "authenticationAlgorithmsCheck",
+    "publicKeyAlgAndEncodingsCheck",
+    "attestationTypesCheck",
+    "userVerificationDetailsCheck",
+    "keyProtectionCheck",
+    "matcherProtectionCheck",
+    "cryptoStrengthCeck",
+    "attachmentHintCheck",
+    "tcDisplayCheck",
+    "tcDisplayContentTypeCheck",
+    "tcDisplayPNGCharacteristicsCheck",
+    "attestationRootCertificatesCheck",
+    "ecdaaTrustAnchorsCheck",
+    "iconCheck",
+    "authenticatorGetInfoCheck",
+    //supportedExtensionsCheck,
 }
 
 enum tcDisplayEnum{

@@ -1,4 +1,5 @@
 import { X509Certificate } from 'crypto'; // per controllare attestationRootCertificates
+import { metadataKeysV3 } from './metadataV3';
 
 export class metadataKeysV2{
 
@@ -105,11 +106,97 @@ export class metadataKeysV2{
     public ecdaaTrustAnchors: ecdaaTrustAnchor[] | undefined;
     public icon: string | undefined;
     public supportedExtensions: ExtensionDescriptor[] | undefined;
+/*
+    public static fromV3(metadata : metadataKeysV3): metadataKeysV2 {
+        let result: metadataKeysV2 = new metadataKeysV2()
 
+
+        return result
+    }
+*/
     //funzione validazione singolo campo
-    //public validateData(): boolean{
-    //    return true;
-    //}
+    //attenzione, lo switch deve corrispondere all'enum
+    public validateData(str:string): boolean{
+        switch(V2FunctionName[str as keyof typeof V2FunctionName]){
+            case 0:
+                return this.aaidCheck()
+                break;
+            case 1:
+                return this.aaguidCheck()
+                break;
+            case 2:
+                return this.attestationCertificateKeyIdentifiersCheck();
+                break;
+            case 3:
+                return this.authenticatorVersionCheck();
+                break;
+            case 4:
+                return this.protocolFamilyCheck()
+                break;
+            case 5:
+                return this.upvCheck();
+                break;
+            case 6:
+                return this.assertionSchemeCheck();
+                break;
+            case 7:
+                return this.authenticationAlgorithmCheck();
+                break;
+            case 8:
+                return this.authenticationAlgorithmsCheck();
+                break;
+            case 9:
+                return this.publicKeyAlgAndEncodingCheck();
+                break;
+            case 10:
+                return this.publicKeyAlgAndEncodingsCheck();
+                break;
+            case 11:
+                return this.attestationTypesCheck();
+                break;
+            case 12:
+                return this.userVerificationDetailsCheck();
+                break;
+            case 13:
+                return this.keyProtectionCheck();
+                break;
+            case 14:
+                return this.matcherProtectionCheck();
+                break;
+            case 15:
+                return this.cryptoStrengthCeck();
+                break;
+            case 16:
+                return this.operatingEnvCheck();
+                break;
+            case 17:
+                return this.attachmentHintCheck();
+                break;
+            case 18:
+                return this.tcDisplayCheck();
+                break;
+            case 19:
+                return this.tcDisplayContentTypeCheck();
+                break;
+            case 20:
+                return this.tcDisplayPNGCharacteristicsCheck();
+                break;
+            case 21:
+                return this.attestationRootCertificatesCheck();
+                break;
+            case 22:
+                return this.ecdaaTrustAnchorsCheck();
+                break;
+            case 23:
+                return this.iconCheck();
+                break;
+            //case 24:
+            //    return this.supportedExtensionsCheck();
+            //    break;
+        }
+        throw "La stringa " + str + " non è una funzione di controllo";
+    }
+
 
     //funzione validazione per tutti i campi
     public validateAll(): boolean{
@@ -340,10 +427,9 @@ export class metadataKeysV2{
     private keyProtectionCheck(): boolean{
         if(this.keyProtection < 1 || this.keyProtection > 24) // 16 + 8 -> 24, massimo num raggiungibile (This flag MUST be set in conjunction with one of the other KEY_PROTECTION flags...)
             return false;
-        if(this.keyProtection == (1 || 2 || 4 || 6 || 8 || 10 || 11 || 17 || 18 || 20 || 24))
-            return true;
-        else    
+        if(this.keyProtection != (1 || 2 || 4 || 6 || 8 || 10 || 11 || 17 || 18 || 20 || 24))
             return false;
+        return true;
     }
 
     /**
@@ -545,6 +631,34 @@ class Version{
     readonly minor: number;
 }
 
+enum V2FunctionName{
+    "aaidCheck",
+    "aaguidCheck",
+    "attestationCertificateKeyIdentifiersCheck",
+    "authenticatorVersionCheck",
+    "protocolFamilyCheck",
+    "upvCheck",
+    "assertionSchemeCheck",
+    "authenticationAlgorithmCheck",
+    "authenticationAlgorithmsCheck",
+    "publicKeyAlgAndEncodingCheck",
+    "publicKeyAlgAndEncodingsCheck",
+    "attestationTypesCheck",
+    "userVerificationDetailsCheck",
+    "keyProtectionCheck",
+    "matcherProtectionCheck",
+    "cryptoStrengthCeck",
+    "operatingEnvCheck",
+    "attachmentHintCheck",
+    "tcDisplayCheck",
+    "tcDisplayContentTypeCheck",
+    "tcDisplayPNGCharacteristicsCheck",
+    "attestationRootCertificatesCheck",
+    "ecdaaTrustAnchorsCheck",
+    "iconCheck",
+    //supportedExtensionsCheck,
+        
+}
 
 enum tcDisplayContentTypeEnum{
     "application/octet-stream",
