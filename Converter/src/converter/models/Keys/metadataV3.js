@@ -210,10 +210,6 @@ var metadataKeysV3 = /** @class */ (function () {
         }
         return false;
     };
-    //controllo upv
-    /*
-        jsonParsed[0]["minor"] == 1){
-    */
     /**
      * Campo legalHeader non controllato:
      *          1) è obbligatorio ci sia (controllo nel costruttore)

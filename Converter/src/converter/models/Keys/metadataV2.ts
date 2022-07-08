@@ -611,7 +611,6 @@ export class metadataKeysV2{
         if(tot == 1)//superfluo
             return true;
         while(i>0){
-            console.log("counter: ",counter," i: ", i ,"\n");
             if((i==1 && counter >= 1 && tot != 0) || (i==2 && counter == 0)){
                 return false;
             }

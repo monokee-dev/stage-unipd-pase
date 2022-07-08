@@ -277,10 +277,6 @@ export class metadataKeysV3{
         return false;        
     }
             
-        //controllo upv
-        /*
-            jsonParsed[0]["minor"] == 1){
-        */
 
     /**
      * Campo legalHeader non controllato:

@@ -7,7 +7,8 @@ import { convertAttestationRootCertificates } from './converter/models/FieldConv
 
 
 
-/* METADATA V2
+// METADATA V2
+
     let j = JSON.parse(fs.readFileSync("./FIDOV2Keys.txt", 'utf-8'))
 
 let met = new metadataKeysV2(j.description,j.authenticatorVersion, j.upv,j.assertionScheme,j.authenticationAlgorithm,
@@ -22,13 +23,21 @@ let prova = metadataKeysV2.fromV2toV3(met)
 
 let prova2 = metadataKeysV3.fromV3toV2(prova)
 
+//console.log(met.attachmentHint)
+
 console.log(met)
 console.log(prova)//mv2 -> mv3
 console.log(prova2)//mv2->mv3->mv2 
-*/
+
+console.log(met.validateAll())
+console.log(prova.validateAll())
+console.log(prova2.validateAll())
 
 
-let j = JSON.parse(fs.readFileSync("./FIDOV3Keys.txt", 'utf-8'))
+//METADATA V3
+
+/*
+let j = JSON.parse(fs.readFileSync("./FIDOV3Keys2.txt", 'utf-8'))
 let met = new metadataKeysV3(j.description,j.authenticatorVersion,j.upv,j.schema,
     j.attestationTypes,j.attestationCertificateKeyIdentifiers,j.userVerificationDetails,
     j.authenticationAlgorithms,j.publicKeyAlgAndEncodings,j.keyProtection,j.matcherProtection,
@@ -42,26 +51,19 @@ let met = new metadataKeysV3(j.description,j.authenticatorVersion,j.upv,j.schema
 
 let prova = metadataKeysV3.fromV3toV2(met)
 
-//let prova2 = metadataKeysV2.fromV2toV3(prova)
+let prova2 = metadataKeysV2.fromV2toV3(prova)
 
-//console.log(met.validateAll())
-//console.log(prova.validateAll())
-//console.log(prova2.validateAll())
+console.log(met.validateAll())
+console.log(prova.validateAll())
+console.log(prova2.validateAll())
 
 
-/*
+
 console.log(met)
-console.log(prova)//mv2 -> mv3
-console.log(prova2)//mv2->mv3->mv2 
+console.log(prova)//mv3 -> mv2
+console.log(prova2)//mv3->mv2->mv3 
 
 */
-
-console.log(met.attachmentHint)
-
-console.log(prova.attachmentHint)
-
-console.log(prova.validateData("attachmentHintCheck"))
-
 
 
 
@@ -104,5 +106,37 @@ console.log(prova.validateData("attestationRootCertificatesCheck"))
 console.log(prova.validateData("ecdaaTrustAnchorsCheck"))
 console.log(prova.validateData("iconCheck"))
 
+
+*/
+
+
+
+
+
+/*
+verifica v3
+
+console.log(prova.validateData("aaidCheck"))
+console.log(prova.validateData("aaguidCheck"))
+console.log(prova.validateData("attestationCertificateKeyIdentifiersCheck"))
+console.log(prova.validateData("authenticatorVersionCheck"))
+console.log(prova.validateData("protocolFamilyCheck"))
+console.log(prova.validateData("schemaCheck"))
+console.log(prova.validateData("upvCheck"))
+console.log(prova.validateData("authenticationAlgorithmsCheck"))
+console.log(prova.validateData("publicKeyAlgAndEncodingsCheck"))
+console.log(prova.validateData("attestationTypesCheck"))
+console.log(prova.validateData("userVerificationDetailsCheck"))
+console.log(prova.validateData("keyProtectionCheck"))
+console.log(prova.validateData("matcherProtectionCheck"))
+console.log(prova.validateData("cryptoStrengthCeck"))
+console.log(prova.validateData("attachmentHintCheck"))
+console.log(prova.validateData("tcDisplayCheck"))
+console.log(prova.validateData("tcDisplayContentTypeCheck"))
+console.log(prova.validateData("tcDisplayPNGCharacteristicsCheck"))
+console.log(prova.validateData("attestationRootCertificatesCheck"))
+console.log(prova.validateData("ecdaaTrustAnchorsCheck"))
+console.log(prova.validateData("iconCheck"))
+console.log(prova.validateData("authenticatorGetInfoCheck"))
 
 */
