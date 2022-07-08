@@ -2,6 +2,9 @@
 exports.__esModule = true;
 exports.ecdaaTrustAnchor = exports.attestationRootCertificates = exports.tcDisplayPNGCharacteristicsDescriptor = exports.supportedExtensions = exports.userVerificationDetails = exports.metadataKeysV2 = void 0;
 var crypto_1 = require("crypto"); // per controllare attestationRootCertificates
+var metadataV3_1 = require("./metadataV3");
+var conversion = require("./../FieldConverter/V2toV3");
+var usefulFunction_1 = require("../FieldConverter/usefulFunction");
 var metadataKeysV2 = /** @class */ (function () {
     //costruttore con tutti i campi, quelli richiesti sono obbligatori, gli altri facoltativi
     function metadataKeysV2(description, authenticatorVersion, upv, assertionScheme, authenticationAlgorithm, publicKeyAlgAndEncoding, attestationTypes, userVerificationDetails, isSecondFactorOnly, keyProtection, matcherProtection, cryptoStrength, attachmentHint, tcDisplay, attestationRootCertificates, legalHeader, aaid, aaguid, attestationCertificateKeyIdentifiers, alternativeDescriptions, protocolFamily, authenticationAlgorithms, publicKeyAlgAndEncodings, isKeyRestricted, isFreshUserVerificationRequired, operatingEnv, tcDisplayContentType, tcDisplayPNGCharacteristics, ecdaaTrustAnchors, icon, supportedExtensions) {
@@ -41,7 +44,7 @@ var metadataKeysV2 = /** @class */ (function () {
             this.publicKeyAlgAndEncodings = undefined;
         }
         this.attestationTypes = Array.from(attestationTypes);
-        this.userVerificationDetails = userVerificationDetails;
+        this.userVerificationDetails = Array.from(userVerificationDetails);
         this.keyProtection = keyProtection;
         this.isKeyRestricted = isKeyRestricted;
         this.isFreshUserVerificationRequired = isFreshUserVerificationRequired;
@@ -52,7 +55,12 @@ var metadataKeysV2 = /** @class */ (function () {
         this.isSecondFactorOnly = isSecondFactorOnly;
         this.tcDisplay = tcDisplay;
         this.tcDisplayContentType = tcDisplayContentType;
-        this.tcDisplayPNGCharacteristics = tcDisplayPNGCharacteristics;
+        if (tcDisplayPNGCharacteristics != undefined) {
+            this.tcDisplayPNGCharacteristics = Array.from(tcDisplayPNGCharacteristics);
+        }
+        else {
+            this.tcDisplayPNGCharacteristics = undefined;
+        }
         this.attestationRootCertificates = attestationRootCertificates;
         if (ecdaaTrustAnchors != undefined) {
             this.ecdaaTrustAnchors = Array.from(ecdaaTrustAnchors);
@@ -69,84 +77,153 @@ var metadataKeysV2 = /** @class */ (function () {
             this.supportedExtensions = undefined;
         }
     }
+    //medodo statico per generazione metadata V2
+    metadataKeysV2.fromV2toV3 = function (m) {
+        var result;
+        if (!m.validateAll())
+            throw "Errore, metadata versione 2 non valido";
+        else {
+            var legalHeader = m.legalHeader != undefined ? m.legalHeader : "https://fidoalliance.org/metadata/metadata-statement-legal-header/";
+            var aaid = m.aaid != undefined ? m.aaid : undefined;
+            var aaguid = m.aaguid != undefined ? m.aaguid : undefined;
+            var attestationCertificateKeyIdentifiers = m.attestationCertificateKeyIdentifiers != undefined ? Array.from(m.attestationCertificateKeyIdentifiers) : undefined; //
+            var description = m.description;
+            var alternativeDescriptions = m.alternativeDescriptions != undefined ? m.alternativeDescriptions : undefined;
+            var authenticatorVersion = m.authenticatorVersion; // semplice uguaglianza in quanto c'è conversione unsigned int -> unsigned long
+            //in v2 protocolFamily non è obbligatorio -> per ottenere il campo viene utilizzato assertionscheme
+            var protocolFamily = void 0;
+            if (m.protocolFamily != undefined) {
+                protocolFamily = m.protocolFamily;
+            }
+            else {
+                if (m.assertionScheme == "U2FV1BIN")
+                    protocolFamily = "u2f";
+                else if (m.assertionScheme == "FIDOV2")
+                    protocolFamily = "fido2";
+                else //UAFV1TLV
+                    protocolFamily = "u2f";
+            }
+            var upv = Array.from(m.upv);
+            //authenticationAlgorithms: array ricavato da elementi presenti in m.authenticationAlgorithms e/o valore singolo ricavato da m.authenticationAlgorithm 
+            var authenticationAlgorithms = new Array();
+            var tempAuthAlg = conversion.convertauthenticationAlgorithmV2toV3(m.authenticationAlgorithm);
+            if (tempAuthAlg != undefined)
+                authenticationAlgorithms.push(tempAuthAlg);
+            //se l'array in m non è vuoto:
+            if (m.authenticationAlgorithms != undefined) {
+                //aggiungo alla variabile authenticationAlgorithms gli elementi presenti nell'array dell'oggetto
+                for (var i = 0; i < m.authenticationAlgorithms.length; i++) {
+                    var temp = conversion.convertauthenticationAlgorithmV2toV3(m.authenticationAlgorithms[i]);
+                    if (temp != undefined)
+                        authenticationAlgorithms.push(temp);
+                }
+            }
+            var publicKeyAlgAndEncodings = new Array();
+            var PubKey = conversion.convertpublicKeyAlgAndEncodingV2toV3(m.publicKeyAlgAndEncoding);
+            if (PubKey != undefined) {
+                publicKeyAlgAndEncodings.push(PubKey);
+            }
+            if (m.publicKeyAlgAndEncodings != undefined) {
+                for (var i = 0; i < m.publicKeyAlgAndEncodings.length; i++) {
+                    var temp = conversion.convertpublicKeyAlgAndEncodingV2toV3(m.publicKeyAlgAndEncodings[i]);
+                    if (temp != undefined)
+                        publicKeyAlgAndEncodings.push(temp);
+                }
+            }
+            var attestationTypes = conversion.convertAttestationTypesV2toV3(m.attestationTypes);
+            var userVerificationDetails_1 = Array();
+            for (var i = 0; i < m.userVerificationDetails.length; i++) {
+                userVerificationDetails_1.push(m.userVerificationDetails[i]);
+                if (!(m.userVerificationDetails[i])) {
+                    for (var l = 0; l < m.userVerificationDetails[i].data.length; l++) {
+                        var numEX = m.userVerificationDetails[i].data[l].userVerification;
+                        userVerificationDetails_1[i].data[l].userVerification = conversion.convertUserVerificationDetailsV2toV3(m.userVerificationDetails[i].data[l].userVerification);
+                    }
+                }
+            }
+            var keyProtection = conversion.convertKeyProtectionV2toV3(m.keyProtection);
+            var isKeyRestricted = m.isKeyRestricted != undefined ? m.isKeyRestricted : true;
+            var isFreshUserVerificationRequired = m.isFreshUserVerificationRequired != undefined ? m.isFreshUserVerificationRequired : true;
+            var matcherProtection = conversion.convertMatcherProtectionV2toV3(m.matcherProtection);
+            var cryptoStrength = m.cryptoStrength != undefined ? m.cryptoStrength : undefined;
+            var attachmentHint = conversion.convertAttachmentHintV2toV3(m.attachmentHint);
+            var tcDisplay = conversion.convertTcDisplayV2toV3(m.tcDisplay);
+            var tcDisplayContentType = m.tcDisplayContentType != undefined ? m.tcDisplayContentType : undefined;
+            var tcDisplayPNGCharacteristics = m.tcDisplayPNGCharacteristics != undefined ? Array.from(m.tcDisplayPNGCharacteristics) : undefined; //?
+            var attestationRootCertificates_1 = Array.from(m.attestationRootCertificates);
+            var ecdaaTrustAnchors = m.ecdaaTrustAnchors != undefined ? Array.from(m.ecdaaTrustAnchors) : undefined;
+            var icon = m.icon != undefined ? m.icon : undefined;
+            var supportedExtensions_1 = m.supportedExtensions != undefined ? Array.from(m.supportedExtensions) : undefined;
+            var schema = conversion.convertSchemaV2toV3();
+            var authenticatorgetinfo = void 0;
+            if (m.aaguid == undefined) {
+                if (m.assertionScheme == "FIDOV2")
+                    throw "Errore, campo assertionScheme presente con valore FidoV2, perciò authenticatorgetinfo è obbligatorio: il campo aaguid non è presente";
+                else
+                    authenticatorgetinfo = undefined;
+            }
+            else
+                authenticatorgetinfo = conversion.convertAuthenticatorGetInfoV2toV3(m.aaguid, m.assertionScheme);
+            //ATTENZIONE controllare i vari campi all'interno del costruttore: i campi dati undefined che sono obbligatori dovrebbero essere inseriti con operatore ternario
+            result = new metadataV3_1.metadataKeysV3(description, authenticatorVersion, upv, schema, attestationTypes != undefined ? attestationTypes : new Array(), attestationCertificateKeyIdentifiers, userVerificationDetails_1 != undefined ? userVerificationDetails_1 : new Array(), authenticationAlgorithms, Array.from(publicKeyAlgAndEncodings), keyProtection != undefined ? keyProtection : new Array(), matcherProtection != undefined ? matcherProtection : new Array(), cryptoStrength, attachmentHint != undefined ? attachmentHint : new Array(), tcDisplay, attestationRootCertificates_1, legalHeader, aaid, aaguid, alternativeDescriptions, protocolFamily, isKeyRestricted, isFreshUserVerificationRequired, tcDisplayContentType, tcDisplayPNGCharacteristics != undefined ? tcDisplayPNGCharacteristics : undefined, ecdaaTrustAnchors, icon, supportedExtensions_1);
+        }
+        return result;
+    };
     //funzione validazione singolo campo
+    //attenzione, lo switch deve corrispondere all'enum
     metadataKeysV2.prototype.validateData = function (str) {
         switch (V2FunctionName[str]) {
-            case 0:
-                return this.aaidCheck();
-                break;
             case 1:
-                return this.aaguidCheck();
-                break;
+                return this.aaidCheck();
             case 2:
-                return this.attestationCertificateKeyIdentifiersCheck();
-                break;
+                return this.aaguidCheck();
             case 3:
-                return this.authenticatorVersionCheck();
-                break;
+                return this.attestationCertificateKeyIdentifiersCheck();
             case 4:
-                return this.protocolFamilyCheck();
-                break;
+                return this.authenticatorVersionCheck();
             case 5:
-                return this.upvCheck();
-                break;
+                return this.protocolFamilyCheck();
             case 6:
-                return this.assertionSchemeCheck();
-                break;
+                return this.upvCheck();
             case 7:
-                return this.authenticationAlgorithmCheck();
-                break;
+                return this.assertionSchemeCheck();
             case 8:
-                return this.authenticationAlgorithmsCheck();
-                break;
+                return this.authenticationAlgorithmCheck();
             case 9:
-                return this.publicKeyAlgAndEncodingCheck();
-                break;
+                return this.authenticationAlgorithmsCheck();
             case 10:
-                return this.publicKeyAlgAndEncodingsCheck();
-                break;
+                return this.publicKeyAlgAndEncodingCheck();
             case 11:
-                return this.attestationTypesCheck();
-                break;
+                return this.publicKeyAlgAndEncodingsCheck();
             case 12:
-                return this.userVerificationDetailsCheck();
-                break;
+                return this.attestationTypesCheck();
             case 13:
-                return this.keyProtectionCheck();
-                break;
+                return this.userVerificationDetailsCheck();
             case 14:
-                return this.matcherProtectionCheck();
-                break;
+                return this.keyProtectionCheck();
             case 15:
-                return this.cryptoStrengthCeck();
-                break;
+                return this.matcherProtectionCheck();
             case 16:
-                return this.operatingEnvCheck();
-                break;
+                return this.cryptoStrengthCeck();
             case 17:
-                return this.attachmentHintCheck();
-                break;
+                return this.operatingEnvCheck();
             case 18:
-                return this.tcDisplayCheck();
-                break;
+                return this.attachmentHintCheck();
             case 19:
-                return this.tcDisplayContentTypeCheck();
-                break;
+                return this.tcDisplayCheck();
             case 20:
-                return this.tcDisplayPNGCharacteristicsCheck();
-                break;
+                return this.tcDisplayContentTypeCheck();
             case 21:
-                return this.attestationRootCertificatesCheck();
-                break;
+                return this.tcDisplayPNGCharacteristicsCheck();
             case 22:
-                return this.ecdaaTrustAnchorsCheck();
-                break;
+                return this.attestationRootCertificatesCheck();
             case 23:
+                return this.ecdaaTrustAnchorsCheck();
+            case 24:
                 return this.iconCheck();
-                break;
-            //case 24:
+            //case 25:
             //    return this.supportedExtensionsCheck();
-            //    break;
+            //    
         }
         throw "La stringa " + str + " non è una funzione di controllo";
     };
@@ -309,10 +386,12 @@ var metadataKeysV2 = /** @class */ (function () {
      *          2) FIDO U2F only supports one signature algorithm and encoding: ALG_SIGN_SECP256R1_ECDSA_SHA256_RAW
      */
     metadataKeysV2.prototype.publicKeyAlgAndEncodingCheck = function () {
-        if (this.publicKeyAlgAndEncoding < 256 || this.publicKeyAlgAndEncoding > 260)
+        if (this.publicKeyAlgAndEncoding <= 255 || this.publicKeyAlgAndEncoding >= 261) {
             return false;
-        if (this.assertionScheme == "U2FV1BIN" && this.authenticationAlgorithm != 256)
+        }
+        if (this.assertionScheme == "U2FV1BIN" && this.publicKeyAlgAndEncoding != 256) { // supporta solo il primo algoritmo
             return false;
+        }
         return true;
     };
     /**
@@ -348,8 +427,12 @@ var metadataKeysV2 = /** @class */ (function () {
      */
     metadataKeysV2.prototype.userVerificationDetailsCheck = function () {
         for (var i = 0; i < this.userVerificationDetails.length; i++) {
-            if (!this.userVerificationDetails[i].validateData())
-                return false;
+            if (!(this.userVerificationDetails[i])) {
+                for (var l = 0; l < this.userVerificationDetails[i].data.length; l++) {
+                    if (!this.userVerificationDetails[i].data[l].validateInternalData())
+                        return false;
+                }
+            }
         }
         return true;
     };
@@ -358,10 +441,14 @@ var metadataKeysV2 = /** @class */ (function () {
      *          1) Verifica conformità campo (https://fidoalliance.org/specs/fido-v2.0-rd-20180702/fido-registry-v2.0-rd-20180702.html#key-protection-types)
      */
     metadataKeysV2.prototype.keyProtectionCheck = function () {
-        if (this.keyProtection < 1 || this.keyProtection > 24) // 16 + 8 -> 24, massimo num raggiungibile (This flag MUST be set in conjunction with one of the other KEY_PROTECTION flags...)
+        if (this.keyProtection <= 0 || this.keyProtection >= 25) { // 16 + 8 -> 24, massimo num raggiungibile (This flag MUST be set in conjunction with one of the other KEY_PROTECTION flags...)
             return false;
-        if (this.keyProtection != (1 || 2 || 4 || 6 || 8 || 10 || 11 || 17 || 18 || 20 || 24))
+        }
+        if (this.keyProtection != 1 && this.keyProtection != 2 && this.keyProtection != 4 && this.keyProtection != 6 &&
+            this.keyProtection != 8 && this.keyProtection != 10 && this.keyProtection != 11 &&
+            this.keyProtection != 17 && this.keyProtection != 18 && this.keyProtection != 20 && this.keyProtection != 24) {
             return false;
+        }
         return true;
     };
     /**
@@ -418,13 +505,20 @@ var metadataKeysV2 = /** @class */ (function () {
         if (tot == 1) //superfluo
             return true;
         while (i > 0) {
-            if ((i == 1 && counter >= 1) || (i == 2 && counter == 0))
+            console.log("counter: ", counter, " i: ", i, "\n");
+            if ((i == 1 && counter >= 1 && tot != 0) || (i == 2 && counter == 0)) {
                 return false;
+            }
             if (tot >= i) {
                 tot = tot - i;
                 counter += 1;
             }
-            i = i / 2;
+            if (i == 1) {
+                i = 0;
+            }
+            else {
+                i = i / 2;
+            }
         }
         return true;
     };
@@ -437,7 +531,8 @@ var metadataKeysV2 = /** @class */ (function () {
      *          1) che il campo number presenti i valori corretti secondo: https://fidoalliance.org/specs/fido-v2.0-rd-20180702/fido-registry-v2.0-rd-20180702.html#transaction-confirmation-display-types
      */
     metadataKeysV2.prototype.tcDisplayCheck = function () {
-        if (this.tcDisplay == (6 || 10 || 12)) {
+        if (this.tcDisplay == 6 || this.tcDisplay == 10 || this.tcDisplay == 12) {
+            console.log("sono entrato");
             return false;
         }
         return true;
@@ -473,14 +568,14 @@ var metadataKeysV2 = /** @class */ (function () {
      */
     metadataKeysV2.prototype.attestationRootCertificatesCheck = function () {
         for (var i = 0; i < this.attestationRootCertificates.length; i++) {
-            var testCert = new crypto_1.X509Certificate(this.attestationRootCertificates[i]);
+            var testCert = new crypto_1.X509Certificate((0, usefulFunction_1.convertAttestationRootCertificates)(this.attestationRootCertificates[i]));
             if (testCert.ca) {
                 // caso 1 CA o intermediate ca
                 if (testCert.verify(testCert.publicKey)) {
-                    console.log("attestationRootCertificate[" + i + "]" + ": root CA");
+                    //console.log("attestationRootCertificate[" + i + "]" + ": root CA");
                 }
                 else {
-                    console.log("attestationRootCertificate[" + i + "]" + ": intermediate CA");
+                    //console.log("attestationRootCertificate[" + i + "]" + ": intermediate CA");
                 }
             }
             //this can be achieved by either specifying the AAID or AAGUID in the attestation certificate
@@ -491,9 +586,9 @@ var metadataKeysV2 = /** @class */ (function () {
                 // id-fido-gen-ce-aaguid { 1 3 6 1 4 1 45724 1 1 4 } or - when neither AAID nor AAGUID are defined -
                 if (this.aaguid != undefined && testCert.keyUsage != undefined && testCert.keyUsage.find(function (element) { return element == "1.3.6.1.4.1.45724.1.1.4"; }) != undefined)
                     return false;
-                // or by using the attestationCertificateKeyIdentifier method => ???
+                // or by using the attestationCertificateKeyIdentifier method => ???  TODO
                 //console.debug(testCert);
-                console.log("attestationRootCertificate[" + i + "]" + ": leaf");
+                //console.log("attestationRootCertificate[" + i + "]" + ": leaf");
             }
         }
         return true;
@@ -509,7 +604,7 @@ var metadataKeysV2 = /** @class */ (function () {
             return false;
         if (this.ecdaaTrustAnchors != undefined) {
             for (var i = 0; i < this.ecdaaTrustAnchors.length; i++) {
-                if (!this.ecdaaTrustAnchors[i].validateData())
+                if (!this.ecdaaTrustAnchors[i].validateInternalData())
                     return false;
             }
         }
@@ -543,31 +638,31 @@ var Version = /** @class */ (function () {
 }());
 var V2FunctionName;
 (function (V2FunctionName) {
-    V2FunctionName[V2FunctionName["aaidCheck"] = 0] = "aaidCheck";
-    V2FunctionName[V2FunctionName["aaguidCheck"] = 1] = "aaguidCheck";
-    V2FunctionName[V2FunctionName["attestationCertificateKeyIdentifiersCheck"] = 2] = "attestationCertificateKeyIdentifiersCheck";
-    V2FunctionName[V2FunctionName["authenticatorVersionCheck"] = 3] = "authenticatorVersionCheck";
-    V2FunctionName[V2FunctionName["protocolFamilyCheck"] = 4] = "protocolFamilyCheck";
-    V2FunctionName[V2FunctionName["upvCheck"] = 5] = "upvCheck";
-    V2FunctionName[V2FunctionName["assertionSchemeCheck"] = 6] = "assertionSchemeCheck";
-    V2FunctionName[V2FunctionName["authenticationAlgorithmCheck"] = 7] = "authenticationAlgorithmCheck";
-    V2FunctionName[V2FunctionName["authenticationAlgorithmsCheck"] = 8] = "authenticationAlgorithmsCheck";
-    V2FunctionName[V2FunctionName["publicKeyAlgAndEncodingCheck"] = 9] = "publicKeyAlgAndEncodingCheck";
-    V2FunctionName[V2FunctionName["publicKeyAlgAndEncodingsCheck"] = 10] = "publicKeyAlgAndEncodingsCheck";
-    V2FunctionName[V2FunctionName["attestationTypesCheck"] = 11] = "attestationTypesCheck";
-    V2FunctionName[V2FunctionName["userVerificationDetailsCheck"] = 12] = "userVerificationDetailsCheck";
-    V2FunctionName[V2FunctionName["keyProtectionCheck"] = 13] = "keyProtectionCheck";
-    V2FunctionName[V2FunctionName["matcherProtectionCheck"] = 14] = "matcherProtectionCheck";
-    V2FunctionName[V2FunctionName["cryptoStrengthCeck"] = 15] = "cryptoStrengthCeck";
-    V2FunctionName[V2FunctionName["operatingEnvCheck"] = 16] = "operatingEnvCheck";
-    V2FunctionName[V2FunctionName["attachmentHintCheck"] = 17] = "attachmentHintCheck";
-    V2FunctionName[V2FunctionName["tcDisplayCheck"] = 18] = "tcDisplayCheck";
-    V2FunctionName[V2FunctionName["tcDisplayContentTypeCheck"] = 19] = "tcDisplayContentTypeCheck";
-    V2FunctionName[V2FunctionName["tcDisplayPNGCharacteristicsCheck"] = 20] = "tcDisplayPNGCharacteristicsCheck";
-    V2FunctionName[V2FunctionName["attestationRootCertificatesCheck"] = 21] = "attestationRootCertificatesCheck";
-    V2FunctionName[V2FunctionName["ecdaaTrustAnchorsCheck"] = 22] = "ecdaaTrustAnchorsCheck";
-    V2FunctionName[V2FunctionName["iconCheck"] = 23] = "iconCheck";
-    //supportedExtensionsCheck,
+    V2FunctionName[V2FunctionName["aaidCheck"] = 1] = "aaidCheck";
+    V2FunctionName[V2FunctionName["aaguidCheck"] = 2] = "aaguidCheck";
+    V2FunctionName[V2FunctionName["attestationCertificateKeyIdentifiersCheck"] = 3] = "attestationCertificateKeyIdentifiersCheck";
+    V2FunctionName[V2FunctionName["authenticatorVersionCheck"] = 4] = "authenticatorVersionCheck";
+    V2FunctionName[V2FunctionName["protocolFamilyCheck"] = 5] = "protocolFamilyCheck";
+    V2FunctionName[V2FunctionName["upvCheck"] = 6] = "upvCheck";
+    V2FunctionName[V2FunctionName["assertionSchemeCheck"] = 7] = "assertionSchemeCheck";
+    V2FunctionName[V2FunctionName["authenticationAlgorithmCheck"] = 8] = "authenticationAlgorithmCheck";
+    V2FunctionName[V2FunctionName["authenticationAlgorithmsCheck"] = 9] = "authenticationAlgorithmsCheck";
+    V2FunctionName[V2FunctionName["publicKeyAlgAndEncodingCheck"] = 10] = "publicKeyAlgAndEncodingCheck";
+    V2FunctionName[V2FunctionName["publicKeyAlgAndEncodingsCheck"] = 11] = "publicKeyAlgAndEncodingsCheck";
+    V2FunctionName[V2FunctionName["attestationTypesCheck"] = 12] = "attestationTypesCheck";
+    V2FunctionName[V2FunctionName["userVerificationDetailsCheck"] = 13] = "userVerificationDetailsCheck";
+    V2FunctionName[V2FunctionName["keyProtectionCheck"] = 14] = "keyProtectionCheck";
+    V2FunctionName[V2FunctionName["matcherProtectionCheck"] = 15] = "matcherProtectionCheck";
+    V2FunctionName[V2FunctionName["cryptoStrengthCeck"] = 16] = "cryptoStrengthCeck";
+    V2FunctionName[V2FunctionName["operatingEnvCheck"] = 17] = "operatingEnvCheck";
+    V2FunctionName[V2FunctionName["attachmentHintCheck"] = 18] = "attachmentHintCheck";
+    V2FunctionName[V2FunctionName["tcDisplayCheck"] = 19] = "tcDisplayCheck";
+    V2FunctionName[V2FunctionName["tcDisplayContentTypeCheck"] = 20] = "tcDisplayContentTypeCheck";
+    V2FunctionName[V2FunctionName["tcDisplayPNGCharacteristicsCheck"] = 21] = "tcDisplayPNGCharacteristicsCheck";
+    V2FunctionName[V2FunctionName["attestationRootCertificatesCheck"] = 22] = "attestationRootCertificatesCheck";
+    V2FunctionName[V2FunctionName["ecdaaTrustAnchorsCheck"] = 23] = "ecdaaTrustAnchorsCheck";
+    V2FunctionName[V2FunctionName["iconCheck"] = 24] = "iconCheck";
+    //supportedExtensionsCheck = 25,   
 })(V2FunctionName || (V2FunctionName = {}));
 var tcDisplayContentTypeEnum;
 (function (tcDisplayContentTypeEnum) {
@@ -636,7 +731,7 @@ var VerificationMethodDescriptor = /** @class */ (function () {
         this.baDesc = b;
         this.paDesc = p;
     }
-    VerificationMethodDescriptor.prototype.validateData = function () {
+    VerificationMethodDescriptor.prototype.validateInternalData = function () {
         if (this.userVerification == 0 || this.userVerification != 1024 || 512 || 256 || 128 || 64 || 32 || 16 || 8 || 4 || 2 || 1)
             return false;
         else
@@ -648,9 +743,9 @@ var VerificationMethodANDCombinations = /** @class */ (function () {
     function VerificationMethodANDCombinations(d) {
         this.data = Array.from(d);
     }
-    VerificationMethodANDCombinations.prototype.validateData = function () {
+    VerificationMethodANDCombinations.prototype.validateInternalData = function () {
         for (var i = 0; i < this.data.length; i++) {
-            if (!this.data[i].validateData())
+            if (!this.data[i].validateInternalData())
                 return false;
         }
         return true;
@@ -661,9 +756,9 @@ var userVerificationDetails = /** @class */ (function () {
     function userVerificationDetails(info) {
         this.data = Array.from(info);
     }
-    userVerificationDetails.prototype.validateData = function () {
+    userVerificationDetails.prototype.validateInternalData = function () {
         for (var i = 0; i < this.data.length; i++) {
-            if (!this.data[i].validateData())
+            if (!this.data[i].validateInternalData())
                 return false;
         }
         return true;
@@ -696,7 +791,7 @@ var rgbPaletteEntry = /** @class */ (function () {
         this.g = g1;
         this.b = b1;
     }
-    rgbPaletteEntry.prototype.validateData = function () {
+    rgbPaletteEntry.prototype.validateInternalData = function () {
         if (this.r < 0 || this.r > 255 || this.g < 0 || this.g > 255 || this.b < 0 || this.b > 255) {
             return false;
         }
@@ -742,7 +837,7 @@ var ecdaaTrustAnchor = /** @class */ (function () {
         this.sy = s2;
         this.G1Curve = g;
     }
-    ecdaaTrustAnchor.prototype.validateData = function () {
+    ecdaaTrustAnchor.prototype.validateInternalData = function () {
         if (G1CurveEnum[this.G1Curve] == undefined)
             return false;
         return true;

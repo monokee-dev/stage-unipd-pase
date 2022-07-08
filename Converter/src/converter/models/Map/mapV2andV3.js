@@ -138,6 +138,7 @@ var attestationTypesEnumMap;
 })(attestationTypesEnumMap || (attestationTypesEnumMap = {}));
 var userVerificationDetailsEnumMap;
 (function (userVerificationDetailsEnumMap) {
+    userVerificationDetailsEnumMap[userVerificationDetailsEnumMap["error"] = 0] = "error";
     userVerificationDetailsEnumMap[userVerificationDetailsEnumMap["presence_internal"] = 1] = "presence_internal";
     userVerificationDetailsEnumMap[userVerificationDetailsEnumMap["fingerprint_internal"] = 2] = "fingerprint_internal";
     userVerificationDetailsEnumMap[userVerificationDetailsEnumMap["passcode_internal"] = 4] = "passcode_internal";

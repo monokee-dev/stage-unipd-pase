@@ -2,9 +2,12 @@
 exports.__esModule = true;
 exports.ecdaaTrustAnchor = exports.attestationRootCertificates = exports.tcDisplayPNGCharacteristicsDescriptor = exports.supportedExtensions = exports.userVerificationDetails = exports.AuthenticatorGetInfo = exports.metadataKeysV3 = void 0;
 var crypto_1 = require("crypto"); // per controllare attestationRootCertificates
+var metadataV2_1 = require("./metadataV2");
+var usefulFunction_1 = require("../FieldConverter/usefulFunction");
+var V3toV2_1 = require("../FieldConverter/V3toV2");
 var metadataKeysV3 = /** @class */ (function () {
     //costruttore con tutti i campi, quelli richiesti sono obbligatori, gli altri facoltativi
-    function metadataKeysV3(description, authenticatorVersion, upv, authenticationAlgorithm, schema, publicKeyAlgAndEncoding, attestationTypes, attestationCertificateKeyIdentifiers, userVerificationDetails, isSecondFactorOnly, authenticationAlgorithms, publicKeyAlgAndEncodings, keyProtection, matcherProtection, cryptoStrength, attachmentHint, tcDisplay, attestationRootCertificates, legalHeader, aaid, aaguid, alternativeDescriptions, protocolFamily, isKeyRestricted, isFreshUserVerificationRequired, operatingEnv, tcDisplayContentType, tcDisplayPNGCharacteristics, ecdaaTrustAnchors, icon, supportedExtensions) {
+    function metadataKeysV3(description, authenticatorVersion, upv, schema, attestationTypes, attestationCertificateKeyIdentifiers, userVerificationDetails, authenticationAlgorithms, publicKeyAlgAndEncodings, keyProtection, matcherProtection, cryptoStrength, attachmentHint, tcDisplay, attestationRootCertificates, legalHeader, aaid, aaguid, alternativeDescriptions, protocolFamily, isKeyRestricted, isFreshUserVerificationRequired, tcDisplayContentType, tcDisplayPNGCharacteristics, ecdaaTrustAnchors, icon, supportedExtensions) {
         if (cryptoStrength === void 0) { cryptoStrength = undefined; }
         if (protocolFamily === void 0) { protocolFamily = "uaf"; }
         if (isKeyRestricted === void 0) { isKeyRestricted = true; }
@@ -36,7 +39,12 @@ var metadataKeysV3 = /** @class */ (function () {
             this.tcDisplay = undefined;
         }
         this.tcDisplayContentType = tcDisplayContentType;
-        this.tcDisplayPNGCharacteristics = tcDisplayPNGCharacteristics;
+        if (tcDisplayPNGCharacteristics != undefined) {
+            this.tcDisplayPNGCharacteristics = Array.from(tcDisplayPNGCharacteristics);
+        }
+        else {
+            this.tcDisplayPNGCharacteristics = undefined;
+        }
         this.attestationRootCertificates = attestationRootCertificates;
         if (ecdaaTrustAnchors != undefined) {
             this.ecdaaTrustAnchors = Array.from(ecdaaTrustAnchors);
@@ -53,78 +61,137 @@ var metadataKeysV3 = /** @class */ (function () {
             this.supportedExtensions = undefined;
         }
     }
+    //medodo statico per generazione metadata V2
+    metadataKeysV3.fromV3toV2 = function (m) {
+        var result;
+        if (!m.validateAll())
+            throw "Errore, metadata versione 3 non valido";
+        else {
+            //conversioni + campi essenziali
+            var legalHeader = m.legalHeader != undefined ? m.legalHeader : "https://fidoalliance.org/metadata/metadata-statement-legal-header/";
+            var aaid = m.aaid != undefined ? m.aaid : undefined;
+            var aaguid = m.aaguid != undefined ? m.aaguid : undefined;
+            ;
+            var attestationCertificateKeyIdentifiers = m.attestationCertificateKeyIdentifiers != undefined ? Array.from(m.attestationCertificateKeyIdentifiers) : undefined;
+            var description = m.description;
+            var alternativeDescriptions = m.alternativeDescriptions != undefined ? m.alternativeDescriptions : undefined;
+            var authenticatorVersion = m.authenticatorVersion;
+            var protocolFamily = m.protocolFamily;
+            var upv = Array.from(m.upv);
+            var assertionScheme = (0, V3toV2_1.convertAssertionSchemaV3toV2)(m.protocolFamily);
+            // prendere primo elemento array di algoritmi per inserirlo nl campo corretto (quello singolo del metadata v2)
+            var authenticationAlgorithm = m.authenticationAlgorithms[0] != undefined ? (0, V3toV2_1.convertauthenticationAlgorithmV3toV2)(m.authenticationAlgorithms[0]) : undefined;
+            //array con elemento in meno (posizionato nel campo precedente)
+            var tempAlg = Array.from(m.authenticationAlgorithms.slice(1));
+            var authenticationAlgorithms = void 0;
+            if (tempAlg.length != 0) {
+                authenticationAlgorithms = new Array();
+                for (var i = 0; i < tempAlg.length; i++)
+                    authenticationAlgorithms.push((0, V3toV2_1.convertauthenticationAlgorithmV3toV2)(tempAlg[i]));
+            }
+            else {
+                authenticationAlgorithms = undefined;
+            }
+            // stesssa cosa per publicKeyAlgAndEncoding
+            var publicKeyAlgAndEncoding = m.publicKeyAlgAndEncodings != undefined ? (0, V3toV2_1.convertpublicKeyAlgAndEncodingV3toV2)(m.publicKeyAlgAndEncodings[0]) : undefined;
+            var tempEnc = Array.from(m.publicKeyAlgAndEncodings.slice(1));
+            var publicKeyAlgAndEncodings = void 0;
+            if (tempEnc.length != 0) {
+                publicKeyAlgAndEncodings = new Array();
+                for (var i = 0; i < tempEnc.length; i++)
+                    publicKeyAlgAndEncodings.push((0, V3toV2_1.convertpublicKeyAlgAndEncodingV3toV2)(tempEnc[i]));
+            }
+            else {
+                publicKeyAlgAndEncodings = undefined;
+            }
+            var attestationTypes = void 0;
+            var tempAttType = (0, V3toV2_1.convertAttestationTypesV3toV2)(m.attestationTypes);
+            if (tempAttType != undefined)
+                attestationTypes = Array.from(tempAttType);
+            var userVerificationDetails_1 = Array();
+            for (var i = 0; i < m.userVerificationDetails.length; i++) {
+                userVerificationDetails_1.push(m.userVerificationDetails[i]);
+                if (!(m.userVerificationDetails[i])) {
+                    for (var l = 0; l < m.userVerificationDetails[i].data.length; l++) {
+                        var numEX = m.userVerificationDetails[i].data[l].userVerification;
+                        userVerificationDetails_1[i].data[l].userVerification = (0, V3toV2_1.convertUserVerificationDetailsV3toV2)(m.userVerificationDetails[i].data[l].userVerification);
+                    }
+                }
+            }
+            var keyProtection = (0, V3toV2_1.convertKeyProtectionV3toV2)(m.keyProtection);
+            var isKeyRestricted = m.isKeyRestricted != undefined ? m.isKeyRestricted : true;
+            var isFreshUserVerificationRequired = m.isFreshUserVerificationRequired != undefined ? m.isFreshUserVerificationRequired : true;
+            var matcherProtection = (0, V3toV2_1.convertMatcherProtectionV3toV2)(m.matcherProtection);
+            var cryptoStrength = (0, V3toV2_1.convertCryptoStrength3toV2)(m.cryptoStrength);
+            var operatingEnv = (0, V3toV2_1.convertOperatingEnv3toV2)();
+            var attachmentHint = (0, V3toV2_1.convertAttachmentHintV3toV2)(m.attachmentHint);
+            var isSecondFactorOnly = (0, V3toV2_1.convertIsSecondFactorOnly3toV2)();
+            var tcDisplay = void 0;
+            if (m.tcDisplay != undefined)
+                tcDisplay = (0, V3toV2_1.convertTcDisplayV3toV2)(m.tcDisplay);
+            else
+                tcDisplay = undefined;
+            var tcDisplayContentType = m.tcDisplayContentType != undefined ? m.tcDisplayContentType : undefined;
+            var tcDisplayPNGCharacteristics = m.tcDisplayPNGCharacteristics != undefined ? Array.from(m.tcDisplayPNGCharacteristics) : undefined;
+            var attestationRootCertificates_1 = Array.from(m.attestationRootCertificates);
+            var ecdaaTrustAnchors = m.ecdaaTrustAnchors != undefined ? Array.from(m.ecdaaTrustAnchors) : undefined;
+            var icon = m.icon != undefined ? m.icon : undefined;
+            var supportedExtensions_1 = m.supportedExtensions != undefined ? Array.from(m.supportedExtensions) : undefined;
+            result = new metadataV2_1.metadataKeysV2(description, authenticatorVersion, upv, assertionScheme, authenticationAlgorithm != undefined ? authenticationAlgorithm : 0, publicKeyAlgAndEncoding != undefined ? publicKeyAlgAndEncoding : 0, attestationTypes != undefined ? attestationTypes : new Array(), userVerificationDetails_1, isSecondFactorOnly, keyProtection != undefined ? keyProtection : 0, matcherProtection != undefined ? matcherProtection : 0, cryptoStrength, attachmentHint != undefined ? attachmentHint : 0, tcDisplay != undefined ? tcDisplay : 0, attestationRootCertificates_1, legalHeader, aaid, aaguid, attestationCertificateKeyIdentifiers, alternativeDescriptions, protocolFamily, authenticationAlgorithms != undefined ? authenticationAlgorithms : undefined, publicKeyAlgAndEncodings != undefined ? publicKeyAlgAndEncodings : undefined, isKeyRestricted, isFreshUserVerificationRequired, operatingEnv, tcDisplayContentType, tcDisplayPNGCharacteristics, ecdaaTrustAnchors, icon, supportedExtensions_1);
+        }
+        return result;
+    };
     //funzione validazione singolo campo
+    //attenzione, lo switch deve corrispondere all'enum
     metadataKeysV3.prototype.validateData = function (str) {
         switch (V3FunctionName[str]) {
-            case 0:
-                return this.aaidCheck();
-                break;
             case 1:
-                return this.aaguidCheck();
-                break;
+                return this.aaidCheck();
             case 2:
-                return this.attestationCertificateKeyIdentifiersCheck();
-                break;
+                return this.aaguidCheck();
             case 3:
-                return this.authenticatorVersionCheck();
-                break;
+                return this.attestationCertificateKeyIdentifiersCheck();
             case 4:
-                return this.protocolFamilyCheck();
-                break;
+                return this.authenticatorVersionCheck();
             case 5:
-                return this.schemaCheck();
-                break;
+                return this.protocolFamilyCheck();
             case 6:
-                return this.upvCheck();
-                break;
+                return this.schemaCheck();
             case 7:
-                return this.authenticationAlgorithmsCheck();
-                break;
+                return this.upvCheck();
             case 8:
-                return this.publicKeyAlgAndEncodingsCheck();
-                break;
+                return this.authenticationAlgorithmsCheck();
             case 9:
-                return this.attestationTypesCheck();
-                break;
+                return this.publicKeyAlgAndEncodingsCheck();
             case 10:
-                return this.userVerificationDetailsCheck();
-                break;
+                return this.attestationTypesCheck();
             case 11:
-                return this.keyProtectionCheck();
-                break;
+                return this.userVerificationDetailsCheck();
             case 12:
-                return this.matcherProtectionCheck();
-                break;
+                return this.keyProtectionCheck();
             case 13:
-                return this.cryptoStrengthCeck();
-                break;
+                return this.matcherProtectionCheck();
             case 14:
-                return this.attachmentHintCheck();
-                break;
+                return this.cryptoStrengthCeck();
             case 15:
-                return this.tcDisplayCheck();
-                break;
+                return this.attachmentHintCheck();
             case 16:
-                return this.tcDisplayContentTypeCheck();
-                break;
+                return this.tcDisplayCheck();
             case 17:
-                return this.tcDisplayPNGCharacteristicsCheck();
-                break;
+                return this.tcDisplayContentTypeCheck();
             case 18:
-                return this.attestationRootCertificatesCheck();
-                break;
+                return this.tcDisplayPNGCharacteristicsCheck();
             case 19:
-                return this.ecdaaTrustAnchorsCheck();
-                break;
+                return this.attestationRootCertificatesCheck();
             case 20:
-                return this.iconCheck();
-                break;
+                return this.ecdaaTrustAnchorsCheck();
             case 21:
+                return this.iconCheck();
+            case 22:
                 return this.authenticatorGetInfoCheck();
-                break;
-            //case 22:
+            //case 23:
             //      return this.supportedExtensionsCheck();
-            //      break;
+            //      
         }
         throw "La stringa " + str + " non è una funzione di controllo";
     };
@@ -306,8 +373,12 @@ var metadataKeysV3 = /** @class */ (function () {
      */
     metadataKeysV3.prototype.userVerificationDetailsCheck = function () {
         for (var i = 0; i < this.userVerificationDetails.length; i++) {
-            if (!this.userVerificationDetails[i].validateData())
-                return false;
+            if (!(this.userVerificationDetails[i])) {
+                for (var l = 0; l < this.userVerificationDetails[i].data.length; l++) {
+                    if (!this.userVerificationDetails[i].data[l].validateInternalData())
+                        return false;
+                }
+            }
         }
         return true;
     };
@@ -432,9 +503,9 @@ var metadataKeysV3 = /** @class */ (function () {
      *          2) che il campo presenti un valore tra quelli presentu in tcDisplayContentTypeEnum
      */
     metadataKeysV3.prototype.tcDisplayContentTypeCheck = function () {
-        if (this.tcDisplay != undefined && this.tcDisplayContentType == undefined)
+        if ((this.tcDisplay != undefined && this.tcDisplay.length >= 1) && this.tcDisplayContentType == undefined)
             return false;
-        if (this.tcDisplayContentType != undefined) {
+        if (this.tcDisplayContentType != undefined && (this.tcDisplay != undefined && this.tcDisplay.length >= 1)) {
             if (tcDisplayContentTypeEnum[this.tcDisplayContentType] == undefined)
                 return false;
         }
@@ -457,14 +528,14 @@ var metadataKeysV3 = /** @class */ (function () {
      */
     metadataKeysV3.prototype.attestationRootCertificatesCheck = function () {
         for (var i = 0; i < this.attestationRootCertificates.length; i++) {
-            var testCert = new crypto_1.X509Certificate(this.attestationRootCertificates[i]);
+            var testCert = new crypto_1.X509Certificate((0, usefulFunction_1.convertAttestationRootCertificates)(this.attestationRootCertificates[i]));
             if (testCert.ca) {
                 // caso 1 CA o intermediate ca
                 if (testCert.verify(testCert.publicKey)) {
-                    console.log("attestationRootCertificate[" + i + "]" + ": root CA");
+                    //console.log("attestationRootCertificate[" + i + "]" + ": root CA");
                 }
                 else {
-                    console.log("attestationRootCertificate[" + i + "]" + ": intermediate CA");
+                    //console.log("attestationRootCertificate[" + i + "]" + ": intermediate CA");
                 }
             }
             //this can be achieved by either specifying the AAID or AAGUID in the attestation certificate
@@ -475,9 +546,9 @@ var metadataKeysV3 = /** @class */ (function () {
                 // id-fido-gen-ce-aaguid { 1 3 6 1 4 1 45724 1 1 4 } or - when neither AAID nor AAGUID are defined -
                 if (this.aaguid != undefined && testCert.keyUsage != undefined && testCert.keyUsage.find(function (element) { return element == "1.3.6.1.4.1.45724.1.1.4"; }) != undefined)
                     return false;
-                // or by using the attestationCertificateKeyIdentifier method => ???
+                // or by using the attestationCertificateKeyIdentifier method => ??? TODO
                 //console.debug(testCert);
-                console.log("attestationRootCertificate[" + i + "]" + ": leaf");
+                //console.log("attestationRootCertificate[" + i + "]" + ": leaf");
             }
         }
         return true;
@@ -493,7 +564,7 @@ var metadataKeysV3 = /** @class */ (function () {
             return false;
         if (this.ecdaaTrustAnchors != undefined) {
             for (var i = 0; i < this.ecdaaTrustAnchors.length; i++) {
-                if (!this.ecdaaTrustAnchors[i].validateData())
+                if (!this.ecdaaTrustAnchors[i].validateInternalData())
                     return false;
             }
         }
@@ -526,7 +597,7 @@ var metadataKeysV3 = /** @class */ (function () {
      */
     metadataKeysV3.prototype.authenticatorGetInfoCheck = function () {
         if (this.authenticatorGetInfo != undefined)
-            return this.authenticatorGetInfo.validateData();
+            return this.authenticatorGetInfo.validateInternalData();
         return true;
     };
     return metadataKeysV3;
@@ -567,10 +638,15 @@ var AuthenticatorGetInfo = /** @class */ (function () {
         this.maxAuthenticatorConfigLength = maxA;
         this.defaultCredProtect = def;
     }
-    AuthenticatorGetInfo.prototype.validateData = function () {
-        if (this.version.find(function (element) { return element == "FIDO_2_0"; }) == undefined && this.version.find(function (element) { return element != "U2F_V2"; }) == undefined && this.version.find(function (element) { return element != "FIDO_2_1"; }) == undefined &&
+    AuthenticatorGetInfo.prototype.validateInternalData = function () {
+        //se i valori non sono tra quelli consentiti
+        if (this.version.find(function (element) { return element == "FIDO_2_0"; }) == undefined && this.version.find(function (element) { return element == "U2F_V2"; }) == undefined && this.version.find(function (element) { return element == "FIDO_2_1"; }) == undefined &&
             this.version.find(function (element) { return element == "FIDO_2_1_PRE"; }) == undefined)
             return false;
+        //non è possibile che come valore ci sia soltanto U2F_V2 senza almeno FIDO_2_0, perché "FIDO UAF and FIDO U2F authenticators do not support authenticatorGetInfo" (https://fidoalliance.org/specs/mds/fido-metadata-statement-v3.0-ps-20210518.html#dom-metadatastatement-authenticatorgetinfo)
+        if (this.version.find(function (element) { return element == "U2F_V2"; }) != undefined && this.version.find(function (element) { return element == "FIDO_2_0"; }) == undefined)
+            return false;
+        //se extension no ha un valore tra quelli consentiti
         if (this.extensions != undefined && this.extensions.find(function (element) { return element == "credProtect"; }) == undefined && this.extensions.find(function (element) { return element == "credBlob"; }) == undefined &&
             this.extensions.find(function (element) { return element == "credProtect"; }) == undefined && this.extensions.find(function (element) { return element == "largeBlobKey"; }) == undefined &&
             this.extensions.find(function (element) { return element == "minPinLength"; }) == undefined && this.extensions.find(function (element) { return element == "hmac-secret"; }))
@@ -661,29 +737,29 @@ var algorithmAuthenticatorGetInfo = /** @class */ (function () {
 }());
 var V3FunctionName;
 (function (V3FunctionName) {
-    V3FunctionName[V3FunctionName["aaidCheck"] = 0] = "aaidCheck";
-    V3FunctionName[V3FunctionName["aaguidCheck"] = 1] = "aaguidCheck";
-    V3FunctionName[V3FunctionName["attestationCertificateKeyIdentifiersCheck"] = 2] = "attestationCertificateKeyIdentifiersCheck";
-    V3FunctionName[V3FunctionName["authenticatorVersionCheck"] = 3] = "authenticatorVersionCheck";
-    V3FunctionName[V3FunctionName["protocolFamilyCheck"] = 4] = "protocolFamilyCheck";
-    V3FunctionName[V3FunctionName["schemaCheck"] = 5] = "schemaCheck";
-    V3FunctionName[V3FunctionName["upvCheck"] = 6] = "upvCheck";
-    V3FunctionName[V3FunctionName["authenticationAlgorithmsCheck"] = 7] = "authenticationAlgorithmsCheck";
-    V3FunctionName[V3FunctionName["publicKeyAlgAndEncodingsCheck"] = 8] = "publicKeyAlgAndEncodingsCheck";
-    V3FunctionName[V3FunctionName["attestationTypesCheck"] = 9] = "attestationTypesCheck";
-    V3FunctionName[V3FunctionName["userVerificationDetailsCheck"] = 10] = "userVerificationDetailsCheck";
-    V3FunctionName[V3FunctionName["keyProtectionCheck"] = 11] = "keyProtectionCheck";
-    V3FunctionName[V3FunctionName["matcherProtectionCheck"] = 12] = "matcherProtectionCheck";
-    V3FunctionName[V3FunctionName["cryptoStrengthCeck"] = 13] = "cryptoStrengthCeck";
-    V3FunctionName[V3FunctionName["attachmentHintCheck"] = 14] = "attachmentHintCheck";
-    V3FunctionName[V3FunctionName["tcDisplayCheck"] = 15] = "tcDisplayCheck";
-    V3FunctionName[V3FunctionName["tcDisplayContentTypeCheck"] = 16] = "tcDisplayContentTypeCheck";
-    V3FunctionName[V3FunctionName["tcDisplayPNGCharacteristicsCheck"] = 17] = "tcDisplayPNGCharacteristicsCheck";
-    V3FunctionName[V3FunctionName["attestationRootCertificatesCheck"] = 18] = "attestationRootCertificatesCheck";
-    V3FunctionName[V3FunctionName["ecdaaTrustAnchorsCheck"] = 19] = "ecdaaTrustAnchorsCheck";
-    V3FunctionName[V3FunctionName["iconCheck"] = 20] = "iconCheck";
-    V3FunctionName[V3FunctionName["authenticatorGetInfoCheck"] = 21] = "authenticatorGetInfoCheck";
-    //supportedExtensionsCheck,
+    V3FunctionName[V3FunctionName["aaidCheck"] = 1] = "aaidCheck";
+    V3FunctionName[V3FunctionName["aaguidCheck"] = 2] = "aaguidCheck";
+    V3FunctionName[V3FunctionName["attestationCertificateKeyIdentifiersCheck"] = 3] = "attestationCertificateKeyIdentifiersCheck";
+    V3FunctionName[V3FunctionName["authenticatorVersionCheck"] = 4] = "authenticatorVersionCheck";
+    V3FunctionName[V3FunctionName["protocolFamilyCheck"] = 5] = "protocolFamilyCheck";
+    V3FunctionName[V3FunctionName["schemaCheck"] = 6] = "schemaCheck";
+    V3FunctionName[V3FunctionName["upvCheck"] = 7] = "upvCheck";
+    V3FunctionName[V3FunctionName["authenticationAlgorithmsCheck"] = 8] = "authenticationAlgorithmsCheck";
+    V3FunctionName[V3FunctionName["publicKeyAlgAndEncodingsCheck"] = 9] = "publicKeyAlgAndEncodingsCheck";
+    V3FunctionName[V3FunctionName["attestationTypesCheck"] = 10] = "attestationTypesCheck";
+    V3FunctionName[V3FunctionName["userVerificationDetailsCheck"] = 11] = "userVerificationDetailsCheck";
+    V3FunctionName[V3FunctionName["keyProtectionCheck"] = 12] = "keyProtectionCheck";
+    V3FunctionName[V3FunctionName["matcherProtectionCheck"] = 13] = "matcherProtectionCheck";
+    V3FunctionName[V3FunctionName["cryptoStrengthCeck"] = 14] = "cryptoStrengthCeck";
+    V3FunctionName[V3FunctionName["attachmentHintCheck"] = 15] = "attachmentHintCheck";
+    V3FunctionName[V3FunctionName["tcDisplayCheck"] = 16] = "tcDisplayCheck";
+    V3FunctionName[V3FunctionName["tcDisplayContentTypeCheck"] = 17] = "tcDisplayContentTypeCheck";
+    V3FunctionName[V3FunctionName["tcDisplayPNGCharacteristicsCheck"] = 18] = "tcDisplayPNGCharacteristicsCheck";
+    V3FunctionName[V3FunctionName["attestationRootCertificatesCheck"] = 19] = "attestationRootCertificatesCheck";
+    V3FunctionName[V3FunctionName["ecdaaTrustAnchorsCheck"] = 20] = "ecdaaTrustAnchorsCheck";
+    V3FunctionName[V3FunctionName["iconCheck"] = 21] = "iconCheck";
+    V3FunctionName[V3FunctionName["authenticatorGetInfoCheck"] = 22] = "authenticatorGetInfoCheck";
+    //supportedExtensionsCheck = 23,
 })(V3FunctionName || (V3FunctionName = {}));
 var tcDisplayEnum;
 (function (tcDisplayEnum) {
@@ -790,19 +866,20 @@ var operatingEnvEnum;
 })(operatingEnvEnum || (operatingEnvEnum = {}));
 var VerificationMethodDescriptorUserVerificationMethodEnum;
 (function (VerificationMethodDescriptorUserVerificationMethodEnum) {
-    VerificationMethodDescriptorUserVerificationMethodEnum[VerificationMethodDescriptorUserVerificationMethodEnum["presence_internal"] = 0] = "presence_internal";
-    VerificationMethodDescriptorUserVerificationMethodEnum[VerificationMethodDescriptorUserVerificationMethodEnum["fingerprint_internal"] = 1] = "fingerprint_internal";
-    VerificationMethodDescriptorUserVerificationMethodEnum[VerificationMethodDescriptorUserVerificationMethodEnum["passcode_internal"] = 2] = "passcode_internal";
-    VerificationMethodDescriptorUserVerificationMethodEnum[VerificationMethodDescriptorUserVerificationMethodEnum["voiceprint_internal"] = 3] = "voiceprint_internal";
-    VerificationMethodDescriptorUserVerificationMethodEnum[VerificationMethodDescriptorUserVerificationMethodEnum["faceprint_internal"] = 4] = "faceprint_internal";
-    VerificationMethodDescriptorUserVerificationMethodEnum[VerificationMethodDescriptorUserVerificationMethodEnum["location_internal"] = 5] = "location_internal";
-    VerificationMethodDescriptorUserVerificationMethodEnum[VerificationMethodDescriptorUserVerificationMethodEnum["eyeprint_internal"] = 6] = "eyeprint_internal";
-    VerificationMethodDescriptorUserVerificationMethodEnum[VerificationMethodDescriptorUserVerificationMethodEnum["pattern_internal"] = 7] = "pattern_internal";
-    VerificationMethodDescriptorUserVerificationMethodEnum[VerificationMethodDescriptorUserVerificationMethodEnum["handprint_internal"] = 8] = "handprint_internal";
-    VerificationMethodDescriptorUserVerificationMethodEnum[VerificationMethodDescriptorUserVerificationMethodEnum["passcode_external"] = 9] = "passcode_external";
-    VerificationMethodDescriptorUserVerificationMethodEnum[VerificationMethodDescriptorUserVerificationMethodEnum["pattern_external"] = 10] = "pattern_external";
-    VerificationMethodDescriptorUserVerificationMethodEnum[VerificationMethodDescriptorUserVerificationMethodEnum["none"] = 11] = "none";
-    VerificationMethodDescriptorUserVerificationMethodEnum[VerificationMethodDescriptorUserVerificationMethodEnum["all"] = 12] = "all";
+    VerificationMethodDescriptorUserVerificationMethodEnum[VerificationMethodDescriptorUserVerificationMethodEnum["error"] = 0] = "error";
+    VerificationMethodDescriptorUserVerificationMethodEnum[VerificationMethodDescriptorUserVerificationMethodEnum["presence_internal"] = 1] = "presence_internal";
+    VerificationMethodDescriptorUserVerificationMethodEnum[VerificationMethodDescriptorUserVerificationMethodEnum["fingerprint_internal"] = 2] = "fingerprint_internal";
+    VerificationMethodDescriptorUserVerificationMethodEnum[VerificationMethodDescriptorUserVerificationMethodEnum["passcode_internal"] = 3] = "passcode_internal";
+    VerificationMethodDescriptorUserVerificationMethodEnum[VerificationMethodDescriptorUserVerificationMethodEnum["voiceprint_internal"] = 4] = "voiceprint_internal";
+    VerificationMethodDescriptorUserVerificationMethodEnum[VerificationMethodDescriptorUserVerificationMethodEnum["faceprint_internal"] = 5] = "faceprint_internal";
+    VerificationMethodDescriptorUserVerificationMethodEnum[VerificationMethodDescriptorUserVerificationMethodEnum["location_internal"] = 6] = "location_internal";
+    VerificationMethodDescriptorUserVerificationMethodEnum[VerificationMethodDescriptorUserVerificationMethodEnum["eyeprint_internal"] = 7] = "eyeprint_internal";
+    VerificationMethodDescriptorUserVerificationMethodEnum[VerificationMethodDescriptorUserVerificationMethodEnum["pattern_internal"] = 8] = "pattern_internal";
+    VerificationMethodDescriptorUserVerificationMethodEnum[VerificationMethodDescriptorUserVerificationMethodEnum["handprint_internal"] = 9] = "handprint_internal";
+    VerificationMethodDescriptorUserVerificationMethodEnum[VerificationMethodDescriptorUserVerificationMethodEnum["none"] = 10] = "none";
+    VerificationMethodDescriptorUserVerificationMethodEnum[VerificationMethodDescriptorUserVerificationMethodEnum["all"] = 11] = "all";
+    VerificationMethodDescriptorUserVerificationMethodEnum[VerificationMethodDescriptorUserVerificationMethodEnum["passcode_external"] = 12] = "passcode_external";
+    VerificationMethodDescriptorUserVerificationMethodEnum[VerificationMethodDescriptorUserVerificationMethodEnum["pattern_external"] = 13] = "pattern_external";
 })(VerificationMethodDescriptorUserVerificationMethodEnum || (VerificationMethodDescriptorUserVerificationMethodEnum = {}));
 var CodeAccuracyDescriptor = /** @class */ (function () {
     function CodeAccuracyDescriptor(ba, mL, mR, bl) {
@@ -838,7 +915,7 @@ var VerificationMethodDescriptor = /** @class */ (function () {
         this.baDesc = b;
         this.paDesc = p;
     }
-    VerificationMethodDescriptor.prototype.validateData = function () {
+    VerificationMethodDescriptor.prototype.validateInternalData = function () {
         if (VerificationMethodDescriptorUserVerificationMethodEnum[this.userVerification] == undefined)
             return false;
         else
@@ -848,11 +925,11 @@ var VerificationMethodDescriptor = /** @class */ (function () {
 }());
 var VerificationMethodANDCombinations = /** @class */ (function () {
     function VerificationMethodANDCombinations(d) {
-        this.VerificationMethodDescriptorObj = Array.from(d);
+        this.data = Array.from(d);
     }
-    VerificationMethodANDCombinations.prototype.validateData = function () {
-        for (var i = 0; i < this.VerificationMethodDescriptorObj.length; i++) {
-            if (!this.VerificationMethodDescriptorObj[i].validateData())
+    VerificationMethodANDCombinations.prototype.validateInternalData = function () {
+        for (var i = 0; i < this.data.length; i++) {
+            if (!this.data[i].validateInternalData())
                 return false;
         }
         return true;
@@ -863,9 +940,9 @@ var userVerificationDetails = /** @class */ (function () {
     function userVerificationDetails(info) {
         this.data = Array.from(info);
     }
-    userVerificationDetails.prototype.validateData = function () {
+    userVerificationDetails.prototype.validateInternalData = function () {
         for (var i = 0; i < this.data.length; i++) {
-            if (!this.data[i].validateData())
+            if (!this.data[i].validateInternalData())
                 return false;
         }
         return true;
@@ -898,7 +975,7 @@ var rgbPaletteEntry = /** @class */ (function () {
         this.g = g1;
         this.b = b1;
     }
-    rgbPaletteEntry.prototype.validateData = function () {
+    rgbPaletteEntry.prototype.validateInternalData = function () {
         if (this.r < 0 || this.r > 255 || this.g < 0 || this.g > 255 || this.b < 0 || this.b > 255) {
             return false;
         }
@@ -944,7 +1021,7 @@ var ecdaaTrustAnchor = /** @class */ (function () {
         this.sy = s2;
         this.G1Curve = g;
     }
-    ecdaaTrustAnchor.prototype.validateData = function () {
+    ecdaaTrustAnchor.prototype.validateInternalData = function () {
         if (G1CurveEnum[this.G1Curve] == undefined)
             return false;
         return true;

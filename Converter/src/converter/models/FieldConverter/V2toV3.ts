@@ -1,19 +1,19 @@
 import * as KeysV3 from "./../Keys/metadataV3"
-import * as V2toV3 from "./../Map/mapV2andV3"
+import * as V2V3Map from "./../Map/mapV2andV3"
 
 //funzioni SOLO conversione: il cotrollo dovrà essere fatto in seguito
 
 export function convertAttestationTypesV2toV3(attestationTypes:number[]):string[] | undefined{
     var temp: string[] = new Array();
     for(var obj of attestationTypes){
-        temp.push(String(V2toV3.attestationTypesConverter(obj)));
+        temp.push(String(V2V3Map.attestationTypesConverter(obj)));
     }
     return temp;
 }
 
 // funzione singola, da iterare per fare la conversione completa
 export function convertUserVerificationDetailsV2toV3(userVerification:number): string | undefined{
-    return String(V2toV3.userVerificationDetailsConverter(userVerification));
+    return String(V2V3Map.userVerificationDetailsConverter(userVerification));
 }
 
 //funzione per ottenere tutti i campi keyprotection
@@ -31,7 +31,7 @@ export function convertKeyProtectionV2toV3(keyProtection: number): string[] | un
     for(let exp = 4; exp >= 0; exp--){
         if((2**exp) <= temp){
             temp = temp - (2**exp);
-            keyV3.push(String(V2toV3.keyProtectionConverter((2**exp))));
+            keyV3.push(String(V2V3Map.keyProtectionConverter((2**exp))));
         }
     }
     if(keyV3.findIndex(element => element == undefined) != -1 ){
@@ -46,7 +46,7 @@ export function convertKeyProtectionV2toV3(keyProtection: number): string[] | un
 export function convertMatcherProtectionV2toV3(matcherProtection: number): string[] | undefined{
     let keyV3: string[] = new Array();
     
-    keyV3.push(String(V2toV3.matcherProtectionConverter((matcherProtection))))
+    keyV3.push(String(V2V3Map.matcherProtectionConverter((matcherProtection))))
     if(keyV3.findIndex(element => element == undefined) != -1 ){
         return undefined;
     }
@@ -61,7 +61,7 @@ export function convertAttachmentHintV2toV3(attachmentHint: number): string[] | 
     for(let exp = 8; exp >= 0; exp--){
         if((2**exp) <= temp){
             temp = temp - (2**exp);
-            keyV3.push(String(V2toV3.attachmentHintConverter((2**exp))));
+            keyV3.push(String(V2V3Map.attachmentHintConverter((2**exp))));
         }
     }
     if(keyV3.findIndex(element => element == undefined) != -1 ){
@@ -79,7 +79,7 @@ export function convertTcDisplayV2toV3(tcDisplay: number): string[] | undefined{
     for(let exp = 4; exp >= 0; exp--){
         if((2**exp) <= temp){
             temp = temp - (2**exp);
-            keyV3.push(String(V2toV3.tcDisplayConverter((2**exp))));
+            keyV3.push(String(V2V3Map.tcDisplayConverter((2**exp))));
         }
     }
     if(keyV3.findIndex(element => element == undefined) != -1 )
@@ -119,10 +119,16 @@ export function convertAuthenticatorGetInfoV2toV3(aaguid:string, assertionScheme
 
 // funzione singola per conversione dei codici degli algoritmi
 export function convertauthenticationAlgorithmV2toV3(authenticationAlgorithm:number): string | undefined{
-    return String(V2toV3.authenticationAlgorithmsConverter(authenticationAlgorithm));
+    let temp = V2V3Map.authenticationAlgorithmsConverter(authenticationAlgorithm)
+    if(temp)
+        return String(temp)
+    return undefined;
 }
 
 // funzione singola per conversione dei codici delle chiavicodifica
 export function convertpublicKeyAlgAndEncodingV2toV3(publicKeyAlgAndEncoding:number): string | undefined{
-    return String(V2toV3.publicKeyAlgAndEncodingsConverter(publicKeyAlgAndEncoding));
+    let temp = V2V3Map.publicKeyAlgAndEncodingsConverter(publicKeyAlgAndEncoding)
+    if(temp)
+        return String(temp)
+    return undefined;
 }

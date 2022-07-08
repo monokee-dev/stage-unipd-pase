@@ -1,12 +1,108 @@
 import * as dotenv from 'dotenv'
-import { Converter } from './converter/converter'
-import { metadataKeysV2 } from './converter/models/Keys/metadataV2';
-import { metadataKeysV3 } from './converter/models/Keys/metadataV3';
+//import { Converter } from './converter/converter'
+import  {metadataKeysV2}  from './converter/models/Keys/metadataV2';
+import  {attestationRootCertificates, metadataKeysV3, userVerificationDetails}  from './converter/models/Keys/metadataV3';
+import * as fs from "node:fs"
+import { convertAttestationRootCertificates } from './converter/models/FieldConverter/usefulFunction';
 
-console.log("ciao");
 
-let ciao: UserVerificationRequirement;
 
-//let metadata: metadataKeysV3 = new metadataKeysV3()
+/* METADATA V2
+    let j = JSON.parse(fs.readFileSync("./FIDOV2Keys.txt", 'utf-8'))
 
-//let r: metadataKeysV2 = metadataKeysV2.fromV3(metadata)
+let met = new metadataKeysV2(j.description,j.authenticatorVersion, j.upv,j.assertionScheme,j.authenticationAlgorithm,
+    j.publicKeyAlgAndEncoding,j.attestationTypes,j.userVerificationDetails,j.isSecondFactorOnly,j.keyProtection,
+    j.matcherProtection,j.cryptoStrength,j.attachmentHint,j.tcDisplay,j.attestationRootCertificates,
+    j.legalHeader,j.aaid,j.aaguid,j.attestationCertificateKeyIdentifiers, j.alternativeDescriptions,j.protocolFamily,
+    j.authenticationAlgorithms,j.publicKeyAlgAndEncodings,j.isKeyRestricted,j.isFreshUserVerificationRequired,j.operatingEnv,
+    j.tcDisplayContentType,j.tcDisplayPNGCharacteristics,j.ecdaaTrustAnchors,j.icon,j.supportedExtensions);
+
+
+let prova = metadataKeysV2.fromV2toV3(met)
+
+let prova2 = metadataKeysV3.fromV3toV2(prova)
+
+console.log(met)
+console.log(prova)//mv2 -> mv3
+console.log(prova2)//mv2->mv3->mv2 
+*/
+
+
+let j = JSON.parse(fs.readFileSync("./FIDOV3Keys.txt", 'utf-8'))
+let met = new metadataKeysV3(j.description,j.authenticatorVersion,j.upv,j.schema,
+    j.attestationTypes,j.attestationCertificateKeyIdentifiers,j.userVerificationDetails,
+    j.authenticationAlgorithms,j.publicKeyAlgAndEncodings,j.keyProtection,j.matcherProtection,
+    j.cryptoStrength,j.attachmentHint,j.tcDisplay,j.attestationRootCertificates,j.legalHeader,
+    j.aaid,j.aaguid,j.alternativeDescriptions,j.protocolFamily,j.isKeyRestricted,
+    j.isFreshUserVerificationRequired,j.tcDisplayContentType,j.tcDisplayPNGCharacteristics,
+    j.ecdaaTrustAnchors,j.icon,j.supportedExtensions)
+
+
+//console.log(met.validateAll())
+
+let prova = metadataKeysV3.fromV3toV2(met)
+
+//let prova2 = metadataKeysV2.fromV2toV3(prova)
+
+//console.log(met.validateAll())
+//console.log(prova.validateAll())
+//console.log(prova2.validateAll())
+
+
+/*
+console.log(met)
+console.log(prova)//mv2 -> mv3
+console.log(prova2)//mv2->mv3->mv2 
+
+*/
+
+console.log(met.attachmentHint)
+
+console.log(prova.attachmentHint)
+
+console.log(prova.validateData("attachmentHintCheck"))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+verifica v2
+
+console.log(prova.validateData("aaidCheck"))
+console.log(prova.validateData("aaguidCheck"))
+console.log(prova.validateData("attestationCertificateKeyIdentifiersCheck"))
+console.log(prova.validateData("authenticatorVersionCheck"))
+console.log(prova.validateData("protocolFamilyCheck"))
+console.log(prova.validateData("upvCheck"))
+console.log(prova.validateData("assertionSchemeCheck"))
+console.log(prova.validateData("authenticationAlgorithmCheck"))
+console.log(prova.validateData("authenticationAlgorithmsCheck"))
+console.log(prova.validateData("publicKeyAlgAndEncodingCheck"))
+console.log(prova.validateData("publicKeyAlgAndEncodingsCheck"))
+console.log(prova.validateData("attestationTypesCheck"))
+console.log(prova.validateData("userVerificationDetailsCheck"))
+console.log(prova.validateData("keyProtectionCheck"))
+console.log(prova.validateData("matcherProtectionCheck"))
+console.log(prova.validateData("cryptoStrengthCeck"))
+console.log(prova.validateData("operatingEnvCheck"))
+console.log(prova.validateData("attachmentHintCheck"))
+console.log(prova.validateData("tcDisplayCheck"))
+console.log(prova.validateData("tcDisplayContentTypeCheck"))
+console.log(prova.validateData("tcDisplayPNGCharacteristicsCheck"))
+console.log(prova.validateData("attestationRootCertificatesCheck"))
+console.log(prova.validateData("ecdaaTrustAnchorsCheck"))
+console.log(prova.validateData("iconCheck"))
+
+
+*/

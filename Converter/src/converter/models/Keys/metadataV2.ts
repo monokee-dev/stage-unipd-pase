@@ -1,6 +1,8 @@
 import { X509Certificate } from 'crypto'; // per controllare attestationRootCertificates
 import { metadataKeysV3 } from './metadataV3';
 import * as  conversion  from './../FieldConverter/V2toV3'
+import { convertAttestationRootCertificates } from '../FieldConverter/usefulFunction';
+import { convertUserVerificationDetailsV3toV2 } from '../FieldConverter/V3toV2';
 
 export class metadataKeysV2{
 
@@ -8,11 +10,11 @@ export class metadataKeysV2{
     constructor(description:string, authenticatorVersion:number, upv:Version[], assertionScheme:string, authenticationAlgorithm:number, 
         publicKeyAlgAndEncoding:number, attestationTypes:number[], userVerificationDetails: VerificationMethodANDCombinations[], isSecondFactorOnly:boolean,
         keyProtection: number, matcherProtection: number, cryptoStrength:number | undefined = undefined, attachmentHint: number, tcDisplay: number, 
-        attestationRootCertificates:string[], legalHeader?:string, aaid?:string, aaguid?:string, attestationCertificateKeyIdentifiers?:string[],  
-        alternativeDescriptions?:string, protocolFamily:string="uaf", authenticationAlgorithms?: number[],  publicKeyAlgAndEncodings?:number[],
-        isKeyRestricted:boolean = true, isFreshUserVerificationRequired:boolean = true, operatingEnv?:string, 
-        tcDisplayContentType?:string, tcDisplayPNGCharacteristics?:tcDisplayPNGCharacteristicsDescriptor[], ecdaaTrustAnchors?:ecdaaTrustAnchor[], 
-        icon?:string, supportedExtensions?: ExtensionDescriptor[]){
+        attestationRootCertificates:string[], legalHeader:string | undefined, aaid:string | undefined, aaguid:string | undefined, attestationCertificateKeyIdentifiers:string[] | undefined,  
+        alternativeDescriptions:string | undefined, protocolFamily:string="uaf", authenticationAlgorithms: number[] | undefined,  publicKeyAlgAndEncodings:number[] | undefined,
+        isKeyRestricted:boolean = true, isFreshUserVerificationRequired:boolean = true, operatingEnv:string | undefined, 
+        tcDisplayContentType:string | undefined, tcDisplayPNGCharacteristics:tcDisplayPNGCharacteristicsDescriptor[] | undefined, ecdaaTrustAnchors:ecdaaTrustAnchor[] | undefined, 
+        icon:string | undefined, supportedExtensions: ExtensionDescriptor[] | undefined){
 
             this.legalHeader=legalHeader;
             this.aaid=aaid;
@@ -46,7 +48,7 @@ export class metadataKeysV2{
                 this.publicKeyAlgAndEncodings = undefined;
             }
             this.attestationTypes=Array.from(attestationTypes);
-            this.userVerificationDetails=userVerificationDetails;
+            this.userVerificationDetails=Array.from(userVerificationDetails); 
             this.keyProtection=keyProtection;
             this.isKeyRestricted=isKeyRestricted;
             this.isFreshUserVerificationRequired=isFreshUserVerificationRequired;
@@ -117,7 +119,7 @@ export class metadataKeysV2{
     public static fromV2toV3(m : metadataKeysV2): metadataKeysV3 {
         let result: metadataKeysV3;
         if(!m.validateAll())
-            throw "Errore, metadata versione 3 non valido";
+            throw "Errore, metadata versione 2 non valido";
         else{
 
             let legalHeader = m.legalHeader != undefined ? m.legalHeader : "https://fidoalliance.org/metadata/metadata-statement-legal-header/";
@@ -129,17 +131,24 @@ export class metadataKeysV2{
             let authenticatorVersion = m.authenticatorVersion; // semplice uguaglianza in quanto c'è conversione unsigned int -> unsigned long
             //in v2 protocolFamily non è obbligatorio -> per ottenere il campo viene utilizzato assertionscheme
             let protocolFamily: string;
-            if(m.assertionScheme == "U2FV1BIN")
-                protocolFamily = "u2f";
-            else if(m.assertionScheme == "FIDOV2")
-                protocolFamily = "fido2";
-            else//UAFV1TLV
-                protocolFamily = "u2f";
+            if(m.protocolFamily != undefined){
+                protocolFamily = m.protocolFamily;
+            }
+            else{
+                if(m.assertionScheme == "U2FV1BIN")
+                    protocolFamily = "u2f";
+                else if(m.assertionScheme == "FIDOV2")
+                    protocolFamily = "fido2";
+                else//UAFV1TLV
+                    protocolFamily = "u2f";
+            }
             let upv = Array.from(m.upv);
 
             //authenticationAlgorithms: array ricavato da elementi presenti in m.authenticationAlgorithms e/o valore singolo ricavato da m.authenticationAlgorithm 
-            let authenticationAlgorithms: string[];
-            authenticationAlgorithms = new Array();
+            let authenticationAlgorithms: string[] = new Array();
+            let tempAuthAlg = conversion.convertauthenticationAlgorithmV2toV3(m.authenticationAlgorithm);
+            if(tempAuthAlg != undefined)
+                authenticationAlgorithms.push(tempAuthAlg)
             //se l'array in m non è vuoto:
             if(m.authenticationAlgorithms != undefined){
                 //aggiungo alla variabile authenticationAlgorithms gli elementi presenti nell'array dell'oggetto
@@ -148,44 +157,38 @@ export class metadataKeysV2{
                     if(temp != undefined)
                         authenticationAlgorithms.push(temp)
                 }
-                //inoltre se all'interno dell'array di m c'è un algoritmo non inserito nella variabile authenticationAlgorithms lo aggiungo
-                if(authenticationAlgorithms.find(element => element == conversion.convertauthenticationAlgorithmV2toV3(m.authenticationAlgorithm) != undefined)){
-                    let temp = conversion.convertauthenticationAlgorithmV2toV3(m.authenticationAlgorithm);
-                    if(temp != undefined)
-                        authenticationAlgorithms.push(temp)
-                }
-            }
-            else{
-                let temp = conversion.convertauthenticationAlgorithmV2toV3(m.authenticationAlgorithm);
-                if(temp != undefined)
-                    authenticationAlgorithms.push(temp)
             }
 
-            let publicKeyAlgAndEncodings: string[];
-            publicKeyAlgAndEncodings = new Array();
+            let publicKeyAlgAndEncodings: string[] = new Array();
+            let PubKey = conversion.convertpublicKeyAlgAndEncodingV2toV3(m.publicKeyAlgAndEncoding);
+            if(PubKey != undefined){
+                publicKeyAlgAndEncodings.push(PubKey)
+            } 
             if(m.publicKeyAlgAndEncodings != undefined){
                 for(let i = 0; i < m.publicKeyAlgAndEncodings.length; i++){
-                    let temp = conversion.convertauthenticationAlgorithmV2toV3(m.publicKeyAlgAndEncodings[i]);
+                    let temp = conversion.convertpublicKeyAlgAndEncodingV2toV3(m.publicKeyAlgAndEncodings[i]);
                     if(temp != undefined)
-                        publicKeyAlgAndEncodings.push()
+                        publicKeyAlgAndEncodings.push(temp)
                 }
-                if(publicKeyAlgAndEncodings.find(element => element == conversion.convertauthenticationAlgorithmV2toV3(m.publicKeyAlgAndEncoding) != undefined)){
-                    let temp = conversion.convertauthenticationAlgorithmV2toV3(m.publicKeyAlgAndEncoding);
-                    if(temp != undefined)
-                        publicKeyAlgAndEncodings.push()
-                }
-            }
-            else{
-                let temp = conversion.convertauthenticationAlgorithmV2toV3(m.publicKeyAlgAndEncoding);
-                if(temp != undefined)
-                    authenticationAlgorithms.push()
             }
 
-            let attestationTypes = m.attestationTypes;
-            let userVerificationDetails = Array.from(m.userVerificationDetails);
+            let attestationTypes = conversion.convertAttestationTypesV2toV3(m.attestationTypes);
+            let userVerificationDetails = Array();
+
+            for(let i = 0; i < m.userVerificationDetails.length; i++) {
+                userVerificationDetails.push(m.userVerificationDetails[i])
+                if (!(m.userVerificationDetails[i])){
+                        for(let l = 0; l < m.userVerificationDetails[i].data.length; l++ ){
+                            let numEX = m.userVerificationDetails[i].data[l].userVerification
+                            userVerificationDetails[i].data[l].userVerification = conversion.convertUserVerificationDetailsV2toV3(m.userVerificationDetails[i].data[l].userVerification) 
+                        }
+                }
+            }
+
+        
             let keyProtection = conversion.convertKeyProtectionV2toV3(m.keyProtection);
-            let isKeyRestricted: boolean | undefined = m.isKeyRestricted != undefined ? m.isKeyRestricted : undefined;
-            let isFreshUserVerificationRequired: boolean | undefined = m.isFreshUserVerificationRequired != undefined ? m.isFreshUserVerificationRequired : undefined;
+            let isKeyRestricted: boolean = m.isKeyRestricted != undefined ? m.isKeyRestricted : true;
+            let isFreshUserVerificationRequired: boolean = m.isFreshUserVerificationRequired != undefined ? m.isFreshUserVerificationRequired : true;
             let matcherProtection: string[] | undefined = conversion.convertMatcherProtectionV2toV3(m.matcherProtection);
             let cryptoStrength: number | undefined = m.cryptoStrength != undefined ? m.cryptoStrength : undefined;
             let attachmentHint: string[] | undefined = conversion.convertAttachmentHintV2toV3(m.attachmentHint);
@@ -207,10 +210,15 @@ export class metadataKeysV2{
             else
                 authenticatorgetinfo = conversion.convertAuthenticatorGetInfoV2toV3(m.aaguid, m.assertionScheme);
 
-            result = new metadataKeysV3(description,authenticatorVersion,upv,schema,attestationTypes,attestationCertificateKeyIdentifiers,userVerificationDetails,
-                authenticationAlgorithms,publicKeyAlgAndEncodings,keyProtection,matcherProtection,cryptoStrength,attachmentHint,tcDisplay,attestationRootCertificates,
-                legalHeader,aaid,aaguid,alternativeDescriptions,protocolFamily,isKeyRestricted,isFreshUserVerificationRequired,tcDisplayContentType,tcDisplayPNGCharacteristics,ecdaaTrustAnchors,
-                icon,supportedExtensions);
+            //ATTENZIONE controllare i vari campi all'interno del costruttore: i campi dati undefined che sono obbligatori dovrebbero essere inseriti con operatore ternario
+
+            result = new metadataKeysV3(description,authenticatorVersion,upv,schema,attestationTypes != undefined ? attestationTypes : new Array<string>(),
+                attestationCertificateKeyIdentifiers,userVerificationDetails != undefined ? userVerificationDetails : new Array(),
+                authenticationAlgorithms,Array.from(publicKeyAlgAndEncodings), keyProtection != undefined ? keyProtection : new Array(),
+                matcherProtection != undefined ? matcherProtection : new Array(), cryptoStrength, attachmentHint != undefined ? attachmentHint : new Array(), 
+                tcDisplay, attestationRootCertificates, legalHeader, aaid, aaguid, alternativeDescriptions, protocolFamily, isKeyRestricted, isFreshUserVerificationRequired, 
+                tcDisplayContentType, tcDisplayPNGCharacteristics != undefined ? tcDisplayPNGCharacteristics : undefined , ecdaaTrustAnchors,
+                icon, supportedExtensions);
         }
         return result;
     }
@@ -473,10 +481,13 @@ export class metadataKeysV2{
      *          2) FIDO U2F only supports one signature algorithm and encoding: ALG_SIGN_SECP256R1_ECDSA_SHA256_RAW
      */
     private publicKeyAlgAndEncodingCheck(): boolean{
-        if(this.publicKeyAlgAndEncoding < 256 || this.publicKeyAlgAndEncoding > 260)
+        if(this.publicKeyAlgAndEncoding <= 255 || this.publicKeyAlgAndEncoding >= 261){
             return false;
-        if(this.assertionScheme == "U2FV1BIN" && this.authenticationAlgorithm != 256)
+        }
+        if(this.assertionScheme == "U2FV1BIN" && this.publicKeyAlgAndEncoding != 256){ // supporta solo il primo algoritmo
+            
             return false;
+        }
         return true;
     }
 
@@ -515,8 +526,12 @@ export class metadataKeysV2{
      */
     private userVerificationDetailsCheck(): boolean{
         for(let i = 0; i < this.userVerificationDetails.length; i++) {
-            if (!this.userVerificationDetails[i].validateData())
-                return false;
+            if (!(this.userVerificationDetails[i])){
+                    for(let l = 0; l < this.userVerificationDetails[i].data.length; l++ ){
+                        if(!this.userVerificationDetails[i].data[l].validateInternalData())
+                            return false;
+                    }
+            }
         }
         return true;
     }
@@ -526,10 +541,14 @@ export class metadataKeysV2{
      *          1) Verifica conformità campo (https://fidoalliance.org/specs/fido-v2.0-rd-20180702/fido-registry-v2.0-rd-20180702.html#key-protection-types)
      */
     private keyProtectionCheck(): boolean{
-        if(this.keyProtection < 1 || this.keyProtection > 24) // 16 + 8 -> 24, massimo num raggiungibile (This flag MUST be set in conjunction with one of the other KEY_PROTECTION flags...)
+        if(this.keyProtection <= 0 || this.keyProtection >= 25){ // 16 + 8 -> 24, massimo num raggiungibile (This flag MUST be set in conjunction with one of the other KEY_PROTECTION flags...)
             return false;
-        if(this.keyProtection != (1 || 2 || 4 || 6 || 8 || 10 || 11 || 17 || 18 || 20 || 24))
+        }    
+        if(this.keyProtection != 1 && this.keyProtection != 2 && this.keyProtection != 4 && this.keyProtection != 6 &&
+            this.keyProtection != 8 && this.keyProtection != 10 && this.keyProtection != 11 && 
+            this.keyProtection != 17 && this.keyProtection != 18 && this.keyProtection != 20 && this.keyProtection != 24){
             return false;
+        }    
         return true;
     }
 
@@ -592,13 +611,20 @@ export class metadataKeysV2{
         if(tot == 1)//superfluo
             return true;
         while(i>0){
-            if((i==1 && counter >= 1) || (i==2 && counter == 0))
+            console.log("counter: ",counter," i: ", i ,"\n");
+            if((i==1 && counter >= 1 && tot != 0) || (i==2 && counter == 0)){
                 return false;
+            }
             if(tot >= i){
                 tot = tot -i;
                 counter+=1;
             }
-            i=i/2;
+            if(i == 1){
+                i=0
+            }
+            else{
+                i=i/2;
+            }
         }
         return true;
     }
@@ -613,7 +639,8 @@ export class metadataKeysV2{
      *          1) che il campo number presenti i valori corretti secondo: https://fidoalliance.org/specs/fido-v2.0-rd-20180702/fido-registry-v2.0-rd-20180702.html#transaction-confirmation-display-types
      */
     private tcDisplayCheck(): boolean{
-        if(this.tcDisplay == (6 || 10 || 12)){
+        if(this.tcDisplay == 6 || this.tcDisplay == 10 || this.tcDisplay == 12){
+            console.log("sono entrato")
             return false;
         }
         return true;
@@ -653,13 +680,13 @@ export class metadataKeysV2{
      */
     private attestationRootCertificatesCheck(): boolean {
         for (let i = 0; i < this.attestationRootCertificates.length; i++) {
-            const testCert: X509Certificate = new X509Certificate(this.attestationRootCertificates[i]);
+            const testCert: X509Certificate = new X509Certificate(convertAttestationRootCertificates(this.attestationRootCertificates[i]));
             if (testCert.ca) {
                 // caso 1 CA o intermediate ca
                 if (testCert.verify(testCert.publicKey)) {
-                    console.log("attestationRootCertificate[" + i + "]" + ": root CA");
+                    //console.log("attestationRootCertificate[" + i + "]" + ": root CA");
                 } else {
-                    console.log("attestationRootCertificate[" + i + "]" + ": intermediate CA");
+                    //console.log("attestationRootCertificate[" + i + "]" + ": intermediate CA");
                 }
             }
             //this can be achieved by either specifying the AAID or AAGUID in the attestation certificate
@@ -670,9 +697,10 @@ export class metadataKeysV2{
                 // id-fido-gen-ce-aaguid { 1 3 6 1 4 1 45724 1 1 4 } or - when neither AAID nor AAGUID are defined -
                 if(this.aaguid != undefined && testCert.keyUsage != undefined && testCert.keyUsage.find(element => element == "1.3.6.1.4.1.45724.1.1.4") != undefined)
                     return false;
-                // or by using the attestationCertificateKeyIdentifier method => ???
+                // or by using the attestationCertificateKeyIdentifier method => ???  TODO
+                
                 //console.debug(testCert);
-                console.log("attestationRootCertificate[" + i + "]" + ": leaf");
+                //console.log("attestationRootCertificate[" + i + "]" + ": leaf");
             }
         }
         return true;
@@ -689,7 +717,7 @@ export class metadataKeysV2{
             return false;
         if(this.ecdaaTrustAnchors != undefined){
             for(let i=0;i<this.ecdaaTrustAnchors.length;i++){
-                if(!this.ecdaaTrustAnchors[i].validateData())
+                if(!this.ecdaaTrustAnchors[i].validateInternalData())
                     return false;
             }
         }
@@ -757,8 +785,7 @@ enum V2FunctionName{
     "attestationRootCertificatesCheck" = 22,
     "ecdaaTrustAnchorsCheck" = 23,
     "iconCheck" = 24,
-    //supportedExtensionsCheck = 25,
-        
+    //supportedExtensionsCheck = 25,   
 }
 
 enum tcDisplayContentTypeEnum{
@@ -841,11 +868,11 @@ class VerificationMethodDescriptor{
         this.paDesc=p!;
     }
     public userVerification: number;
-    public caDesc: CodeAccuracyDescriptor;
-    public baDesc: BiometricAccuracyDescriptor;
-    public paDesc: PatternAccuracyDescriptor;
+    public caDesc: CodeAccuracyDescriptor | undefined;
+    public baDesc: BiometricAccuracyDescriptor | undefined;
+    public paDesc: PatternAccuracyDescriptor | undefined;
 
-    public validateData(): boolean{
+    public validateInternalData(): boolean{
         if(this.userVerification == 0 || this.userVerification != 1024||512||256||128||64||32||16||8||4||2||1)
             return false;
         else
@@ -858,9 +885,9 @@ class VerificationMethodANDCombinations{
         this.data=Array.from(d);
     }
     public data: VerificationMethodDescriptor[];
-    public validateData(): boolean{
+    public validateInternalData(): boolean{
         for(let i = 0; i < this.data.length; i++){
-            if(!this.data[i].validateData())
+            if(!this.data[i].validateInternalData())
                 return false;
         }
         return true;
@@ -872,9 +899,9 @@ export class userVerificationDetails {
         this.data=Array.from(info);
     }
     public data: VerificationMethodANDCombinations[];
-    public validateData(): boolean{
+    public validateInternalData(): boolean{
         for(let i = 0; i < this.data.length; i++){
-            if(!this.data[i].validateData())
+            if(!this.data[i].validateInternalData())
                 return false;
         }
         return true;
@@ -912,7 +939,7 @@ class  rgbPaletteEntry{
     public g: number;
     public b: number;
 
-    public validateData(): boolean{
+    public validateInternalData(): boolean{
         if(this.r < 0 || this.r > 255 || this.g < 0 || this.g > 255 || this.b < 0 || this.b > 255){
             return false;
         }
@@ -967,7 +994,7 @@ export class ecdaaTrustAnchor {
     public sy: string;
     public G1Curve: string;
 
-    public validateData(): boolean{
+    public validateInternalData(): boolean{
         if(G1CurveEnum[this.G1Curve as keyof typeof G1CurveEnum] == undefined)
             return false;
 

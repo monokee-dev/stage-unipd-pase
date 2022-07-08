@@ -1,16 +1,19 @@
 import { X509Certificate } from 'crypto'; // per controllare attestationRootCertificates
 import { metadataKeysV2 } from './metadataV2';
+import * as  conversion  from './../FieldConverter/V2toV3'
+import { convertAttestationRootCertificates } from '../FieldConverter/usefulFunction';
+import { convertAssertionSchemaV3toV2, convertAttachmentHintV3toV2, convertAttestationTypesV3toV2, convertauthenticationAlgorithmV3toV2, convertCryptoStrength3toV2, convertIsSecondFactorOnly3toV2, convertKeyProtectionV3toV2, convertMatcherProtectionV3toV2, convertOperatingEnv3toV2, convertpublicKeyAlgAndEncodingV3toV2, convertTcDisplayV3toV2, convertUserVerificationDetailsV3toV2 } from '../FieldConverter/V3toV2';
 
 export class metadataKeysV3{
 
     //costruttore con tutti i campi, quelli richiesti sono obbligatori, gli altri facoltativi
     constructor(description:string, authenticatorVersion:number, upv:Version[], schema:number,
-        attestationTypes:string[], attestationCertificateKeyIdentifiers:string[],
+        attestationTypes:string[], attestationCertificateKeyIdentifiers:string[] | undefined,
         userVerificationDetails: VerificationMethodANDCombinations[], authenticationAlgorithms: string[],  publicKeyAlgAndEncodings:string[],
         keyProtection: string[], matcherProtection: string[], cryptoStrength:number | undefined = undefined, attachmentHint: string[], tcDisplay: string[] | undefined, 
         attestationRootCertificates:string[], legalHeader:string, aaid?:string, aaguid?:string, alternativeDescriptions?:string, 
         protocolFamily:string="uaf", isKeyRestricted:boolean = true, isFreshUserVerificationRequired:boolean = true, 
-        tcDisplayContentType?:string, tcDisplayPNGCharacteristics?:tcDisplayPNGCharacteristicsDescriptor, ecdaaTrustAnchors?:ecdaaTrustAnchor[], 
+        tcDisplayContentType?:string, tcDisplayPNGCharacteristics?:tcDisplayPNGCharacteristicsDescriptor[], ecdaaTrustAnchors?:ecdaaTrustAnchor[], 
         icon?:string, supportedExtensions?: ExtensionDescriptor[]){
 
             this.legalHeader=legalHeader;
@@ -39,8 +42,13 @@ export class metadataKeysV3{
             else{
                 this.tcDisplay = undefined;
              }                        
-            this.tcDisplayContentType=tcDisplayContentType;                            
-            this.tcDisplayPNGCharacteristics=tcDisplayPNGCharacteristics;
+            this.tcDisplayContentType=tcDisplayContentType;        
+            if(tcDisplayPNGCharacteristics != undefined){                    
+                this.tcDisplayPNGCharacteristics=Array.from(tcDisplayPNGCharacteristics);
+            }
+            else{
+                this.tcDisplayPNGCharacteristics = undefined;
+            }  
             this.attestationRootCertificates=attestationRootCertificates;
             if(ecdaaTrustAnchors != undefined){
                 this.ecdaaTrustAnchors=Array.from(ecdaaTrustAnchors);
@@ -63,7 +71,7 @@ export class metadataKeysV3{
     public legalHeader: string;
     public aaid: string | undefined; 
     public aaguid: string | undefined; 
-    public attestationCertificateKeyIdentifiers: string[]; 
+    public attestationCertificateKeyIdentifiers: string[] | undefined; 
     public description: string;
     public alternativeDescriptions: string | undefined;
     public authenticatorVersion: number; 
@@ -82,24 +90,99 @@ export class metadataKeysV3{
     public attachmentHint: string[];
     public tcDisplay: string[] | undefined; // undefined corrisponde all'array vuoto, ciò significa che transaction confirmation non è supportata dall'autenticatore
     public tcDisplayContentType: string | undefined;                               
-    public tcDisplayPNGCharacteristics: tcDisplayPNGCharacteristicsDescriptor | undefined;
+    public tcDisplayPNGCharacteristics: tcDisplayPNGCharacteristicsDescriptor[] | undefined;
     public attestationRootCertificates: string[];
     public ecdaaTrustAnchors: ecdaaTrustAnchor[] | undefined;
     public icon: string | undefined;
     public supportedExtensions: ExtensionDescriptor[] | undefined;
     public authenticatorGetInfo: AuthenticatorGetInfo | undefined;
-/*
+
     //medodo statico per generazione metadata V2
-    public static fromV3toV2(metadata : metadataKeysV3): metadataKeysV2 {
+    public static fromV3toV2(m : metadataKeysV3): metadataKeysV2 {
         let result: metadataKeysV2;
-        if(!metadata.validateAll())
+        if(!m.validateAll())
             throw "Errore, metadata versione 3 non valido";
         else{
-            result = new metadataKeysV2();
+            //conversioni + campi essenziali
+            let legalHeader = m.legalHeader != undefined ? m.legalHeader : "https://fidoalliance.org/metadata/metadata-statement-legal-header/";
+            let aaid = m.aaid != undefined ? m.aaid : undefined;
+            let aaguid = m.aaguid != undefined ? m.aaguid : undefined;; 
+            let attestationCertificateKeyIdentifiers = m.attestationCertificateKeyIdentifiers != undefined ? Array.from(m.attestationCertificateKeyIdentifiers) : undefined; 
+            let description = m.description;
+            let alternativeDescriptions = m.alternativeDescriptions != undefined ? m.alternativeDescriptions : undefined;
+            let authenticatorVersion = m.authenticatorVersion;
+            let protocolFamily = m.protocolFamily;
+            let upv = Array.from(m.upv);  
+            let assertionScheme = convertAssertionSchemaV3toV2(m.protocolFamily);   
+            // prendere primo elemento array di algoritmi per inserirlo nl campo corretto (quello singolo del metadata v2)
+            let authenticationAlgorithm = m.authenticationAlgorithms[0] != undefined ? convertauthenticationAlgorithmV3toV2(m.authenticationAlgorithms[0]) : undefined;
+            //array con elemento in meno (posizionato nel campo precedente)
+            let tempAlg = Array.from(m.authenticationAlgorithms.slice(1));
+            let authenticationAlgorithms;
+            if(tempAlg.length != 0){
+                authenticationAlgorithms = new Array();
+                for( let i = 0; i < tempAlg.length; i++)
+                    authenticationAlgorithms.push(convertauthenticationAlgorithmV3toV2(tempAlg[i]));
+            }
+            else{
+                authenticationAlgorithms = undefined;
+            }
+            // stesssa cosa per publicKeyAlgAndEncoding
+            let publicKeyAlgAndEncoding = m.publicKeyAlgAndEncodings != undefined ? convertpublicKeyAlgAndEncodingV3toV2(m.publicKeyAlgAndEncodings[0]) : undefined;
+            let tempEnc = Array.from(m.publicKeyAlgAndEncodings.slice(1));
+            let publicKeyAlgAndEncodings;
+            if(tempEnc.length != 0){
+                publicKeyAlgAndEncodings = new Array()
+                for( let i = 0; i < tempEnc.length; i++)
+                    publicKeyAlgAndEncodings.push(convertpublicKeyAlgAndEncodingV3toV2(tempEnc[i]));
+            }
+            else{
+                publicKeyAlgAndEncodings = undefined;
+            }
+            let attestationTypes;
+            let tempAttType = convertAttestationTypesV3toV2(m.attestationTypes)
+            if(tempAttType != undefined)
+                attestationTypes = Array.from(tempAttType);
+
+            let userVerificationDetails = Array();
+            for(let i = 0; i < m.userVerificationDetails.length; i++) {
+                userVerificationDetails.push(m.userVerificationDetails[i])
+                if (!(m.userVerificationDetails[i])){
+                        for(let l = 0; l < m.userVerificationDetails[i].data.length; l++ ){
+                            let numEX = m.userVerificationDetails[i].data[l].userVerification
+                            userVerificationDetails[i].data[l].userVerification = convertUserVerificationDetailsV3toV2(m.userVerificationDetails[i].data[l].userVerification) 
+                        }
+                }
+            }
+
+            let keyProtection = convertKeyProtectionV3toV2(m.keyProtection)
+            let isKeyRestricted = m.isKeyRestricted != undefined ? m.isKeyRestricted : true;
+            let isFreshUserVerificationRequired = m.isFreshUserVerificationRequired != undefined ? m.isFreshUserVerificationRequired : true;
+            let matcherProtection = convertMatcherProtectionV3toV2(m.matcherProtection);
+            let cryptoStrength = convertCryptoStrength3toV2(m.cryptoStrength);
+            let operatingEnv = convertOperatingEnv3toV2();
+            let attachmentHint = convertAttachmentHintV3toV2(m.attachmentHint);
+            let isSecondFactorOnly = convertIsSecondFactorOnly3toV2();
+            let tcDisplay;
+            if(m.tcDisplay != undefined)
+                tcDisplay = convertTcDisplayV3toV2(m.tcDisplay);
+            else
+                tcDisplay = undefined;
+            let tcDisplayContentType = m.tcDisplayContentType != undefined ? m.tcDisplayContentType : undefined;                            
+            let tcDisplayPNGCharacteristics: tcDisplayPNGCharacteristicsDescriptor[] | undefined = m.tcDisplayPNGCharacteristics != undefined ? Array.from(m.tcDisplayPNGCharacteristics) : undefined;
+            let attestationRootCertificates: string[] = Array.from(m.attestationRootCertificates);
+            let ecdaaTrustAnchors: ecdaaTrustAnchor[] | undefined = m.ecdaaTrustAnchors != undefined ? Array.from(m.ecdaaTrustAnchors) : undefined;
+            let icon: string | undefined = m.icon != undefined ? m.icon : undefined;
+            let supportedExtensions: ExtensionDescriptor[] | undefined = m.supportedExtensions != undefined ? Array.from(m.supportedExtensions) : undefined; 
+            result = new metadataKeysV2(description,authenticatorVersion,upv,assertionScheme,authenticationAlgorithm != undefined ? authenticationAlgorithm : 0 ,publicKeyAlgAndEncoding != undefined ? publicKeyAlgAndEncoding : 0,
+                attestationTypes != undefined ? attestationTypes : new Array(), userVerificationDetails,isSecondFactorOnly,keyProtection != undefined ? keyProtection : 0,matcherProtection != undefined ? matcherProtection : 0,
+                cryptoStrength,attachmentHint != undefined ? attachmentHint : 0,tcDisplay != undefined ? tcDisplay : 0,attestationRootCertificates,legalHeader,aaid,aaguid,attestationCertificateKeyIdentifiers,
+                alternativeDescriptions,protocolFamily,authenticationAlgorithms != undefined ? authenticationAlgorithms : undefined,publicKeyAlgAndEncodings != undefined ? publicKeyAlgAndEncodings : undefined,isKeyRestricted,isFreshUserVerificationRequired,operatingEnv,tcDisplayContentType,
+                tcDisplayPNGCharacteristics,ecdaaTrustAnchors,icon,supportedExtensions);
         }
         return result;
     }
-*/
+
     //funzione validazione singolo campo
     //attenzione, lo switch deve corrispondere all'enum
     public validateData(str:string): boolean{
@@ -369,10 +452,14 @@ export class metadataKeysV3{
      * Controlli:
      *          1) Verifica conformità campo userVerification di VerificationMethodDescriptor (https://fidoalliance.org/specs/common-specs/fido-registry-v2.1-ps-20191217.html#user-verification-methods)
      */
-    private userVerificationDetailsCheck(): boolean{
+     private userVerificationDetailsCheck(): boolean{
         for(let i = 0; i < this.userVerificationDetails.length; i++) {
-            if (!this.userVerificationDetails[i].validateData())
-                return false;
+            if (!(this.userVerificationDetails[i])){
+                    for(let l = 0; l < this.userVerificationDetails[i].data.length; l++ ){
+                        if(!this.userVerificationDetails[i].data[l].validateInternalData())
+                            return false;
+                    }
+            }
         }
         return true;
     }
@@ -509,10 +596,10 @@ export class metadataKeysV3{
      *          2) che il campo presenti un valore tra quelli presentu in tcDisplayContentTypeEnum
      */
     private tcDisplayContentTypeCheck(): boolean{
-        if(this.tcDisplay != undefined && this.tcDisplayContentType == undefined)
+        if((this.tcDisplay != undefined && this.tcDisplay.length >= 1) && this.tcDisplayContentType == undefined)
             return false;
 
-        if(this.tcDisplayContentType != undefined){
+        if(this.tcDisplayContentType != undefined && (this.tcDisplay != undefined && this.tcDisplay.length >= 1)){
             if(tcDisplayContentTypeEnum[this.tcDisplayContentType as keyof typeof tcDisplayContentTypeEnum] == undefined)
                 return false;
         }
@@ -537,13 +624,13 @@ export class metadataKeysV3{
      */
     private attestationRootCertificatesCheck(): boolean {
         for (let i = 0; i < this.attestationRootCertificates.length; i++) {
-            const testCert: X509Certificate = new X509Certificate(this.attestationRootCertificates[i]);
+            const testCert: X509Certificate = new X509Certificate(convertAttestationRootCertificates(this.attestationRootCertificates[i]));
             if (testCert.ca) {
                 // caso 1 CA o intermediate ca
                 if (testCert.verify(testCert.publicKey)) {
-                    console.log("attestationRootCertificate[" + i + "]" + ": root CA");
+                    //console.log("attestationRootCertificate[" + i + "]" + ": root CA");
                 } else {
-                    console.log("attestationRootCertificate[" + i + "]" + ": intermediate CA");
+                    //console.log("attestationRootCertificate[" + i + "]" + ": intermediate CA");
                 }
             }
             //this can be achieved by either specifying the AAID or AAGUID in the attestation certificate
@@ -554,9 +641,10 @@ export class metadataKeysV3{
                 // id-fido-gen-ce-aaguid { 1 3 6 1 4 1 45724 1 1 4 } or - when neither AAID nor AAGUID are defined -
                 if(this.aaguid != undefined && testCert.keyUsage != undefined && testCert.keyUsage.find(element => element == "1.3.6.1.4.1.45724.1.1.4") != undefined)
                     return false;
-                // or by using the attestationCertificateKeyIdentifier method => ???
+                // or by using the attestationCertificateKeyIdentifier method => ??? TODO
+                
                 //console.debug(testCert);
-                console.log("attestationRootCertificate[" + i + "]" + ": leaf");
+                //console.log("attestationRootCertificate[" + i + "]" + ": leaf");
             }
         }
         return true;
@@ -574,7 +662,7 @@ export class metadataKeysV3{
         
         if(this.ecdaaTrustAnchors != undefined){
             for(let i=0;i<this.ecdaaTrustAnchors.length;i++){
-                if(!this.ecdaaTrustAnchors[i].validateData())
+                if(!this.ecdaaTrustAnchors[i].validateInternalData())
                     return false;
             }
         }
@@ -610,7 +698,7 @@ export class metadataKeysV3{
      */
      private authenticatorGetInfoCheck(): boolean{
         if(this.authenticatorGetInfo != undefined)
-            return this.authenticatorGetInfo.validateData();
+            return this.authenticatorGetInfo.validateInternalData();
         return true;
     }
 }
@@ -680,7 +768,7 @@ export class AuthenticatorGetInfo{
     public maxAuthenticatorConfigLength: number | undefined;
     public defaultCredProtect: number | undefined;
 
-    public validateData(): boolean{
+    public validateInternalData(): boolean{
         //se i valori non sono tra quelli consentiti
         if(this.version.find(element => element == "FIDO_2_0") == undefined && this.version.find(element => element == "U2F_V2") == undefined && this.version.find(element => element == "FIDO_2_1") == undefined &&
         this.version.find(element => element == "FIDO_2_1_PRE") == undefined)
@@ -925,6 +1013,7 @@ enum operatingEnvEnum{
 }
 
 enum VerificationMethodDescriptorUserVerificationMethodEnum{
+    "error",
     "presence_internal",
     "fingerprint_internal",
     "passcode_internal",
@@ -934,10 +1023,10 @@ enum VerificationMethodDescriptorUserVerificationMethodEnum{
     "eyeprint_internal",
     "pattern_internal",
     "handprint_internal",
-    "passcode_external",
-    "pattern_external",
     "none",
     "all",
+    "passcode_external",
+    "pattern_external",
 }
 
 class CodeAccuracyDescriptor{
@@ -988,11 +1077,11 @@ class VerificationMethodDescriptor{
         this.paDesc=p!;
     }
     public userVerification: string;
-    public caDesc: CodeAccuracyDescriptor;
-    public baDesc: BiometricAccuracyDescriptor;
-    public paDesc: PatternAccuracyDescriptor;
+    public caDesc: CodeAccuracyDescriptor | undefined;
+    public baDesc: BiometricAccuracyDescriptor | undefined;
+    public paDesc: PatternAccuracyDescriptor | undefined;
 
-    public validateData(): boolean{
+    public validateInternalData(): boolean{
         if(VerificationMethodDescriptorUserVerificationMethodEnum[this.userVerification as keyof typeof VerificationMethodDescriptorUserVerificationMethodEnum] == undefined)
             return false;
         else
@@ -1002,12 +1091,12 @@ class VerificationMethodDescriptor{
 
 class VerificationMethodANDCombinations{
     constructor(d:VerificationMethodDescriptor[]){
-        this.VerificationMethodDescriptorObj=Array.from(d);
+        this.data=Array.from(d);
     }
-    public VerificationMethodDescriptorObj: VerificationMethodDescriptor[];
-    public validateData(): boolean{
-        for(let i = 0; i < this.VerificationMethodDescriptorObj.length; i++){
-            if(!this.VerificationMethodDescriptorObj[i].validateData())
+    public data: VerificationMethodDescriptor[];
+    public validateInternalData(): boolean{
+        for(let i = 0; i < this.data.length; i++){
+            if(!this.data[i].validateInternalData())
                 return false;
         }
         return true;
@@ -1019,9 +1108,9 @@ export class userVerificationDetails {
         this.data=Array.from(info);
     }
     public data: VerificationMethodANDCombinations[];
-    public validateData(): boolean{
+    public validateInternalData(): boolean{
         for(let i = 0; i < this.data.length; i++){
-            if(!this.data[i].validateData())
+            if(!this.data[i].validateInternalData())
                 return false;
         }
         return true;
@@ -1059,7 +1148,7 @@ class  rgbPaletteEntry{
     public g: number;
     public b: number;
 
-    public validateData(): boolean{
+    public validateInternalData(): boolean{
         if(this.r < 0 || this.r > 255 || this.g < 0 || this.g > 255 || this.b < 0 || this.b > 255){
             return false;
         }
@@ -1114,7 +1203,7 @@ export class ecdaaTrustAnchor {
     public sy: string;
     public G1Curve: string;
 
-    public validateData(): boolean{
+    public validateInternalData(): boolean{
         if(G1CurveEnum[this.G1Curve as keyof typeof G1CurveEnum] == undefined)
             return false;
 
