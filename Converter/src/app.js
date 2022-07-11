@@ -2,20 +2,20 @@
 exports.__esModule = true;
 //import { Converter } from './converter/converter'
 var metadataV2_1 = require("./converter/models/Keys/metadataV2");
+var metadataV3_1 = require("./converter/models/Keys/metadataV3");
 var fs = require("node:fs");
 // METADATA V2
-var j = JSON.parse(fs.readFileSync("./FIDOV2Keys2.txt", 'utf-8'));
+var j = JSON.parse(fs.readFileSync("./FIDOV2Keys.txt", 'utf-8'));
 var met = new metadataV2_1.metadataKeysV2(j.description, j.authenticatorVersion, j.upv, j.assertionScheme, j.authenticationAlgorithm, j.publicKeyAlgAndEncoding, j.attestationTypes, j.userVerificationDetails, j.isSecondFactorOnly, j.keyProtection, j.matcherProtection, j.cryptoStrength, j.attachmentHint, j.tcDisplay, j.attestationRootCertificates, j.legalHeader, j.aaid, j.aaguid, j.attestationCertificateKeyIdentifiers, j.alternativeDescriptions, j.protocolFamily, j.authenticationAlgorithms, j.publicKeyAlgAndEncodings, j.isKeyRestricted, j.isFreshUserVerificationRequired, j.operatingEnv, j.tcDisplayContentType, j.tcDisplayPNGCharacteristics, j.ecdaaTrustAnchors, j.icon, j.supportedExtensions);
-//let prova = metadataKeysV2.fromV2toV3(met)
-//let prova2 = metadataKeysV3.fromV3toV2(prova)
-console.log(met.attachmentHint);
-//console.log(met)
-//console.log(prova)//mv2 -> mv3
-//console.log(prova2)//mv2->mv3->mv2 
-//
-//console.log(met.validateAll())
-//console.log(prova.validateAll())
-//console.log(prova2.validateAll())
+var prova = metadataV2_1.metadataKeysV2.fromV2toV3(met);
+var prova2 = metadataV3_1.metadataKeysV3.fromV3toV2(prova);
+//console.log(met.attachmentHint)
+console.log(met);
+console.log(prova); //mv2 -> mv3
+console.log(prova2); //mv2->mv3->mv2 
+console.log(met.validateAll());
+console.log(prova.validateAll());
+console.log(prova2.validateAll());
 //METADATA V3
 /*
 let j = JSON.parse(fs.readFileSync("./FIDOV3Keys2.txt", 'utf-8'))

@@ -9,7 +9,7 @@ export class metadataKeysV2{
     //costruttore con tutti i campi, quelli richiesti sono obbligatori, gli altri facoltativi
     constructor(description:string, authenticatorVersion:number, upv:Version[], assertionScheme:string, authenticationAlgorithm:number, 
         publicKeyAlgAndEncoding:number, attestationTypes:number[], userVerificationDetails: VerificationMethodANDCombinations[], isSecondFactorOnly:boolean,
-        keyProtection: number, matcherProtection: number, cryptoStrength:number | undefined = undefined, attachmentHint: number, tcDisplay: number, 
+        keyProtection: number, matcherProtection: number, cryptoStrength:number, attachmentHint: number, tcDisplay: number, 
         attestationRootCertificates:string[], legalHeader:string | undefined, aaid:string | undefined, aaguid:string | undefined, attestationCertificateKeyIdentifiers:string[] | undefined,  
         alternativeDescriptions:string | undefined, protocolFamily:string="uaf", authenticationAlgorithms: number[] | undefined,  publicKeyAlgAndEncodings:number[] | undefined,
         isKeyRestricted:boolean = true, isFreshUserVerificationRequired:boolean = true, operatingEnv:string | undefined, 
@@ -103,7 +103,7 @@ export class metadataKeysV2{
     public isKeyRestricted: boolean;
     public isFreshUserVerificationRequired: boolean;
     public matcherProtection: number;
-    public cryptoStrength: number | undefined;
+    public cryptoStrength: number;
     public operatingEnv: string | undefined;
     public attachmentHint: number;
     public isSecondFactorOnly: boolean;   
@@ -577,12 +577,16 @@ export class metadataKeysV2{
     /**
      * Controlli:
      *          1) Verifica campo sia unsigned short
+     *       ATTENZIONE:   Se non si sa deve essere posta ad unknown (siccome cryptostrength è unsigned short per convenzione è posta a 0)
      */   
     private cryptoStrengthCeck(): boolean{
         if(this.cryptoStrength != undefined){
             if(this.cryptoStrength < 0 || this.cryptoStrength > 65535)
                 return false;
         }
+        if(this.cryptoStrength == undefined)
+            return false;
+
         return true;
     }
 

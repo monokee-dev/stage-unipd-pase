@@ -176,7 +176,7 @@ export class metadataKeysV3{
             let supportedExtensions: ExtensionDescriptor[] | undefined = m.supportedExtensions != undefined ? Array.from(m.supportedExtensions) : undefined; 
             result = new metadataKeysV2(description,authenticatorVersion,upv,assertionScheme,authenticationAlgorithm != undefined ? authenticationAlgorithm : 0 ,publicKeyAlgAndEncoding != undefined ? publicKeyAlgAndEncoding : 0,
                 attestationTypes != undefined ? attestationTypes : new Array(), userVerificationDetails,isSecondFactorOnly,keyProtection != undefined ? keyProtection : 0,matcherProtection != undefined ? matcherProtection : 0,
-                cryptoStrength,attachmentHint != undefined ? attachmentHint : 0,tcDisplay != undefined ? tcDisplay : 0,attestationRootCertificates,legalHeader,aaid,aaguid,attestationCertificateKeyIdentifiers,
+                cryptoStrength != undefined ? cryptoStrength : 0 ,attachmentHint != undefined ? attachmentHint : 0,tcDisplay != undefined ? tcDisplay : 0,attestationRootCertificates,legalHeader,aaid,aaguid,attestationCertificateKeyIdentifiers,
                 alternativeDescriptions,protocolFamily,authenticationAlgorithms != undefined ? authenticationAlgorithms : undefined,publicKeyAlgAndEncodings != undefined ? publicKeyAlgAndEncodings : undefined,isKeyRestricted,isFreshUserVerificationRequired,operatingEnv,tcDisplayContentType,
                 tcDisplayPNGCharacteristics,ecdaaTrustAnchors,icon,supportedExtensions);
         }
