@@ -20,7 +20,8 @@ export function convertUserVerificationDetailsV3toV2(userVerification:string): n
 export function convertKeyProtectionV3toV2(keyProtection: string[]): number | undefined{
     let keyV3: number=0;
     for(let i=0; i<keyProtection.length; i++){
-            keyV3 += (Number(V2V3Map.keyProtectionConverter((keyProtection[i]))));
+        let temp = (Number(V2V3Map.keyProtectionConverter((keyProtection[i]))));
+        keyV3 = keyV3 + temp;
     }
     return keyV3;
 }
@@ -29,7 +30,8 @@ export function convertKeyProtectionV3toV2(keyProtection: string[]): number | un
 export function convertMatcherProtectionV3toV2(matcherProtection: string[]): number | undefined{
     let keyV3: number=0;
     for(let i=0; i<matcherProtection.length; i++){
-            keyV3 += (Number(V2V3Map.matcherProtectionConverter((matcherProtection[i]))));
+        let temp = (Number(V2V3Map.matcherProtectionConverter((matcherProtection[i]))));
+        keyV3 = keyV3 + temp;
     }
     return keyV3;
 }
@@ -38,8 +40,8 @@ export function convertMatcherProtectionV3toV2(matcherProtection: string[]): num
 export function convertAttachmentHintV3toV2(attachmentHint: string[]): number | undefined{
     let keyV3: number=0;
     for(let i=0; i<attachmentHint.length; i++){
-            let temp = Number(V2V3Map.attachmentHintConverter((attachmentHint[i])));
-            keyV3 = keyV3 + temp;
+        let temp = Number(V2V3Map.attachmentHintConverter((attachmentHint[i])));
+        keyV3 = keyV3 + temp;
     }
     return keyV3;
 }
@@ -48,7 +50,8 @@ export function convertAttachmentHintV3toV2(attachmentHint: string[]): number | 
 export function convertTcDisplayV3toV2(tcDisplay: string[]): number | undefined{
     let keyV3: number=0;
     for(let i=0; i<tcDisplay.length; i++){
-            keyV3 += (Number(V2V3Map.tcDisplayConverter((tcDisplay[i]))));
+        let temp = (Number(V2V3Map.tcDisplayConverter((tcDisplay[i]))));   
+        keyV3 = keyV3 + temp;
     }
     return keyV3;
 }

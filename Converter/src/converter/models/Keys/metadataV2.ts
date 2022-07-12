@@ -3,13 +3,14 @@ import { metadataKeysV3 } from './metadataV3';
 import * as  conversion  from './../FieldConverter/V2toV3'
 import { convertAttestationRootCertificates } from '../FieldConverter/usefulFunction';
 import { convertUserVerificationDetailsV3toV2 } from '../FieldConverter/V3toV2';
+import { MetadataKeyError } from '../Error/error';
 
 export class metadataKeysV2{
 
     //costruttore con tutti i campi, quelli richiesti sono obbligatori, gli altri facoltativi
     constructor(description:string, authenticatorVersion:number, upv:Version[], assertionScheme:string, authenticationAlgorithm:number, 
         publicKeyAlgAndEncoding:number, attestationTypes:number[], userVerificationDetails: VerificationMethodANDCombinations[], isSecondFactorOnly:boolean,
-        keyProtection: number, matcherProtection: number, cryptoStrength:number, attachmentHint: number, tcDisplay: number, 
+        keyProtection: number, matcherProtection: number, cryptoStrength:number | undefined, attachmentHint: number, tcDisplay: number, 
         attestationRootCertificates:string[], legalHeader:string | undefined, aaid:string | undefined, aaguid:string | undefined, attestationCertificateKeyIdentifiers:string[] | undefined,  
         alternativeDescriptions:string | undefined, protocolFamily:string="uaf", authenticationAlgorithms: number[] | undefined,  publicKeyAlgAndEncodings:number[] | undefined,
         isKeyRestricted:boolean = true, isFreshUserVerificationRequired:boolean = true, operatingEnv:string | undefined, 
@@ -103,7 +104,7 @@ export class metadataKeysV2{
     public isKeyRestricted: boolean;
     public isFreshUserVerificationRequired: boolean;
     public matcherProtection: number;
-    public cryptoStrength: number;
+    public cryptoStrength: number | undefined;
     public operatingEnv: string | undefined;
     public attachmentHint: number;
     public isSecondFactorOnly: boolean;   
@@ -764,31 +765,31 @@ class Version{
 }
 
 enum V2FunctionName{
-    "aaidCheck" = 1,
-    "aaguidCheck" = 2,
-    "attestationCertificateKeyIdentifiersCheck" = 3,
-    "authenticatorVersionCheck" = 4,
-    "protocolFamilyCheck" = 5,
-    "upvCheck" = 6,
-    "assertionSchemeCheck" = 7,
-    "authenticationAlgorithmCheck" = 8,
-    "authenticationAlgorithmsCheck" = 9,
-    "publicKeyAlgAndEncodingCheck" = 10,
-    "publicKeyAlgAndEncodingsCheck" = 11,
-    "attestationTypesCheck" = 12,
-    "userVerificationDetailsCheck" = 13,
-    "keyProtectionCheck" = 14,
-    "matcherProtectionCheck" = 15,
+    "aaid" = 1,
+    "aaguid" = 2,
+    "attestationCertificateKeyIdentifiers" = 3,
+    "authenticatorVersion" = 4,
+    "protocolFamily" = 5,
+    "upv" = 6,
+    "assertionScheme" = 7,
+    "authenticationAlgorithm" = 8,
+    "authenticationAlgorithms" = 9,
+    "publicKeyAlgAndEncoding" = 10,
+    "publicKeyAlgAndEncodings" = 11,
+    "attestationTypes" = 12,
+    "userVerificationDetails" = 13,
+    "keyProtection" = 14,
+    "matcherProtection" = 15,
     "cryptoStrengthCeck" = 16,
-    "operatingEnvCheck" = 17,
-    "attachmentHintCheck" = 18,
-    "tcDisplayCheck" = 19,
-    "tcDisplayContentTypeCheck" = 20,
-    "tcDisplayPNGCharacteristicsCheck" = 21,
-    "attestationRootCertificatesCheck" = 22,
-    "ecdaaTrustAnchorsCheck" = 23,
-    "iconCheck" = 24,
-    //supportedExtensionsCheck = 25,   
+    "operatingEnv" = 17,
+    "attachmentHint" = 18,
+    "tcDisplay" = 19,
+    "tcDisplayContentType" = 20,
+    "tcDisplayPNGCharacteristics" = 21,
+    "attestationRootCertificates" = 22,
+    "ecdaaTrustAnchors" = 23,
+    "icon" = 24,
+    //supportedExtensions = 25,   
 }
 
 enum tcDisplayContentTypeEnum{

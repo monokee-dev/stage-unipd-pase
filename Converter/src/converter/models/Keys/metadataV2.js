@@ -8,7 +8,6 @@ var usefulFunction_1 = require("../FieldConverter/usefulFunction");
 var metadataKeysV2 = /** @class */ (function () {
     //costruttore con tutti i campi, quelli richiesti sono obbligatori, gli altri facoltativi
     function metadataKeysV2(description, authenticatorVersion, upv, assertionScheme, authenticationAlgorithm, publicKeyAlgAndEncoding, attestationTypes, userVerificationDetails, isSecondFactorOnly, keyProtection, matcherProtection, cryptoStrength, attachmentHint, tcDisplay, attestationRootCertificates, legalHeader, aaid, aaguid, attestationCertificateKeyIdentifiers, alternativeDescriptions, protocolFamily, authenticationAlgorithms, publicKeyAlgAndEncodings, isKeyRestricted, isFreshUserVerificationRequired, operatingEnv, tcDisplayContentType, tcDisplayPNGCharacteristics, ecdaaTrustAnchors, icon, supportedExtensions) {
-        if (cryptoStrength === void 0) { cryptoStrength = undefined; }
         if (protocolFamily === void 0) { protocolFamily = "uaf"; }
         if (isKeyRestricted === void 0) { isKeyRestricted = true; }
         if (isFreshUserVerificationRequired === void 0) { isFreshUserVerificationRequired = true; }
@@ -473,12 +472,15 @@ var metadataKeysV2 = /** @class */ (function () {
     /**
      * Controlli:
      *          1) Verifica campo sia unsigned short
+     *       ATTENZIONE:   Se non si sa deve essere posta ad unknown (siccome cryptostrength è unsigned short per convenzione è posta a 0)
      */
     metadataKeysV2.prototype.cryptoStrengthCeck = function () {
         if (this.cryptoStrength != undefined) {
             if (this.cryptoStrength < 0 || this.cryptoStrength > 65535)
                 return false;
         }
+        if (this.cryptoStrength == undefined)
+            return false;
         return true;
     };
     /**
@@ -637,31 +639,31 @@ var Version = /** @class */ (function () {
 }());
 var V2FunctionName;
 (function (V2FunctionName) {
-    V2FunctionName[V2FunctionName["aaidCheck"] = 1] = "aaidCheck";
-    V2FunctionName[V2FunctionName["aaguidCheck"] = 2] = "aaguidCheck";
-    V2FunctionName[V2FunctionName["attestationCertificateKeyIdentifiersCheck"] = 3] = "attestationCertificateKeyIdentifiersCheck";
-    V2FunctionName[V2FunctionName["authenticatorVersionCheck"] = 4] = "authenticatorVersionCheck";
-    V2FunctionName[V2FunctionName["protocolFamilyCheck"] = 5] = "protocolFamilyCheck";
-    V2FunctionName[V2FunctionName["upvCheck"] = 6] = "upvCheck";
-    V2FunctionName[V2FunctionName["assertionSchemeCheck"] = 7] = "assertionSchemeCheck";
-    V2FunctionName[V2FunctionName["authenticationAlgorithmCheck"] = 8] = "authenticationAlgorithmCheck";
-    V2FunctionName[V2FunctionName["authenticationAlgorithmsCheck"] = 9] = "authenticationAlgorithmsCheck";
-    V2FunctionName[V2FunctionName["publicKeyAlgAndEncodingCheck"] = 10] = "publicKeyAlgAndEncodingCheck";
-    V2FunctionName[V2FunctionName["publicKeyAlgAndEncodingsCheck"] = 11] = "publicKeyAlgAndEncodingsCheck";
-    V2FunctionName[V2FunctionName["attestationTypesCheck"] = 12] = "attestationTypesCheck";
-    V2FunctionName[V2FunctionName["userVerificationDetailsCheck"] = 13] = "userVerificationDetailsCheck";
-    V2FunctionName[V2FunctionName["keyProtectionCheck"] = 14] = "keyProtectionCheck";
-    V2FunctionName[V2FunctionName["matcherProtectionCheck"] = 15] = "matcherProtectionCheck";
+    V2FunctionName[V2FunctionName["aaid"] = 1] = "aaid";
+    V2FunctionName[V2FunctionName["aaguid"] = 2] = "aaguid";
+    V2FunctionName[V2FunctionName["attestationCertificateKeyIdentifiers"] = 3] = "attestationCertificateKeyIdentifiers";
+    V2FunctionName[V2FunctionName["authenticatorVersion"] = 4] = "authenticatorVersion";
+    V2FunctionName[V2FunctionName["protocolFamily"] = 5] = "protocolFamily";
+    V2FunctionName[V2FunctionName["upv"] = 6] = "upv";
+    V2FunctionName[V2FunctionName["assertionScheme"] = 7] = "assertionScheme";
+    V2FunctionName[V2FunctionName["authenticationAlgorithm"] = 8] = "authenticationAlgorithm";
+    V2FunctionName[V2FunctionName["authenticationAlgorithms"] = 9] = "authenticationAlgorithms";
+    V2FunctionName[V2FunctionName["publicKeyAlgAndEncoding"] = 10] = "publicKeyAlgAndEncoding";
+    V2FunctionName[V2FunctionName["publicKeyAlgAndEncodings"] = 11] = "publicKeyAlgAndEncodings";
+    V2FunctionName[V2FunctionName["attestationTypes"] = 12] = "attestationTypes";
+    V2FunctionName[V2FunctionName["userVerificationDetails"] = 13] = "userVerificationDetails";
+    V2FunctionName[V2FunctionName["keyProtection"] = 14] = "keyProtection";
+    V2FunctionName[V2FunctionName["matcherProtection"] = 15] = "matcherProtection";
     V2FunctionName[V2FunctionName["cryptoStrengthCeck"] = 16] = "cryptoStrengthCeck";
-    V2FunctionName[V2FunctionName["operatingEnvCheck"] = 17] = "operatingEnvCheck";
-    V2FunctionName[V2FunctionName["attachmentHintCheck"] = 18] = "attachmentHintCheck";
-    V2FunctionName[V2FunctionName["tcDisplayCheck"] = 19] = "tcDisplayCheck";
-    V2FunctionName[V2FunctionName["tcDisplayContentTypeCheck"] = 20] = "tcDisplayContentTypeCheck";
-    V2FunctionName[V2FunctionName["tcDisplayPNGCharacteristicsCheck"] = 21] = "tcDisplayPNGCharacteristicsCheck";
-    V2FunctionName[V2FunctionName["attestationRootCertificatesCheck"] = 22] = "attestationRootCertificatesCheck";
-    V2FunctionName[V2FunctionName["ecdaaTrustAnchorsCheck"] = 23] = "ecdaaTrustAnchorsCheck";
-    V2FunctionName[V2FunctionName["iconCheck"] = 24] = "iconCheck";
-    //supportedExtensionsCheck = 25,   
+    V2FunctionName[V2FunctionName["operatingEnv"] = 17] = "operatingEnv";
+    V2FunctionName[V2FunctionName["attachmentHint"] = 18] = "attachmentHint";
+    V2FunctionName[V2FunctionName["tcDisplay"] = 19] = "tcDisplay";
+    V2FunctionName[V2FunctionName["tcDisplayContentType"] = 20] = "tcDisplayContentType";
+    V2FunctionName[V2FunctionName["tcDisplayPNGCharacteristics"] = 21] = "tcDisplayPNGCharacteristics";
+    V2FunctionName[V2FunctionName["attestationRootCertificates"] = 22] = "attestationRootCertificates";
+    V2FunctionName[V2FunctionName["ecdaaTrustAnchors"] = 23] = "ecdaaTrustAnchors";
+    V2FunctionName[V2FunctionName["icon"] = 24] = "icon";
+    //supportedExtensions = 25,   
 })(V2FunctionName || (V2FunctionName = {}));
 var tcDisplayContentTypeEnum;
 (function (tcDisplayContentTypeEnum) {

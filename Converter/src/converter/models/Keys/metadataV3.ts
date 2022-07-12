@@ -3,6 +3,7 @@ import { metadataKeysV2 } from './metadataV2';
 import * as  conversion  from './../FieldConverter/V2toV3'
 import { convertAttestationRootCertificates } from '../FieldConverter/usefulFunction';
 import { convertAssertionSchemaV3toV2, convertAttachmentHintV3toV2, convertAttestationTypesV3toV2, convertauthenticationAlgorithmV3toV2, convertCryptoStrength3toV2, convertIsSecondFactorOnly3toV2, convertKeyProtectionV3toV2, convertMatcherProtectionV3toV2, convertOperatingEnv3toV2, convertpublicKeyAlgAndEncodingV3toV2, convertTcDisplayV3toV2, convertUserVerificationDetailsV3toV2 } from '../FieldConverter/V3toV2';
+import { MetadataKeyError } from '../Error/error';
 
 export class metadataKeysV3{
 
@@ -382,6 +383,7 @@ export class metadataKeysV3{
     private schemaCheck(): boolean{
         if(this.schema < 0 || this.schema > 65535)
             return false;
+            //throw new MetadataKeyError("Errore valore Schema")
         return true;
     }
 
@@ -880,29 +882,29 @@ class algorithmAuthenticatorGetInfo{
 }
 
 enum V3FunctionName{
-    "aaidCheck" = 1,
-    "aaguidCheck" = 2,
-    "attestationCertificateKeyIdentifiersCheck" = 3,
-    "authenticatorVersionCheck" = 4,
-    "protocolFamilyCheck" = 5,
-    "schemaCheck" = 6,
-    "upvCheck" = 7,
-    "authenticationAlgorithmsCheck" = 8,
-    "publicKeyAlgAndEncodingsCheck" = 9,
-    "attestationTypesCheck" = 10,
-    "userVerificationDetailsCheck" = 11,
-    "keyProtectionCheck" = 12,
-    "matcherProtectionCheck" = 13,
-    "cryptoStrengthCeck" = 14,
-    "attachmentHintCheck" = 15,
-    "tcDisplayCheck" = 16,
-    "tcDisplayContentTypeCheck" = 17,
-    "tcDisplayPNGCharacteristicsCheck" = 18,
-    "attestationRootCertificatesCheck" = 19,
-    "ecdaaTrustAnchorsCheck" = 20,
-    "iconCheck" = 21,
-    "authenticatorGetInfoCheck" = 22,
-    //supportedExtensionsCheck = 23,
+    "aaid" = 1,
+    "aaguid" = 2,
+    "attestationCertificateKeyIdentifiers" = 3,
+    "authenticatorVersion" = 4,
+    "protocolFamily" = 5,
+    "schema" = 6,
+    "upv" = 7,
+    "authenticationAlgorithms" = 8,
+    "publicKeyAlgAndEncodings" = 9,
+    "attestationTypes" = 10,
+    "userVerificationDetails" = 11,
+    "keyProtection" = 12,
+    "matcherProtection" = 13,
+    "cryptoStrength" = 14,
+    "attachmentHint" = 15,
+    "tcDisplay" = 16,
+    "tcDisplayContentType" = 17,
+    "tcDisplayPNGCharacteristics" = 18,
+    "attestationRootCertificates" = 19,
+    "ecdaaTrustAnchors" = 20,
+    "icon" = 21,
+    "authenticatorGetInfo" = 22,
+    //supportedExtensions = 23,
 }
 
 enum tcDisplayEnum{

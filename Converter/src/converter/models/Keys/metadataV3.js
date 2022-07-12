@@ -137,7 +137,7 @@ var metadataKeysV3 = /** @class */ (function () {
             var ecdaaTrustAnchors = m.ecdaaTrustAnchors != undefined ? Array.from(m.ecdaaTrustAnchors) : undefined;
             var icon = m.icon != undefined ? m.icon : undefined;
             var supportedExtensions_1 = m.supportedExtensions != undefined ? Array.from(m.supportedExtensions) : undefined;
-            result = new metadataV2_1.metadataKeysV2(description, authenticatorVersion, upv, assertionScheme, authenticationAlgorithm != undefined ? authenticationAlgorithm : 0, publicKeyAlgAndEncoding != undefined ? publicKeyAlgAndEncoding : 0, attestationTypes != undefined ? attestationTypes : new Array(), userVerificationDetails_1, isSecondFactorOnly, keyProtection != undefined ? keyProtection : 0, matcherProtection != undefined ? matcherProtection : 0, cryptoStrength, attachmentHint != undefined ? attachmentHint : 0, tcDisplay != undefined ? tcDisplay : 0, attestationRootCertificates_1, legalHeader, aaid, aaguid, attestationCertificateKeyIdentifiers, alternativeDescriptions, protocolFamily, authenticationAlgorithms != undefined ? authenticationAlgorithms : undefined, publicKeyAlgAndEncodings != undefined ? publicKeyAlgAndEncodings : undefined, isKeyRestricted, isFreshUserVerificationRequired, operatingEnv, tcDisplayContentType, tcDisplayPNGCharacteristics, ecdaaTrustAnchors, icon, supportedExtensions_1);
+            result = new metadataV2_1.metadataKeysV2(description, authenticatorVersion, upv, assertionScheme, authenticationAlgorithm != undefined ? authenticationAlgorithm : 0, publicKeyAlgAndEncoding != undefined ? publicKeyAlgAndEncoding : 0, attestationTypes != undefined ? attestationTypes : new Array(), userVerificationDetails_1, isSecondFactorOnly, keyProtection != undefined ? keyProtection : 0, matcherProtection != undefined ? matcherProtection : 0, cryptoStrength != undefined ? cryptoStrength : 0, attachmentHint != undefined ? attachmentHint : 0, tcDisplay != undefined ? tcDisplay : 0, attestationRootCertificates_1, legalHeader, aaid, aaguid, attestationCertificateKeyIdentifiers, alternativeDescriptions, protocolFamily, authenticationAlgorithms != undefined ? authenticationAlgorithms : undefined, publicKeyAlgAndEncodings != undefined ? publicKeyAlgAndEncodings : undefined, isKeyRestricted, isFreshUserVerificationRequired, operatingEnv, tcDisplayContentType, tcDisplayPNGCharacteristics, ecdaaTrustAnchors, icon, supportedExtensions_1);
         }
         return result;
     };
@@ -306,6 +306,7 @@ var metadataKeysV3 = /** @class */ (function () {
     metadataKeysV3.prototype.schemaCheck = function () {
         if (this.schema < 0 || this.schema > 65535)
             return false;
+        //throw new MetadataKeyError("Errore valore Schema")
         return true;
     };
     /**
@@ -733,29 +734,29 @@ var algorithmAuthenticatorGetInfo = /** @class */ (function () {
 }());
 var V3FunctionName;
 (function (V3FunctionName) {
-    V3FunctionName[V3FunctionName["aaidCheck"] = 1] = "aaidCheck";
-    V3FunctionName[V3FunctionName["aaguidCheck"] = 2] = "aaguidCheck";
-    V3FunctionName[V3FunctionName["attestationCertificateKeyIdentifiersCheck"] = 3] = "attestationCertificateKeyIdentifiersCheck";
-    V3FunctionName[V3FunctionName["authenticatorVersionCheck"] = 4] = "authenticatorVersionCheck";
-    V3FunctionName[V3FunctionName["protocolFamilyCheck"] = 5] = "protocolFamilyCheck";
-    V3FunctionName[V3FunctionName["schemaCheck"] = 6] = "schemaCheck";
-    V3FunctionName[V3FunctionName["upvCheck"] = 7] = "upvCheck";
-    V3FunctionName[V3FunctionName["authenticationAlgorithmsCheck"] = 8] = "authenticationAlgorithmsCheck";
-    V3FunctionName[V3FunctionName["publicKeyAlgAndEncodingsCheck"] = 9] = "publicKeyAlgAndEncodingsCheck";
-    V3FunctionName[V3FunctionName["attestationTypesCheck"] = 10] = "attestationTypesCheck";
-    V3FunctionName[V3FunctionName["userVerificationDetailsCheck"] = 11] = "userVerificationDetailsCheck";
-    V3FunctionName[V3FunctionName["keyProtectionCheck"] = 12] = "keyProtectionCheck";
-    V3FunctionName[V3FunctionName["matcherProtectionCheck"] = 13] = "matcherProtectionCheck";
-    V3FunctionName[V3FunctionName["cryptoStrengthCeck"] = 14] = "cryptoStrengthCeck";
-    V3FunctionName[V3FunctionName["attachmentHintCheck"] = 15] = "attachmentHintCheck";
-    V3FunctionName[V3FunctionName["tcDisplayCheck"] = 16] = "tcDisplayCheck";
-    V3FunctionName[V3FunctionName["tcDisplayContentTypeCheck"] = 17] = "tcDisplayContentTypeCheck";
-    V3FunctionName[V3FunctionName["tcDisplayPNGCharacteristicsCheck"] = 18] = "tcDisplayPNGCharacteristicsCheck";
-    V3FunctionName[V3FunctionName["attestationRootCertificatesCheck"] = 19] = "attestationRootCertificatesCheck";
-    V3FunctionName[V3FunctionName["ecdaaTrustAnchorsCheck"] = 20] = "ecdaaTrustAnchorsCheck";
-    V3FunctionName[V3FunctionName["iconCheck"] = 21] = "iconCheck";
-    V3FunctionName[V3FunctionName["authenticatorGetInfoCheck"] = 22] = "authenticatorGetInfoCheck";
-    //supportedExtensionsCheck = 23,
+    V3FunctionName[V3FunctionName["aaid"] = 1] = "aaid";
+    V3FunctionName[V3FunctionName["aaguid"] = 2] = "aaguid";
+    V3FunctionName[V3FunctionName["attestationCertificateKeyIdentifiers"] = 3] = "attestationCertificateKeyIdentifiers";
+    V3FunctionName[V3FunctionName["authenticatorVersion"] = 4] = "authenticatorVersion";
+    V3FunctionName[V3FunctionName["protocolFamily"] = 5] = "protocolFamily";
+    V3FunctionName[V3FunctionName["schema"] = 6] = "schema";
+    V3FunctionName[V3FunctionName["upv"] = 7] = "upv";
+    V3FunctionName[V3FunctionName["authenticationAlgorithms"] = 8] = "authenticationAlgorithms";
+    V3FunctionName[V3FunctionName["publicKeyAlgAndEncodings"] = 9] = "publicKeyAlgAndEncodings";
+    V3FunctionName[V3FunctionName["attestationTypes"] = 10] = "attestationTypes";
+    V3FunctionName[V3FunctionName["userVerificationDetails"] = 11] = "userVerificationDetails";
+    V3FunctionName[V3FunctionName["keyProtection"] = 12] = "keyProtection";
+    V3FunctionName[V3FunctionName["matcherProtection"] = 13] = "matcherProtection";
+    V3FunctionName[V3FunctionName["cryptoStrength"] = 14] = "cryptoStrength";
+    V3FunctionName[V3FunctionName["attachmentHint"] = 15] = "attachmentHint";
+    V3FunctionName[V3FunctionName["tcDisplay"] = 16] = "tcDisplay";
+    V3FunctionName[V3FunctionName["tcDisplayContentType"] = 17] = "tcDisplayContentType";
+    V3FunctionName[V3FunctionName["tcDisplayPNGCharacteristics"] = 18] = "tcDisplayPNGCharacteristics";
+    V3FunctionName[V3FunctionName["attestationRootCertificates"] = 19] = "attestationRootCertificates";
+    V3FunctionName[V3FunctionName["ecdaaTrustAnchors"] = 20] = "ecdaaTrustAnchors";
+    V3FunctionName[V3FunctionName["icon"] = 21] = "icon";
+    V3FunctionName[V3FunctionName["authenticatorGetInfo"] = 22] = "authenticatorGetInfo";
+    //supportedExtensions = 23,
 })(V3FunctionName || (V3FunctionName = {}));
 var tcDisplayEnum;
 (function (tcDisplayEnum) {
