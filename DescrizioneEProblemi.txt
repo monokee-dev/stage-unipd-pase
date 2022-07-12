@@ -1,0 +1,33 @@
+Cartelle:
+	-Error: contiene classe "MetadataKeyError" che estende "Error"
+	-FieldConverter: contiene i file necessari per la conversione dei campi che sono differenti nelle due versioni del metadata. 
+        In "usefulFunction" è presente la classe che va ad aggiungere la stringa di inizio e di fine al certificato (attestationRootCertificates) 
+        per permettere la sua validazione. V2toV3 contiene una serie di metodi che permettono la conversione dei campi da MDS2 a MDS3. V2toV3, al contrario, 
+        contiene funzioni necessarie per la conversione dei campi da MDS3 a MDS2.
+
+	-Keys: File contenente le informazioni che presentano i metadata 2 e 3 (sia quelle opzionali che quelle obbligatorie). Sono presenti costruttore, 
+        alcuni enum per campi specifici, classi per la rappresentazione di campi particolari e funzioni di controllo (non presente per tutti i campi, 
+        ad esempio non è presente per il campo description) 
+
+	-Map: File che associa i valori di un metadata ai valori dell'altro. Presenti anche funzioni che permettono di recuperare una o l'altra informazione 
+        presente all'interno dell'enum in base a quale parametro le viene fornito (se le si passa parametro del metadata V2 restituisce valore del MDS3; 
+        se le si passa parametro del MDS3 viceversa. Queste funzioni vengono richiamate di metodi presenti nella cartella FieldConverter)
+
+
+File:
+	-Initializer: file per l'inizializzazione di un metadata o dell'altro
+
+	-app: file da cui parte il tutto.
+
+	-FIDOXKeysY: file contenente la versione del metadata X (esempio numero Y)
+
+
+Problemi riscontrati:
+	-operatingEnv presente in V2 ma non in V3
+
+	-isSecondFactorOnly presente in V2 ma non in V3
+
+	-userVerificationDetails alcuni elementi sono presenti in v3 ma non in V2
+
+	-attachmentHint nella documentazione viene espressamente detto che un valore (il secondo) non deve essere inserito da solo; guardando il file fido con 
+        svariati esempi del metadata si nota che questa regola non viene rispettata. L'applicazione al momento segue la documentazione
