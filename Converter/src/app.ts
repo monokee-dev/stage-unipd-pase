@@ -10,7 +10,7 @@ import { metadataKeysV3 } from './converter/models/Keys/metadataV3';
 
 
 
-    let metadata1 = metadataInitializer("./FIDOV3Keys.txt");
+    let metadata1 = metadataInitializer("./FIDOV2Keys.txt");
     //let metadata2;
     /*
     if(metadata1 instanceof metadataKeysV2)

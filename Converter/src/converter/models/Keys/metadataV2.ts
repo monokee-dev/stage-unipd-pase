@@ -344,9 +344,9 @@ export class metadataKeysV2{
      */
     private aaidCheck(): boolean{
         if(this.protocolFamily == "uaf" && this.aaid == undefined)
-            return false;
+            throw new MetadataKeyError("Errore valore aaid")
         if(this.aaid != undefined && (!RegExp(/^[0-9A-F]{4}#[0-9A-F]{4}$/i).test(this.aaid) || this.protocolFamily == "fido2"))
-            return false;
+            throw new MetadataKeyError("Errore valore aaid")
         return true;
     }
 
@@ -358,12 +358,12 @@ export class metadataKeysV2{
      */
     private aaguidCheck(): boolean{
         if(this.protocolFamily == "fido2" && this.aaguid == undefined)
-            return false;
+            throw new MetadataKeyError("Errore valore aaguid")
         if(this.protocolFamily == "uaf" && this.aaguid != undefined)
-            return false;
+            throw new MetadataKeyError("Errore valore aaguid")
         if(this.aaguid != undefined){
             if(this.aaguid.length != 36 || (this.aaguid.length == 36 && !RegExp(/^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/i).test(this.aaguid)))
-                    return false;
+                throw new MetadataKeyError("Errore valore aaguid")
         }
         return true;
     }
@@ -375,11 +375,11 @@ export class metadataKeysV2{
      */
     private attestationCertificateKeyIdentifiersCheck(): boolean{
         if(this.aaid == undefined && this.aaguid == undefined && this.attestationCertificateKeyIdentifiers == undefined)
-            return false;
+            throw new MetadataKeyError("Errore valore attestationCertificateKeyIdentifiers")
         if(this.attestationCertificateKeyIdentifiers != undefined){
             for(let i = 0; i < this.attestationCertificateKeyIdentifiers.length; i++) {
                 if (!RegExp(/^[0-9a-f]+$/).test(this.attestationCertificateKeyIdentifiers[i]))
-                    return false;
+                    throw new MetadataKeyError("Errore valore attestationCertificateKeyIdentifiers in posizione: " + i + ". ")
             }
         }
         return true;
@@ -403,7 +403,7 @@ export class metadataKeysV2{
      */
     private authenticatorVersionCheck(){
         if(this.authenticatorVersion < 0 || this.authenticatorVersion > 65535)
-            return false;
+            throw new MetadataKeyError("Errore valore authenticatorVersion")
         return true;
     }
 
@@ -414,13 +414,13 @@ export class metadataKeysV2{
      */
     private protocolFamilyCheck(): boolean{
         if(this.protocolFamily != undefined && this.protocolFamily != "uaf" && this.protocolFamily != "u2f" && this.protocolFamily != "fido2")
-            return false;
+            throw new MetadataKeyError("Errore valore protocolFamily")
         if(this.protocolFamily != "fido2" && this.assertionScheme == "FIDOV2")
-            return false;
+            throw new MetadataKeyError("Errore valore protocolFamily")
         if(this.protocolFamily != "u2f" && this.assertionScheme == "U2FV1BIN")
-            return false;
+            throw new MetadataKeyError("Errore valore protocolFamily")
         if((this.protocolFamily != "uaf" && this.protocolFamily != undefined) && this.assertionScheme == "UAFV1TLV" ) 
-            return false;
+            throw new MetadataKeyError("Errore valore protocolFamily")
         return true;
     }
 
@@ -431,7 +431,7 @@ export class metadataKeysV2{
      private upvCheck(){
         for(let i=0; i<this.upv.length;i++){
             if(this.upv[i].major < 0 || this.upv[i].major > 65535 || this.upv[i].minor < 0 || this.upv[i].minor > 65535)
-                return false;
+                throw new MetadataKeyError("Errore valore upv in posizione: " + i + ". ")
         }
         return true;
     }
@@ -442,7 +442,7 @@ export class metadataKeysV2{
      */
     private assertionSchemeCheck(): boolean{
         if(assertionSchemeEnum[this.assertionScheme as keyof typeof assertionSchemeEnum] == undefined)
-                return false;
+            throw new MetadataKeyError("Errore valore assertionScheme")
         return true;
     }
 
@@ -453,9 +453,9 @@ export class metadataKeysV2{
      */
     private authenticationAlgorithmCheck(): boolean{
         if(this.authenticationAlgorithm < 1 || this.authenticationAlgorithm > 18)
-            return false;
+            throw new MetadataKeyError("Errore valore authenticationAlgorithm")
         if(this.assertionScheme == "U2FV1BIN" && this.authenticationAlgorithm != 1)
-            return false;
+            throw new MetadataKeyError("Errore valore authenticationAlgorithm")
         return true;
     }
 
@@ -468,9 +468,9 @@ export class metadataKeysV2{
         if(this.authenticationAlgorithms != undefined){    
             for(let i = 0; i < this.authenticationAlgorithms.length; i++) {
                 if (this.authenticationAlgorithms[i] < 1 || this.authenticationAlgorithms[i] > 18)
-                    return false;
+                    throw new MetadataKeyError("Errore valore authenticationAlgorithms in posizione: " + i + ". ")
                 if(this.assertionScheme == "U2FV1BIN" && this.authenticationAlgorithm != 1)
-                    return false;
+                    throw new MetadataKeyError("Errore valore authenticationAlgorithms in posizione: " + i + ". ")
             }
         }
         return true;
@@ -483,11 +483,10 @@ export class metadataKeysV2{
      */
     private publicKeyAlgAndEncodingCheck(): boolean{
         if(this.publicKeyAlgAndEncoding <= 255 || this.publicKeyAlgAndEncoding >= 261){
-            return false;
+            throw new MetadataKeyError("Errore valore publicKeyAlgAndEncoding")
         }
         if(this.assertionScheme == "U2FV1BIN" && this.publicKeyAlgAndEncoding != 256){ // supporta solo il primo algoritmo
-            
-            return false;
+            throw new MetadataKeyError("Errore valore publicKeyAlgAndEncoding")
         }
         return true;
     }
@@ -501,9 +500,9 @@ export class metadataKeysV2{
         if(this.publicKeyAlgAndEncodings != undefined){
             for(let i = 0; i < this.publicKeyAlgAndEncodings.length; i++) {
                 if (this.publicKeyAlgAndEncodings[i] < 256 || this.publicKeyAlgAndEncodings[i] > 260)
-                    return false;
+                    throw new MetadataKeyError("Errore valore publicKeyAlgAndEncodings in posizione: " + i + ". ")
                 if(this.assertionScheme == "U2FV1BIN" && this.authenticationAlgorithm != 256)
-                    return false;
+                    throw new MetadataKeyError("Errore valore publicKeyAlgAndEncodings in posizione: " + i + ". ")
             }
         }
         return true;
@@ -516,7 +515,7 @@ export class metadataKeysV2{
     private attestationTypesCheck(): boolean{
         for(let i = 0; i < this.attestationTypes.length; i++) {
             if (this.attestationTypes[i] < 15879 || this.attestationTypes[i] > 15882)
-                return false;
+                throw new MetadataKeyError("Errore valore attestationTypes in posizione: " + i + ". ")
         }
         return true;
     }
@@ -528,10 +527,10 @@ export class metadataKeysV2{
     private userVerificationDetailsCheck(): boolean{
         for(let i = 0; i < this.userVerificationDetails.length; i++) {
             if (!(this.userVerificationDetails[i])){
-                    for(let l = 0; l < this.userVerificationDetails[i].data.length; l++ ){
-                        if(!this.userVerificationDetails[i].data[l].validateInternalData())
-                            return false;
-                    }
+                for(let l = 0; l < this.userVerificationDetails[i].data.length; l++ ){
+                    if(!this.userVerificationDetails[i].data[l].validateInternalData())
+                        throw new MetadataKeyError("Errore valore userVerificationDetails")
+                }
             }
         }
         return true;
@@ -543,12 +542,12 @@ export class metadataKeysV2{
      */
     private keyProtectionCheck(): boolean{
         if(this.keyProtection <= 0 || this.keyProtection >= 25){ // 16 + 8 -> 24, massimo num raggiungibile (This flag MUST be set in conjunction with one of the other KEY_PROTECTION flags...)
-            return false;
+            throw new MetadataKeyError("Errore valore keyProtection")
         }    
         if(this.keyProtection != 1 && this.keyProtection != 2 && this.keyProtection != 4 && this.keyProtection != 6 &&
             this.keyProtection != 8 && this.keyProtection != 10 && this.keyProtection != 11 && 
             this.keyProtection != 17 && this.keyProtection != 18 && this.keyProtection != 20 && this.keyProtection != 24){
-            return false;
+                throw new MetadataKeyError("Errore valore keyProtection")
         }    
         return true;
     }
@@ -571,7 +570,7 @@ export class metadataKeysV2{
      */    
     private matcherProtectionCheck(): boolean{
         if(this.matcherProtection < 1 || this.matcherProtection > 4 || this.matcherProtection == 3)
-            return false;
+            throw new MetadataKeyError("Errore valore matcherProtection")
         return true;
     }
 
@@ -583,10 +582,10 @@ export class metadataKeysV2{
     private cryptoStrengthCeck(): boolean{
         if(this.cryptoStrength != undefined){
             if(this.cryptoStrength < 0 || this.cryptoStrength > 65535)
-                return false;
+                throw new MetadataKeyError("Errore valore cryptoStrength")
         }
         if(this.cryptoStrength == undefined)
-            return false;
+            throw new MetadataKeyError("Errore valore cryptoStrength")
 
         return true;
     }
@@ -598,7 +597,7 @@ export class metadataKeysV2{
     private operatingEnvCheck(): boolean{
         if(this.operatingEnv != undefined){
             if(operatingEnvEnum[this.operatingEnv as keyof typeof operatingEnvEnum] == undefined)
-                return false;
+                throw new MetadataKeyError("Errore valore operatingEnv")
             }
         return true;
     }
@@ -617,7 +616,7 @@ export class metadataKeysV2{
             return true;
         while(i>0){
             if((i==1 && counter >= 1 && tot != 0) || (i==2 && counter == 0)){
-                return false;
+                throw new MetadataKeyError("Errore valore attachmentHint")
             }
             if(tot >= i){
                 tot = tot -i;
@@ -644,8 +643,7 @@ export class metadataKeysV2{
      */
     private tcDisplayCheck(): boolean{
         if(this.tcDisplay == 6 || this.tcDisplay == 10 || this.tcDisplay == 12){
-            console.log("sono entrato")
-            return false;
+            throw new MetadataKeyError("Errore valore tcDisplay")
         }
         return true;
     }
@@ -657,11 +655,11 @@ export class metadataKeysV2{
      */
     private tcDisplayContentTypeCheck(): boolean{
         if(this.tcDisplay != 0 && this.tcDisplayContentType == undefined)
-            return false;
+            throw new MetadataKeyError("Errore valore tcDisplayContentType")
 
         if(this.tcDisplayContentType != undefined){
             if(tcDisplayContentTypeEnum[this.tcDisplayContentType as keyof typeof tcDisplayContentTypeEnum] == undefined)
-                return false;
+                throw new MetadataKeyError("Errore valore tcDisplayContentType")
         }
         return true;
     }   
@@ -672,7 +670,7 @@ export class metadataKeysV2{
      */
     private tcDisplayPNGCharacteristicsCheck(): boolean{ //(seconda parte: se variabile tcDisplayContentType è image/png)
         if(this.tcDisplay != 0 && tcDisplayContentTypeEnum[this.tcDisplayContentType as keyof typeof tcDisplayContentTypeEnum] == tcDisplayContentTypeEnum["image/png" as keyof typeof tcDisplayContentTypeEnum] && this.tcDisplayPNGCharacteristics == undefined)
-            return false;
+            throw new MetadataKeyError("Errore valore tcDisplayPNGCharacteristics")
         return true;
     }
 
@@ -697,10 +695,10 @@ export class metadataKeysV2{
             else {
                 // using the extension id-fido-gen-ce-aaid { 1 3 6 1 4 1 45724 1 1 1 }
                 if(this.aaid != undefined && testCert.keyUsage != undefined && testCert.keyUsage.find(element => element == "1.3.6.1.4.1.45724.1.1.1") != undefined)
-                    return false;
+                    throw new MetadataKeyError("Errore valore attestationRootCertificates in posizione: " + i + ". ")
                 // id-fido-gen-ce-aaguid { 1 3 6 1 4 1 45724 1 1 4 } or - when neither AAID nor AAGUID are defined -
                 if(this.aaguid != undefined && testCert.keyUsage != undefined && testCert.keyUsage.find(element => element == "1.3.6.1.4.1.45724.1.1.4") != undefined)
-                    return false;
+                    throw new MetadataKeyError("Errore valore attestationRootCertificates in posizione: " + i + ". ")
                 // or by using the attestationCertificateKeyIdentifier method => ???  TODO
                 
                 //console.debug(testCert);
@@ -718,11 +716,11 @@ export class metadataKeysV2{
     private ecdaaTrustAnchorsCheck(): boolean{
         let temp: number | undefined = this.attestationTypes.find(element => element == 15881);
         if((temp != undefined && this.ecdaaTrustAnchors == undefined) || (temp == undefined && this.ecdaaTrustAnchors != undefined))
-            return false;
+            throw new MetadataKeyError("Errore valore ecdaaTrustAnchors")
         if(this.ecdaaTrustAnchors != undefined){
             for(let i=0;i<this.ecdaaTrustAnchors.length;i++){
                 if(!this.ecdaaTrustAnchors[i].validateInternalData())
-                    return false;
+                    throw new MetadataKeyError("Errore valore ecdaaTrustAnchors in posizione: " + i + ". ")
             }
         }
         return true;
@@ -739,7 +737,7 @@ export class metadataKeysV2{
                 temp = this.icon.replace(this.icon.substring(this.icon.indexOf("data:"), this.icon.indexOf("base64")+7), "");
             }
             if(!RegExp(/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/).test(temp)){
-                return false;
+                throw new MetadataKeyError("Errore valore icon")
             }
         }
         return true;

@@ -19,7 +19,8 @@ exports.convertUserVerificationDetailsV3toV2 = convertUserVerificationDetailsV3t
 function convertKeyProtectionV3toV2(keyProtection) {
     var keyV3 = 0;
     for (var i = 0; i < keyProtection.length; i++) {
-        keyV3 += (Number(V2V3Map.keyProtectionConverter((keyProtection[i]))));
+        var temp = (Number(V2V3Map.keyProtectionConverter((keyProtection[i]))));
+        keyV3 = keyV3 + temp;
     }
     return keyV3;
 }
@@ -27,7 +28,8 @@ exports.convertKeyProtectionV3toV2 = convertKeyProtectionV3toV2;
 function convertMatcherProtectionV3toV2(matcherProtection) {
     var keyV3 = 0;
     for (var i = 0; i < matcherProtection.length; i++) {
-        keyV3 += (Number(V2V3Map.matcherProtectionConverter((matcherProtection[i]))));
+        var temp = (Number(V2V3Map.matcherProtectionConverter((matcherProtection[i]))));
+        keyV3 = keyV3 + temp;
     }
     return keyV3;
 }
@@ -44,7 +46,8 @@ exports.convertAttachmentHintV3toV2 = convertAttachmentHintV3toV2;
 function convertTcDisplayV3toV2(tcDisplay) {
     var keyV3 = 0;
     for (var i = 0; i < tcDisplay.length; i++) {
-        keyV3 += (Number(V2V3Map.tcDisplayConverter((tcDisplay[i]))));
+        var temp = (Number(V2V3Map.tcDisplayConverter((tcDisplay[i]))));
+        keyV3 = keyV3 + temp;
     }
     return keyV3;
 }

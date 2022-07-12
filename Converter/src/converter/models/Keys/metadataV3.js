@@ -5,6 +5,7 @@ var crypto_1 = require("crypto"); // per controllare attestationRootCertificates
 var metadataV2_1 = require("./metadataV2");
 var usefulFunction_1 = require("../FieldConverter/usefulFunction");
 var V3toV2_1 = require("../FieldConverter/V3toV2");
+var error_1 = require("../Error/error");
 var metadataKeysV3 = /** @class */ (function () {
     //costruttore con tutti i campi, quelli richiesti sono obbligatori, gli altri facoltativi
     function metadataKeysV3(description, authenticatorVersion, upv, schema, attestationTypes, attestationCertificateKeyIdentifiers, userVerificationDetails, authenticationAlgorithms, publicKeyAlgAndEncodings, keyProtection, matcherProtection, cryptoStrength, attachmentHint, tcDisplay, attestationRootCertificates, legalHeader, aaid, aaguid, alternativeDescriptions, protocolFamily, isKeyRestricted, isFreshUserVerificationRequired, tcDisplayContentType, tcDisplayPNGCharacteristics, ecdaaTrustAnchors, icon, supportedExtensions) {
@@ -223,10 +224,10 @@ var metadataKeysV3 = /** @class */ (function () {
      */
     metadataKeysV3.prototype.aaidCheck = function () {
         if (this.protocolFamily == "uaf" && this.aaid == undefined)
-            return false;
+            throw new error_1.MetadataKeyError("Errore valore aaid");
         //no distinzione upper-lower case
         if (this.aaid != undefined && (!RegExp(/^[0-9A-F]{4}#[0-9A-F]{4}$/i).test(this.aaid) || this.protocolFamily == "fido2"))
-            return false;
+            throw new error_1.MetadataKeyError("Errore valore aaid");
         return true;
     };
     /**
@@ -237,10 +238,10 @@ var metadataKeysV3 = /** @class */ (function () {
      */
     metadataKeysV3.prototype.aaguidCheck = function () {
         if ((this.protocolFamily == "fido2" && this.aaguid == undefined) || (this.protocolFamily == "uaf" && this.aaguid != undefined))
-            return false;
+            throw new error_1.MetadataKeyError("Errore valore aaguid");
         if (this.aaguid != undefined) {
             if (this.aaguid.length != 36 || (this.aaguid.length == 36 && !RegExp(/^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/i).test(this.aaguid)))
-                return false;
+                throw new error_1.MetadataKeyError("Errore valore aaguid");
         }
         return true;
     };
@@ -252,7 +253,7 @@ var metadataKeysV3 = /** @class */ (function () {
         if (this.attestationCertificateKeyIdentifiers != undefined) {
             for (var i = 0; i < this.attestationCertificateKeyIdentifiers.length; i++) {
                 if (!RegExp(/^[0-9a-f]+$/).test(this.attestationCertificateKeyIdentifiers[i]))
-                    return false;
+                    throw new error_1.MetadataKeyError("Errore valore attestationCertificateKeyIdentifiers in posizione: " + i + ". ");
             }
         }
         return true;
@@ -274,9 +275,9 @@ var metadataKeysV3 = /** @class */ (function () {
      */
     metadataKeysV3.prototype.authenticatorVersionCheck = function () {
         if (this.authenticatorVersion < 0 || this.authenticatorVersion > 4294967295)
-            return false;
+            throw new error_1.MetadataKeyError("Errore valore authenticatorVersion");
         if (this.authenticatorGetInfo != undefined && this.authenticatorGetInfo.firmwareVersion != this.authenticatorVersion)
-            return false;
+            throw new error_1.MetadataKeyError("Errore valore authenticatorVersion");
         return true;
     };
     /**
@@ -286,16 +287,16 @@ var metadataKeysV3 = /** @class */ (function () {
      */
     metadataKeysV3.prototype.protocolFamilyCheck = function () {
         if (this.protocolFamily == undefined)
-            return false;
+            throw new error_1.MetadataKeyError("Errore valore protocolFamily");
         if (protocolFamilyEnum[this.protocolFamily] == undefined)
-            return false;
+            throw new error_1.MetadataKeyError("Errore valore protocolFamily");
         if (this.authenticatorGetInfo != undefined) {
             if (this.protocolFamily == "fido2" && (this.authenticatorGetInfo.version.find(function (element) { return element == "FIDO_2_1"; }) == undefined &&
                 this.authenticatorGetInfo.version.find(function (element) { return element == "FIDO_2_0"; }) == undefined &&
                 this.authenticatorGetInfo.version.find(function (element) { return element == "FIDO_2_1_PRE"; }) == undefined))
-                return false;
+                throw new error_1.MetadataKeyError("Errore valore protocolFamily");
             if (this.protocolFamily == "u2f" && (this.authenticatorGetInfo.version.find(function (element) { return element == "U2F_V2"; }) == undefined))
-                return false;
+                throw new error_1.MetadataKeyError("Errore valore protocolFamily");
         }
         return true;
     };
@@ -305,8 +306,7 @@ var metadataKeysV3 = /** @class */ (function () {
      */
     metadataKeysV3.prototype.schemaCheck = function () {
         if (this.schema < 0 || this.schema > 65535)
-            return false;
-        //throw new MetadataKeyError("Errore valore Schema")
+            throw new error_1.MetadataKeyError("Errore valore Schema");
         return true;
     };
     /**
@@ -317,7 +317,7 @@ var metadataKeysV3 = /** @class */ (function () {
     metadataKeysV3.prototype.upvCheck = function () {
         for (var i = 0; i < this.upv.length; i++) {
             if (this.upv[i].major < 0 || this.upv[i].major > 65535 || this.upv[i].minor < 0 || this.upv[i].minor > 65535)
-                return false;
+                throw new error_1.MetadataKeyError("Errore valore upv in posizione: " + i + ". ");
         }
         return true;
     };
@@ -330,9 +330,9 @@ var metadataKeysV3 = /** @class */ (function () {
         if (this.authenticationAlgorithms != undefined) {
             for (var i = 0; i < this.authenticationAlgorithms.length; i++) {
                 if (authenticationAlgorithmsEnum[this.authenticationAlgorithms[i]] == undefined)
-                    return false;
+                    throw new error_1.MetadataKeyError("Errore valore authenticationAlgorithms in posizione: " + i + ". ");
                 if (this.protocolFamily == "u2f" && this.authenticationAlgorithms[i] != "secp256r1_ecdsa_sha256_raw")
-                    return false;
+                    throw new error_1.MetadataKeyError("Errore valore authenticationAlgorithms in posizione: " + i + ". ");
             }
         }
         return true;
@@ -345,10 +345,12 @@ var metadataKeysV3 = /** @class */ (function () {
     metadataKeysV3.prototype.publicKeyAlgAndEncodingsCheck = function () {
         if (this.publicKeyAlgAndEncodings != undefined) {
             for (var i = 0; i < this.publicKeyAlgAndEncodings.length; i++) {
-                if (publicKeyAlgAndEncodingsEnum[this.publicKeyAlgAndEncodings[i]] == undefined)
-                    return false;
-                if (this.protocolFamily == "u2f" && this.publicKeyAlgAndEncodings[i] != "ecc_x962_raw")
-                    return false;
+                if (publicKeyAlgAndEncodingsEnum[this.publicKeyAlgAndEncodings[i]] == undefined) {
+                    throw new error_1.MetadataKeyError("Errore valore publicKeyAlgAndEncodings in posizione: " + i + ". ");
+                }
+                if (this.protocolFamily == "u2f" && this.publicKeyAlgAndEncodings[i] != "ecc_x962_raw") {
+                    throw new error_1.MetadataKeyError("Errore valore publicKeyAlgAndEncodings in posizione: " + i + ". ");
+                }
             }
         }
         return true;
@@ -360,7 +362,7 @@ var metadataKeysV3 = /** @class */ (function () {
     metadataKeysV3.prototype.attestationTypesCheck = function () {
         for (var i = 0; i < this.attestationTypes.length; i++) {
             if (attestationTypesEnum[this.attestationTypes[i]] == undefined)
-                return false;
+                throw new error_1.MetadataKeyError("Errore valore attestationTypes");
         }
         return true;
     };
@@ -373,7 +375,7 @@ var metadataKeysV3 = /** @class */ (function () {
             if (!(this.userVerificationDetails[i])) {
                 for (var l = 0; l < this.userVerificationDetails[i].data.length; l++) {
                     if (!this.userVerificationDetails[i].data[l].validateInternalData())
-                        return false;
+                        throw new error_1.MetadataKeyError("Errore valore userVerificationDetails");
                 }
             }
         }
@@ -386,24 +388,24 @@ var metadataKeysV3 = /** @class */ (function () {
     metadataKeysV3.prototype.keyProtectionCheck = function () {
         for (var i = 0; i < this.keyProtection.length; i++) {
             if (keyProtectionEnum[this.keyProtection[i]] == undefined)
-                return false;
+                throw new error_1.MetadataKeyError("Errore valore keyProtection");
         }
         if (this.keyProtection.find(function (element) { return element == "software"; }) != undefined) {
             if (this.keyProtection.find(function (element) { return element == "hardware"; }) != undefined)
-                return false;
+                throw new error_1.MetadataKeyError("Errore valore keyProtection");
             if (this.keyProtection.find(function (element) { return element == "tee"; }) != undefined)
-                return false;
+                throw new error_1.MetadataKeyError("Errore valore keyProtection");
             if (this.keyProtection.find(function (element) { return element == "secure_element"; }) != undefined)
-                return false;
+                throw new error_1.MetadataKeyError("Errore valore keyProtection");
         }
         if (this.keyProtection.find(function (element) { return element == "tee"; }) != undefined) {
             if (this.keyProtection.find(function (element) { return element == "secure_element"; }) != undefined)
-                return false;
+                throw new error_1.MetadataKeyError("Errore valore keyProtection");
         }
         //(remote_handle) MUST be set in conjunction with one of the other KEY_PROTECTION flags 
         if (this.keyProtection.find(function (element) { return element == "remote_handle"; }) != undefined) {
             if (this.keyProtection.find(function (element) { return element != "remote_handle"; }) == undefined)
-                return false;
+                throw new error_1.MetadataKeyError("Errore valore keyProtection");
         }
         return true;
     };
@@ -424,15 +426,15 @@ var metadataKeysV3 = /** @class */ (function () {
     metadataKeysV3.prototype.matcherProtectionCheck = function () {
         for (var i = 0; i < this.matcherProtection.length; i++) {
             if (matcherProtectionEnum[this.matcherProtection[i]] == undefined)
-                return false;
+                throw new error_1.MetadataKeyError("Errore valore matcherProtection");
         }
         if (this.matcherProtection.find(function (element) { return element == "software"; }) != undefined) {
             if (this.matcherProtection.find(function (element) { return element == "tee"; }) != undefined || this.matcherProtection.find(function (element) { return element == "on_chip"; }) != undefined)
-                return false;
+                throw new error_1.MetadataKeyError("Errore valore matcherProtection");
         }
         if (this.matcherProtection.find(function (element) { return element == "tee"; }) != undefined) {
             if (this.matcherProtection.find(function (element) { return element == "on_chip"; }) != undefined)
-                return false;
+                throw new error_1.MetadataKeyError("Errore valore matcherProtection");
         }
         return true;
     };
@@ -443,7 +445,7 @@ var metadataKeysV3 = /** @class */ (function () {
     metadataKeysV3.prototype.cryptoStrengthCeck = function () {
         if (this.cryptoStrength != undefined) {
             if (this.cryptoStrength < 0 || this.cryptoStrength > 65535)
-                return false;
+                throw new error_1.MetadataKeyError("Errore valore cryptoStrength");
         }
         return true;
     };
@@ -452,19 +454,19 @@ var metadataKeysV3 = /** @class */ (function () {
      *          1) che il campo number presenti i valori corretti
      */
     metadataKeysV3.prototype.attachmentHintCheck = function () {
-        for (var i = 0; i < this.matcherProtection.length; i++) {
+        for (var i = 0; i < this.attachmentHint.length; i++) {
             if (attachmentHintEnum[this.attachmentHint[i]] == undefined)
-                return false;
+                throw new error_1.MetadataKeyError("Errore valore attachmentHint");
         }
         //se c'è elemento internal insieme ad un altro elemento differente --> errore
-        if (this.matcherProtection.find(function (element) { return element == "internal"; }) != undefined) {
-            if (this.matcherProtection.find(function (element) { return element != "internal"; }) != undefined)
-                return false;
+        if (this.attachmentHint.find(function (element) { return element == "internal"; }) != undefined) {
+            if (this.attachmentHint.find(function (element) { return element != "internal"; }) != undefined)
+                throw new error_1.MetadataKeyError("Errore valore attachmentHint");
         }
         //se si ha elemento external senza altri elementi si ha errore (il controllo su internal non è stato fatto in quanto fatto dall'if precedente)
-        if (this.matcherProtection.find(function (element) { return element == "external"; }) != undefined) {
-            if (this.matcherProtection.find(function (element) { return element != "external"; }) == undefined)
-                return false;
+        if (this.attachmentHint.find(function (element) { return element == "external"; }) != undefined) {
+            if (this.attachmentHint.find(function (element) { return element != "external"; }) == undefined)
+                throw new error_1.MetadataKeyError("Errore valore attachmentHint");
         }
         return true;
     };
@@ -481,15 +483,15 @@ var metadataKeysV3 = /** @class */ (function () {
         if (this.tcDisplay != undefined) {
             for (var i = 0; i < this.tcDisplay.length; i++) {
                 if (tcDisplayEnum[this.tcDisplay[i]] == undefined)
-                    return false;
+                    throw new error_1.MetadataKeyError("Errore valore tcDisplay");
             }
             if (this.tcDisplay.find(function (element) { return element == "privileged_software"; }) != undefined) {
                 if (this.tcDisplay.find(function (element) { return element == "tee"; }) != undefined || this.tcDisplay.find(function (element) { return element == "hardware"; }) != undefined)
-                    return false;
+                    throw new error_1.MetadataKeyError("Errore valore tcDisplay");
             }
             if (this.tcDisplay.find(function (element) { return element == "tee"; }) != undefined) {
                 if (this.tcDisplay.find(function (element) { return element == "hardware"; }) != undefined)
-                    return false;
+                    throw new error_1.MetadataKeyError("Errore valore tcDisplay");
             }
         }
         return true;
@@ -501,10 +503,10 @@ var metadataKeysV3 = /** @class */ (function () {
      */
     metadataKeysV3.prototype.tcDisplayContentTypeCheck = function () {
         if ((this.tcDisplay != undefined && this.tcDisplay.length >= 1) && this.tcDisplayContentType == undefined)
-            return false;
+            throw new error_1.MetadataKeyError("Errore valore tcDisplayContentType");
         if (this.tcDisplayContentType != undefined && (this.tcDisplay != undefined && this.tcDisplay.length >= 1)) {
             if (tcDisplayContentTypeEnum[this.tcDisplayContentType] == undefined)
-                return false;
+                throw new error_1.MetadataKeyError("Errore valore tcDisplayContentType");
         }
         return true;
     };
@@ -514,7 +516,7 @@ var metadataKeysV3 = /** @class */ (function () {
      */
     metadataKeysV3.prototype.tcDisplayPNGCharacteristicsCheck = function () {
         if (this.tcDisplay != undefined && tcDisplayContentTypeEnum[this.tcDisplayContentType] == tcDisplayContentTypeEnum["image/png"] && this.tcDisplayPNGCharacteristics == undefined)
-            return false;
+            throw new error_1.MetadataKeyError("Errore valore tcDisplayPNGCharacteristics");
         return true;
     };
     /**
@@ -539,10 +541,10 @@ var metadataKeysV3 = /** @class */ (function () {
             else {
                 // using the extension id-fido-gen-ce-aaid { 1 3 6 1 4 1 45724 1 1 1 }
                 if (this.aaid != undefined && testCert.keyUsage != undefined && testCert.keyUsage.find(function (element) { return element == "1.3.6.1.4.1.45724.1.1.1"; }) != undefined)
-                    return false;
+                    throw new error_1.MetadataKeyError("Errore valore attestationRootCertificates in posizione: " + i + ". ");
                 // id-fido-gen-ce-aaguid { 1 3 6 1 4 1 45724 1 1 4 } or - when neither AAID nor AAGUID are defined -
                 if (this.aaguid != undefined && testCert.keyUsage != undefined && testCert.keyUsage.find(function (element) { return element == "1.3.6.1.4.1.45724.1.1.4"; }) != undefined)
-                    return false;
+                    throw new error_1.MetadataKeyError("Errore valore attestationRootCertificates in posizione: " + i + ". ");
                 // or by using the attestationCertificateKeyIdentifier method => ??? TODO
                 //console.debug(testCert);
                 //console.log("attestationRootCertificate[" + i + "]" + ": leaf");
@@ -558,11 +560,11 @@ var metadataKeysV3 = /** @class */ (function () {
     metadataKeysV3.prototype.ecdaaTrustAnchorsCheck = function () {
         var temp = this.attestationTypes.find(function (element) { return element == "ecdaa"; });
         if (temp != undefined && this.ecdaaTrustAnchors == undefined || temp == undefined && this.ecdaaTrustAnchors != undefined)
-            return false;
+            throw new error_1.MetadataKeyError("Errore valore ecdaaTrustAnchors");
         if (this.ecdaaTrustAnchors != undefined) {
             for (var i = 0; i < this.ecdaaTrustAnchors.length; i++) {
                 if (!this.ecdaaTrustAnchors[i].validateInternalData())
-                    return false;
+                    throw new error_1.MetadataKeyError("Errore valore ecdaaTrustAnchors in posizione: " + i + ". ");
             }
         }
         return true;
@@ -575,7 +577,7 @@ var metadataKeysV3 = /** @class */ (function () {
         if (this.icon != undefined) {
             var temp = this.icon.replace(this.icon.substring(this.icon.indexOf("data:"), this.icon.indexOf("base64") + 7), "");
             if (!RegExp(/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/).test(temp)) {
-                return false;
+                throw new error_1.MetadataKeyError("Errore valore icon");
             }
         }
         return true;
@@ -593,8 +595,10 @@ var metadataKeysV3 = /** @class */ (function () {
      *          2) se presente c'è controllo in protocol family
      */
     metadataKeysV3.prototype.authenticatorGetInfoCheck = function () {
-        if (this.authenticatorGetInfo != undefined)
-            return this.authenticatorGetInfo.validateInternalData();
+        if (this.authenticatorGetInfo != undefined) {
+            if (!this.authenticatorGetInfo.validateInternalData())
+                throw new error_1.MetadataKeyError("Errore valore authenticatorGetInfo");
+        }
         return true;
     };
     return metadataKeysV3;

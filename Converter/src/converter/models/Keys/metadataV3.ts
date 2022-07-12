@@ -293,10 +293,10 @@ export class metadataKeysV3{
      */
     private aaidCheck(): boolean{
         if(this.protocolFamily == "uaf" && this.aaid == undefined)
-            return false;
+            throw new MetadataKeyError("Errore valore aaid");
         //no distinzione upper-lower case
         if(this.aaid != undefined && (!RegExp(/^[0-9A-F]{4}#[0-9A-F]{4}$/i).test(this.aaid) || this.protocolFamily == "fido2"))
-            return false;        
+            throw new MetadataKeyError("Errore valore aaid")
         return true;
     }
 
@@ -308,10 +308,10 @@ export class metadataKeysV3{
      */
     private aaguidCheck(): boolean{
         if((this.protocolFamily == "fido2" && this.aaguid == undefined) || (this.protocolFamily == "uaf" && this.aaguid != undefined))
-            return false;
+            throw new MetadataKeyError("Errore valore aaguid")
         if(this.aaguid != undefined){
             if(this.aaguid.length != 36 || (this.aaguid.length == 36 && !RegExp(/^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/i).test(this.aaguid)))
-                    return false;
+                throw new MetadataKeyError("Errore valore aaguid")
         }
         return true;
     }
@@ -324,7 +324,7 @@ export class metadataKeysV3{
         if(this.attestationCertificateKeyIdentifiers != undefined){
             for(let i = 0; i < this.attestationCertificateKeyIdentifiers.length; i++) {
                 if (!RegExp(/^[0-9a-f]+$/).test(this.attestationCertificateKeyIdentifiers[i]))
-                    return false;
+                    throw new MetadataKeyError("Errore valore attestationCertificateKeyIdentifiers in posizione: " + i + ". ")
             }
         }
         return true;
@@ -349,9 +349,9 @@ export class metadataKeysV3{
      */
     private authenticatorVersionCheck(): boolean{
         if(this.authenticatorVersion < 0 || this.authenticatorVersion > 4294967295)
-            return false;
+            throw new MetadataKeyError("Errore valore authenticatorVersion")
         if(this.authenticatorGetInfo != undefined && this.authenticatorGetInfo.firmwareVersion != this.authenticatorVersion)
-            return false;
+            throw new MetadataKeyError("Errore valore authenticatorVersion")
         return true;
     }
 
@@ -362,16 +362,16 @@ export class metadataKeysV3{
      */
     private protocolFamilyCheck(): boolean{
         if(this.protocolFamily == undefined )
-            return false;
+            throw new MetadataKeyError("Errore valore protocolFamily")
         if(protocolFamilyEnum[this.protocolFamily as keyof typeof protocolFamilyEnum] == undefined) 
-            return false;
+            throw new MetadataKeyError("Errore valore protocolFamily")
         if(this.authenticatorGetInfo != undefined){
             if(this.protocolFamily == "fido2" && (this.authenticatorGetInfo.version.find(element => element == "FIDO_2_1") == undefined && 
                                                 this.authenticatorGetInfo.version.find(element => element == "FIDO_2_0") == undefined &&
                                                 this.authenticatorGetInfo.version.find(element => element == "FIDO_2_1_PRE") == undefined))
-                return false;
+                throw new MetadataKeyError("Errore valore protocolFamily")
             if(this.protocolFamily == "u2f" && (this.authenticatorGetInfo.version.find(element => element == "U2F_V2") == undefined))
-                return false;
+                throw new MetadataKeyError("Errore valore protocolFamily")
         }  
         return true;
     }
@@ -382,8 +382,7 @@ export class metadataKeysV3{
      */
     private schemaCheck(): boolean{
         if(this.schema < 0 || this.schema > 65535)
-            return false;
-            //throw new MetadataKeyError("Errore valore Schema")
+            throw new MetadataKeyError("Errore valore Schema");
         return true;
     }
 
@@ -395,7 +394,7 @@ export class metadataKeysV3{
      private upvCheck(){
         for(let i=0; i<this.upv.length;i++){
             if(this.upv[i].major < 0 || this.upv[i].major > 65535 || this.upv[i].minor < 0 || this.upv[i].minor > 65535)
-                return false;
+                throw new MetadataKeyError("Errore valore upv in posizione: " + i + ". ")
         }
         return true;
     }
@@ -409,9 +408,9 @@ export class metadataKeysV3{
         if(this.authenticationAlgorithms != undefined){    
             for(let i = 0; i < this.authenticationAlgorithms.length; i++) {
                 if (authenticationAlgorithmsEnum[this.authenticationAlgorithms[i] as keyof typeof authenticationAlgorithmsEnum] == undefined)
-                    return false;
+                    throw new MetadataKeyError("Errore valore authenticationAlgorithms in posizione: " + i + ". ")
                 if(this.protocolFamily == "u2f" && this.authenticationAlgorithms[i] != "secp256r1_ecdsa_sha256_raw")
-                    return false;
+                    throw new MetadataKeyError("Errore valore authenticationAlgorithms in posizione: " + i + ". ")
             }
         }
         return true;
@@ -425,10 +424,10 @@ export class metadataKeysV3{
     private publicKeyAlgAndEncodingsCheck(): boolean{
         if(this.publicKeyAlgAndEncodings != undefined){
             for(let i = 0; i < this.publicKeyAlgAndEncodings.length; i++) {
-                if (publicKeyAlgAndEncodingsEnum[this.publicKeyAlgAndEncodings[i] as keyof typeof publicKeyAlgAndEncodingsEnum] == undefined)
-                    return false;
-                if(this.protocolFamily == "u2f" && this.publicKeyAlgAndEncodings[i] != "ecc_x962_raw")
-            return false;
+                if (publicKeyAlgAndEncodingsEnum[this.publicKeyAlgAndEncodings[i] as keyof typeof publicKeyAlgAndEncodingsEnum] == undefined){
+                    throw new MetadataKeyError("Errore valore publicKeyAlgAndEncodings in posizione: " + i + ". ")}
+                if(this.protocolFamily == "u2f" && this.publicKeyAlgAndEncodings[i] != "ecc_x962_raw"){
+                    throw new MetadataKeyError("Errore valore publicKeyAlgAndEncodings in posizione: " + i + ". ")}
             }
         }
         return true;
@@ -441,7 +440,7 @@ export class metadataKeysV3{
     private attestationTypesCheck(): boolean{
         for(let i = 0; i < this.attestationTypes.length; i++) {
             if (attestationTypesEnum[this.attestationTypes[i] as keyof typeof attestationTypesEnum] == undefined)
-                return false;
+                throw new MetadataKeyError("Errore valore attestationTypes")
         }
         return true;
     }
@@ -455,7 +454,7 @@ export class metadataKeysV3{
             if (!(this.userVerificationDetails[i])){
                     for(let l = 0; l < this.userVerificationDetails[i].data.length; l++ ){
                         if(!this.userVerificationDetails[i].data[l].validateInternalData())
-                            return false;
+                            throw new MetadataKeyError("Errore valore userVerificationDetails")
                     }
             }
         }
@@ -469,27 +468,27 @@ export class metadataKeysV3{
     private keyProtectionCheck(): boolean{
         for(let i=0;i<this.keyProtection.length;i++){
             if(keyProtectionEnum[this.keyProtection[i] as keyof typeof keyProtectionEnum] == undefined)
-                return false;
+                throw new MetadataKeyError("Errore valore keyProtection")
         }
 
         if(this.keyProtection.find(element => element == "software") != undefined){
             if(this.keyProtection.find(element => element == "hardware") != undefined)
-                return false;
+                throw new MetadataKeyError("Errore valore keyProtection")
             if(this.keyProtection.find(element => element == "tee") != undefined)
-                return false;
+                throw new MetadataKeyError("Errore valore keyProtection")
             if(this.keyProtection.find(element => element == "secure_element") != undefined)
-                return false;    
+                throw new MetadataKeyError("Errore valore keyProtection")   
         }
 
         if(this.keyProtection.find(element => element == "tee") != undefined){
             if(this.keyProtection.find(element => element == "secure_element") != undefined)
-                return false;  
+                throw new MetadataKeyError("Errore valore keyProtection")  
         }
 
         //(remote_handle) MUST be set in conjunction with one of the other KEY_PROTECTION flags 
         if(this.keyProtection.find(element => element == "remote_handle") != undefined){
             if(this.keyProtection.find(element => element != "remote_handle") == undefined)
-                return false;  
+                throw new MetadataKeyError("Errore valore keyProtection")  
         }
         return true;
     }
@@ -513,15 +512,15 @@ export class metadataKeysV3{
     private matcherProtectionCheck(): boolean{
         for(let i=0;i<this.matcherProtection.length;i++){
             if(matcherProtectionEnum[this.matcherProtection[i] as keyof typeof matcherProtectionEnum] == undefined)
-                return false;
+                throw new MetadataKeyError("Errore valore matcherProtection")  
         }
         if(this.matcherProtection.find(element => element == "software") != undefined){
             if(this.matcherProtection.find(element => element == "tee") != undefined || this.matcherProtection.find(element => element == "on_chip") != undefined)
-                return false;
+                throw new MetadataKeyError("Errore valore matcherProtection")  
         }
         if(this.matcherProtection.find(element => element == "tee") != undefined){
             if(this.matcherProtection.find(element => element == "on_chip") != undefined)
-                return false;
+                throw new MetadataKeyError("Errore valore matcherProtection")  
         }
         return true;
     }
@@ -533,7 +532,7 @@ export class metadataKeysV3{
     private cryptoStrengthCeck(): boolean{
         if(this.cryptoStrength != undefined){
             if(this.cryptoStrength < 0 || this.cryptoStrength > 65535)
-                return false;
+                throw new MetadataKeyError("Errore valore cryptoStrength")
         }
         return true;
     }
@@ -543,19 +542,19 @@ export class metadataKeysV3{
      *          1) che il campo number presenti i valori corretti
      */
     private attachmentHintCheck(): boolean{
-        for(let i=0;i<this.matcherProtection.length;i++){
+        for(let i=0;i<this.attachmentHint.length;i++){
             if(attachmentHintEnum[this.attachmentHint[i] as keyof typeof attachmentHintEnum] == undefined)
-                return false;
+                throw new MetadataKeyError("Errore valore attachmentHint")
         }
         //se c'è elemento internal insieme ad un altro elemento differente --> errore
-        if(this.matcherProtection.find(element => element == "internal") != undefined){
-            if(this.matcherProtection.find(element => element != "internal") != undefined)
-                return false;
+        if(this.attachmentHint.find(element => element == "internal") != undefined){
+            if(this.attachmentHint.find(element => element != "internal") != undefined)
+                throw new MetadataKeyError("Errore valore attachmentHint")
         }
         //se si ha elemento external senza altri elementi si ha errore (il controllo su internal non è stato fatto in quanto fatto dall'if precedente)
-        if(this.matcherProtection.find(element => element == "external") != undefined){
-            if(this.matcherProtection.find(element => element != "external") == undefined)
-                return false;
+        if(this.attachmentHint.find(element => element == "external") != undefined){
+            if(this.attachmentHint.find(element => element != "external") == undefined)
+                throw new MetadataKeyError("Errore valore attachmentHint")
         }
         return true;
     }
@@ -574,15 +573,15 @@ export class metadataKeysV3{
         if(this.tcDisplay != undefined){
             for(let i=0;i<this.tcDisplay.length;i++){
                 if(tcDisplayEnum[this.tcDisplay[i] as keyof typeof tcDisplayEnum] == undefined)
-                    return false;
+                    throw new MetadataKeyError("Errore valore tcDisplay")
             }
             if(this.tcDisplay.find(element => element == "privileged_software") != undefined){
                 if(this.tcDisplay.find(element => element == "tee") != undefined || this.tcDisplay.find(element => element == "hardware") != undefined)
-                    return false;
+                    throw new MetadataKeyError("Errore valore tcDisplay")
             }
             if(this.tcDisplay.find(element => element == "tee") != undefined){
                 if(this.tcDisplay.find(element => element == "hardware") != undefined)
-                    return false;
+                    throw new MetadataKeyError("Errore valore tcDisplay")
             }
         }
         return true;
@@ -595,11 +594,11 @@ export class metadataKeysV3{
      */
     private tcDisplayContentTypeCheck(): boolean{
         if((this.tcDisplay != undefined && this.tcDisplay.length >= 1) && this.tcDisplayContentType == undefined)
-            return false;
+            throw new MetadataKeyError("Errore valore tcDisplayContentType")
 
         if(this.tcDisplayContentType != undefined && (this.tcDisplay != undefined && this.tcDisplay.length >= 1)){
             if(tcDisplayContentTypeEnum[this.tcDisplayContentType as keyof typeof tcDisplayContentTypeEnum] == undefined)
-                return false;
+                throw new MetadataKeyError("Errore valore tcDisplayContentType")
         }
         return true;
     }   
@@ -610,7 +609,7 @@ export class metadataKeysV3{
      */
     private tcDisplayPNGCharacteristicsCheck(): boolean{ //(seconda parte: se variabile tcDisplayContentType è image/png)
         if(this.tcDisplay != undefined && tcDisplayContentTypeEnum[this.tcDisplayContentType as keyof typeof tcDisplayContentTypeEnum] == tcDisplayContentTypeEnum["image/png" as keyof typeof tcDisplayContentTypeEnum] && this.tcDisplayPNGCharacteristics == undefined)
-            return false;
+            throw new MetadataKeyError("Errore valore tcDisplayPNGCharacteristics")
         return true;
     }
 
@@ -635,10 +634,10 @@ export class metadataKeysV3{
             else {
                 // using the extension id-fido-gen-ce-aaid { 1 3 6 1 4 1 45724 1 1 1 }
                 if(this.aaid != undefined  && testCert.keyUsage != undefined && testCert.keyUsage.find(element => element == "1.3.6.1.4.1.45724.1.1.1") != undefined)
-                    return false;
+                    throw new MetadataKeyError("Errore valore attestationRootCertificates in posizione: " + i + ". ")
                 // id-fido-gen-ce-aaguid { 1 3 6 1 4 1 45724 1 1 4 } or - when neither AAID nor AAGUID are defined -
                 if(this.aaguid != undefined && testCert.keyUsage != undefined && testCert.keyUsage.find(element => element == "1.3.6.1.4.1.45724.1.1.4") != undefined)
-                    return false;
+                    throw new MetadataKeyError("Errore valore attestationRootCertificates in posizione: " + i + ". ")
                 // or by using the attestationCertificateKeyIdentifier method => ??? TODO
                 
                 //console.debug(testCert);
@@ -656,12 +655,12 @@ export class metadataKeysV3{
     private ecdaaTrustAnchorsCheck(): boolean{
         let temp: string | undefined = this.attestationTypes.find(element => element == "ecdaa");
         if(temp != undefined && this.ecdaaTrustAnchors == undefined || temp == undefined && this.ecdaaTrustAnchors != undefined)
-            return false;
+            throw new MetadataKeyError("Errore valore ecdaaTrustAnchors")
         
         if(this.ecdaaTrustAnchors != undefined){
             for(let i=0;i<this.ecdaaTrustAnchors.length;i++){
                 if(!this.ecdaaTrustAnchors[i].validateInternalData())
-                    return false;
+                    throw new MetadataKeyError("Errore valore ecdaaTrustAnchors in posizione: " + i + ". ")
             }
         }
         return true;
@@ -675,7 +674,7 @@ export class metadataKeysV3{
         if(this.icon != undefined){
             let temp = this.icon.replace(this.icon.substring(this.icon.indexOf("data:"), this.icon.indexOf("base64")+7), "");
             if(!RegExp(/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/).test(temp)){
-                return false;
+                throw new MetadataKeyError("Errore valore icon")
             }
         }
         return true;
@@ -695,8 +694,10 @@ export class metadataKeysV3{
      *          2) se presente c'è controllo in protocol family
      */
      private authenticatorGetInfoCheck(): boolean{
-        if(this.authenticatorGetInfo != undefined)
-            return this.authenticatorGetInfo.validateInternalData();
+        if(this.authenticatorGetInfo != undefined){
+            if(!this.authenticatorGetInfo.validateInternalData())
+                throw new MetadataKeyError("Errore valore authenticatorGetInfo")
+        }   
         return true;
     }
 }
