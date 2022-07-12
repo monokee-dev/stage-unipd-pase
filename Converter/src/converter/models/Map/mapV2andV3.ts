@@ -136,7 +136,7 @@ enum attestationTypesEnumMap{
 }
 
 enum userVerificationDetailsEnumMap{
-    "error" = 0, //non presente in FIDO, cmq se valore dovesse essere 0 con la verifica verrà restituito errore
+    "error" = 0, //non presente in FIDO. Se valore dovesse essere 0 con la verifica verrà restituito errore
     "presence_internal" = 1,
     "fingerprint_internal" = 2,
     "passcode_internal" = 4,
