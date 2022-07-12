@@ -3,7 +3,7 @@ import * as dotenv from 'dotenv'
 import  * as MV2  from './converter/models/Keys/metadataV2';
 import  * as MV3  from './converter/models/Keys/metadataV3';
 
-import { metadataInitializer } from './converter/converter'
+import { metadataInitializer } from './converter/initializer'
 import { metadataKeysV2 } from './converter/models/Keys/metadataV2';
 import { metadataKeysV3 } from './converter/models/Keys/metadataV3';
 

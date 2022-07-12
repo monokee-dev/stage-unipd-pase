@@ -1,7 +1,7 @@
 "use strict";
 exports.__esModule = true;
-var converter_1 = require("./converter/converter");
-var metadata1 = (0, converter_1.metadataInitializer)("./FIDOV2Keys.txt");
+var initializer_1 = require("./converter/initializer");
+var metadata1 = (0, initializer_1.metadataInitializer)("./FIDOV2Keys.txt");
 //let metadata2;
 /*
 if(metadata1 instanceof metadataKeysV2)
