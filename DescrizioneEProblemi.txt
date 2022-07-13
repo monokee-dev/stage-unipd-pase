@@ -26,7 +26,7 @@ File:
 Problemi riscontrati:
 	-operatingEnv presente in V2 ma non in V3 -> valori non ricavabili
 
-	-isSecondFactorOnly presente in V2 ma non in V3 -> (dalla conversione v3 -> v2 nell'app questo campo viene posto di default a true)
+	-isSecondFactorOnly presente in V2 ma non in V3 -> (dalla conversione v3 -> v2 nell'app questo campo viene posto di default a true dall'applicazione)
 
 	-in userVerificationDetails alcuni elementi sono presenti in v3 ma non in V2 (nello specifico il capo userVerificationMethod di VerificationMethodDescriptor)
 
