@@ -17,4 +17,12 @@ export class RGBPaletteEntry {
             return true;
         }
     }
+
+    public static fromJSON(json: { [id: string] : any; }): RGBPaletteEntry {
+        return new RGBPaletteEntry(
+            json.r!,
+            json.g!,
+            json.b
+        )
+    }
 }

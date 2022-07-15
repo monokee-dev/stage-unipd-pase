@@ -24,4 +24,16 @@ export class ECDAATrustAnchor {
 
         return true;
     }
+
+    public static fromJSON(json: { [id: string] : any; }): ECDAATrustAnchor {
+        return new ECDAATrustAnchor(
+            json.X!,
+            json.Y!,
+            json.c,
+            json.sx,
+            json.sy,
+            json.G1Curve
+        )
+    }
+
 }

@@ -18,4 +18,21 @@ export class TcDisplayPNGCharacteristicsDescriptor {
     public filter: number;
     public interlace: number;
     public plte: RGBPaletteEntry[] | undefined;
+
+    public static fromJSON(json: { [id: string] : any; }): TcDisplayPNGCharacteristicsDescriptor {
+        let temp = Array();
+        for(let i=0; i<json.plte.length; i++)
+            temp.push(RGBPaletteEntry.fromJSON(json.plte));
+        
+        return new TcDisplayPNGCharacteristicsDescriptor(
+            json.width,
+            json.height,
+            json.bitDepth,
+            json.compression,
+            json.filter,
+            json.interlace,
+            temp
+        )
+    }
+
 }

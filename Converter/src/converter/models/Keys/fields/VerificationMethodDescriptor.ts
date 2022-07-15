@@ -21,6 +21,16 @@ export class VerificationMethodDescriptorV3 {
         else
             return true;
     }
+
+    public static fromJSON(json: { [id: string] : any; }): VerificationMethodDescriptorV3 {
+        return new VerificationMethodDescriptorV3(
+            json.userVerification!,
+            json.caDesc!,
+            json.baDesc,
+            json.paDesc
+        )
+    }
+
 }
 
 export class VerificationMethodDescriptorV2{
@@ -40,5 +50,14 @@ export class VerificationMethodDescriptorV2{
             return false;
         else
             return true;
+    }
+
+    public static fromJSON(json: { [id: string] : any; }): VerificationMethodDescriptorV3 {
+        return new VerificationMethodDescriptorV3(
+            json.userVerification!,
+            json.caDesc!,
+            json.baDesc,
+            json.paDesc
+        )
     }
 }

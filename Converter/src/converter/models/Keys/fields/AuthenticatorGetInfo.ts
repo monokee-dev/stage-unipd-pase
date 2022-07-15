@@ -91,10 +91,6 @@ export class AuthenticatorGetInfo{
     public maxAuthenticatorConfigLength: number | undefined;
     public defaultCredProtect: number | undefined;
 
-    public test() {
-        console.log("Hello! @67")
-    }
-
     public validateInternalData(): boolean {
         //se i valori non sono tra quelli consentiti
         if (this.version.find(element => element == "FIDO_2_0") == undefined && this.version.find(element => element == "U2F_V2") == undefined && this.version.find(element => element == "FIDO_2_1") == undefined &&

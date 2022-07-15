@@ -12,6 +12,17 @@ export class UserVerificationDetailsV3 {
         }
         return true;
     }
+
+    public static fromJSON(json: { [id: string] : any; }): UserVerificationDetailsV3 {
+
+        let temp = Array();
+        for(let i=0; i<json.userVerificationDetails.length; i++)
+            temp.push(VerificationMethodANDCombinationsV3.fromJSON(json.plte));
+
+        return new UserVerificationDetailsV3(
+            temp
+        )
+    }
 }
 
 
@@ -26,5 +37,15 @@ export class UserVerificationDetailsV2 {
                 return false;
         }
         return true;
+    }
+
+    public static fromJSON(json: { [id: string] : any; }): UserVerificationDetailsV2 {
+        let temp = Array();
+        for(let i=0; i<json.userVerificationDetails.length; i++)
+            temp.push(VerificationMethodANDCombinationsV2.fromJSON(json.plte));
+
+        return new UserVerificationDetailsV2(
+            temp
+        )
     }
 }

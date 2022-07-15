@@ -9,4 +9,14 @@ export class ExtensionDescriptor {
     public tag: number;
     public data: string;
     public fail_if_unknown: boolean;
+
+    public static fromJSON(json: { [id: string] : any; }): ExtensionDescriptor {
+        return new ExtensionDescriptor(
+            json.id,
+            json.tag,
+            json.data,
+            json.fail_if_unknown
+        )
+    }
+
 }

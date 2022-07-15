@@ -5,4 +5,11 @@ export class SupportedExtensions {
         this.data = info;
     }
     public data: ExtensionDescriptor;
+
+    public static fromJSON(json: { [id: string] : any; }): SupportedExtensions {
+        return new SupportedExtensions(
+            ExtensionDescriptor.fromJSON(json.data)
+        )
+    }
+
 }
