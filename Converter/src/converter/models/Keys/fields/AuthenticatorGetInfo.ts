@@ -2,11 +2,43 @@ import { MetadataKeyError } from "./../../Error/error";
 import { AlgorithmAuthenticatorGetInfo } from "./AlgorithmAuthenticatorGetInfo";
 import { AuthenticatorOption } from "./AuthenticatorOption";
 
-export class AuthenticatorGetInfo {
+export class AuthenticatorGetInfo{
+    
+    public static fromJSON(json: { [id: string] : any; }): AuthenticatorGetInfo {
+        return new AuthenticatorGetInfo(
+            json.versions!,
+            json.aaguid!,
+            json.extensions,
+            json.options,
+            json.maxMsgSize,
+            json.pinUvAuthProtocols,
+            json.maxCredentialCountInList,
+            json.maxCredentialIdLength,
+            json.transports,
+            json.algorithms,
+            json.maxAuthenticatorConfigLength,
+            json.defaultCredProtect,
+            json.firmwareVersion,
+            json.maxSerializedLargeBlobArray,
+            json.forcePINChange,
+            json.minPINLength,
+            json.maxCredBlobLength,
+            json.maxRPIDsForSetMinPINLength,
+            json.preferredPlatformUvAttempts,
+            json.uvModality,
+            json.certifications,
+            json.remainingDiscoverableCredentials,
+            json.vendorPrototypeConfigCommands
+        )
+    }
+
+
     constructor(ver: string[], aag: string, ext?: string[], opt?: AuthenticatorOption, maxM?: number, pin?: number[], maxCc?: number, maxCIi?: number,
         tra?: string[], alg?: AlgorithmAuthenticatorGetInfo, maxA?: number, def?: number, fir?: number, maxS?: number, force?: boolean, minP?: number,
         maxCbl?: number, maxRpin?: number, pref?: number, uvM?: number, certif?: string[], remaining?: number, vendor?: number[]) {
-        this.version = Array.from(ver);
+        
+        
+        this.version = ver
         if (ext != undefined) {
             this.extensions = Array.from(ext);
         }
@@ -14,7 +46,7 @@ export class AuthenticatorGetInfo {
         this.options = opt;
         this.maxMsgSize = maxM;
         this.pinUvAuthProtocols = pin;
-        this.maxCredentialCountInList = maxCc;
+        this.maxCredentialCountInList = maxCc; 
         this.maxCredentialIdLength = maxCIi;
         this.transports = tra;
         this.algorithms = alg;
@@ -32,6 +64,7 @@ export class AuthenticatorGetInfo {
         this.maxAuthenticatorConfigLength = maxA;
         this.defaultCredProtect = def;
     }
+    
     public version: string[];
     public extensions: string[] | undefined;
     public aaguid: string;
@@ -57,6 +90,10 @@ export class AuthenticatorGetInfo {
     public vendorPrototypeConfigCommands: number[] | undefined;
     public maxAuthenticatorConfigLength: number | undefined;
     public defaultCredProtect: number | undefined;
+
+    public test() {
+        console.log("Hello! @67")
+    }
 
     public validateInternalData(): boolean {
         //se i valori non sono tra quelli consentiti

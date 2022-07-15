@@ -5,7 +5,7 @@ import { MetadataKeysV2 } from '../v2/MetadataV2';
 import { AuthenticatorGetInfo } from '../fields/AuthenticatorGetInfo';
 import { Version } from "../fields/Version";
 import { convertAttestationRootCertificates } from '../../FieldConverter/usefulFunction';
-import {attachmentHintEnum, attestationTypesEnum, authenticationAlgorithmsEnum, keyProtectionEnum, matcherProtectionEnum, protocolFamilyEnum, publicKeyAlgAndEncodingsEnum, tcDisplayContentTypeEnum, tcDisplayEnum, V3FunctionName} from "./../fields/enums"
+import { attachmentHintEnum, attestationTypesEnum, authenticationAlgorithmsEnum, keyProtectionEnum, matcherProtectionEnum, protocolFamilyEnum, publicKeyAlgAndEncodingsEnum, tcDisplayContentTypeEnum, tcDisplayEnum, V3FunctionName } from "./../fields/enums"
 import { VerificationMethodANDCombinationsV3 } from '../fields/VerificationMethodANDCombinations';
 import * as Enum from "./../fields/enums"
 import { ExtensionDescriptor } from '../fields/ExtensionDescriptor';
@@ -16,14 +16,34 @@ import { ECDAATrustAnchor } from '../fields/ECDAATrustAnchor';
 export class MetadataKeysV3 {
 
     //costruttore con tutti i campi, quelli richiesti sono obbligatori, gli altri facoltativi
-    constructor(description: string, authenticatorVersion: number, upv: Version[], schema: number,
-        attestationTypes: string[], attestationCertificateKeyIdentifiers: string[] | undefined,
-        userVerificationDetails: VerificationMethodANDCombinationsV3[], authenticationAlgorithms: string[], publicKeyAlgAndEncodings: string[],
-        keyProtection: string[], matcherProtection: string[], cryptoStrength: number | undefined = undefined, attachmentHint: string[], tcDisplay: string[] | undefined,
-        attestationRootCertificates: string[], legalHeader: string, aaid?: string, aaguid?: string, alternativeDescriptions?: string,
-        protocolFamily: string = "uaf", isKeyRestricted: boolean = true, isFreshUserVerificationRequired: boolean = true,
-        tcDisplayContentType?: string, tcDisplayPNGCharacteristics?: TcDisplayPNGCharacteristicsDescriptor[], ecdaaTrustAnchors?: ECDAATrustAnchor[],
-        icon?: string, supportedExtensions?: ExtensionDescriptor[], authenticatorGetInfo?: AuthenticatorGetInfo) {
+    constructor(description: string,
+        authenticatorVersion: number,
+        upv: Version[],
+        schema: number,
+        attestationTypes: string[],
+        attestationCertificateKeyIdentifiers: string[] | undefined,
+        userVerificationDetails: VerificationMethodANDCombinationsV3[],
+        authenticationAlgorithms: string[],
+        publicKeyAlgAndEncodings: string[],
+        keyProtection: string[],
+        matcherProtection: string[],
+        cryptoStrength: number | undefined = undefined,
+        attachmentHint: string[],
+        tcDisplay: string[] | undefined,
+        attestationRootCertificates: string[],
+        legalHeader: string,
+        aaid?: string,
+        aaguid?: string,
+        alternativeDescriptions?: string,
+        protocolFamily: string = "uaf",
+        isKeyRestricted: boolean = true,
+        isFreshUserVerificationRequired: boolean = true,
+        tcDisplayContentType?: string,
+        tcDisplayPNGCharacteristics?: TcDisplayPNGCharacteristicsDescriptor[],
+        ecdaaTrustAnchors?: ECDAATrustAnchor[],
+        icon?: string,
+        supportedExtensions?: ExtensionDescriptor[],
+        authenticatorGetInfo?: AuthenticatorGetInfo) {
 
         this.legalHeader = legalHeader;
         this.aaid = aaid;
@@ -268,6 +288,10 @@ export class MetadataKeysV3 {
                 return this.iconCheck();
 
             case 22:
+                console.log("Validate data @271")
+                console.debug("Auth.GetInfo", this.authenticatorGetInfo)
+                console.log(this.authenticatorGetInfo)
+
                 return this.authenticatorGetInfoCheck();
 
             //case 23:
