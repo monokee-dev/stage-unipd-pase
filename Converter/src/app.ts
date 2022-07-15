@@ -5,9 +5,7 @@ import  * as MV3  from './converter/models/Keys/metadataV3';
 
 import { metadataInitializer } from './converter/initializer';
 
-
-
-    let metadata1 = metadataInitializer("./FIDOV3Keys.txt");
+    let metadata1 = metadataInitializer("../resources/FIDOV3Keys.json", true);
     let metadata2;
     let metadata3;
     
