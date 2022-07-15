@@ -2,13 +2,15 @@ import * as KeysV3 from "./../Keys/metadataV3"
 import * as V2V3Map from "./../Map/mapV2andV3"
 
 //funzioni SOLO conversione: il cotrollo dovrà essere fatto in seguito
-
-export function convertAttestationTypesV2toV3(attestationTypes:number[]):string[] | undefined{
-    var temp: string[] = new Array();
-    for(var obj of attestationTypes){
-        temp.push(String(V2V3Map.attestationTypesConverter(obj)));
+export class V2toV3 {
+    public static convertAttestationTypes(attestationTypes:number[]):string[] | undefined{
+        var temp: string[] = new Array();
+        for(var obj of attestationTypes){
+            temp.push(String(V2V3Map.attestationTypesConverter(obj)));
+        }
+        return temp;
     }
-    return temp;
+    
 }
 
 // funzione singola, da iterare per fare la conversione completa
