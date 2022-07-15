@@ -2,7 +2,6 @@ import { X509Certificate } from 'crypto'; // per controllare attestationRootCert
 import { metadataKeysV3 } from './metadataV3';
 import * as  conversion  from './../FieldConverter/V2toV3'
 import { convertAttestationRootCertificates } from '../FieldConverter/usefulFunction';
-import { convertUserVerificationDetailsV3toV2 } from '../FieldConverter/V3toV2';
 import { MetadataKeyError } from '../Error/error';
 
 export class metadataKeysV2{
@@ -201,16 +200,18 @@ export class metadataKeysV2{
             let icon: string | undefined = m.icon != undefined ? m.icon : undefined;
             let supportedExtensions: ExtensionDescriptor[] | undefined = m.supportedExtensions != undefined ? Array.from(m.supportedExtensions) : undefined;
             let schema:number = conversion.convertSchemaV2toV3();
-            let authenticatorgetinfo;
+            let authenticatorGetInfo;
             if(m.aaguid == undefined){
-                if(m.assertionScheme == "FIDOV2")
-                    throw "Errore, campo assertionScheme presente con valore FidoV2, perciò authenticatorgetinfo è obbligatorio: il campo aaguid non è presente"
-                else
-                    authenticatorgetinfo = undefined;
+                if(m.assertionScheme == "FIDOV2"){
+                    throw "Errore, campo assertionScheme presente con valore FidoV2, perciò authenticatorGetInfo è obbligatorio: il campo aaguid non è presente"
+                }
+                else{
+                    authenticatorGetInfo = undefined
+                }
             }
-            else
-                authenticatorgetinfo = conversion.convertAuthenticatorGetInfoV2toV3(m.aaguid, m.assertionScheme);
-
+            else{
+                authenticatorGetInfo = conversion.convertAuthenticatorGetInfoV2toV3(m.aaguid, m.assertionScheme, m.isSecondFactorOnly, m.authenticatorVersion);
+            }
             //ATTENZIONE controllare i vari campi all'interno del costruttore: i campi dati undefined che sono obbligatori dovrebbero essere inseriti con operatore ternario
 
             result = new metadataKeysV3(description,authenticatorVersion,upv,schema,attestationTypes != undefined ? attestationTypes : new Array<string>(),
@@ -219,7 +220,7 @@ export class metadataKeysV2{
                 matcherProtection != undefined ? matcherProtection : new Array(), cryptoStrength, attachmentHint != undefined ? attachmentHint : new Array(), 
                 tcDisplay, attestationRootCertificates, legalHeader, aaid, aaguid, alternativeDescriptions, protocolFamily, isKeyRestricted, isFreshUserVerificationRequired, 
                 tcDisplayContentType, tcDisplayPNGCharacteristics != undefined ? tcDisplayPNGCharacteristics : undefined , ecdaaTrustAnchors,
-                icon, supportedExtensions);
+                icon, supportedExtensions,authenticatorGetInfo);
         }
         return result;
     }
@@ -402,8 +403,9 @@ export class metadataKeysV2{
      *          1) essendo il campo unsigned short:  0 <= authenticatorVersion <= 65.535
      */
     private authenticatorVersionCheck(){
-        if(this.authenticatorVersion < 0 || this.authenticatorVersion > 65535)
+        if(this.authenticatorVersion < 0 || this.authenticatorVersion > 65535){
             throw new MetadataKeyError("Errore valore authenticatorVersion")
+        }
         return true;
     }
 

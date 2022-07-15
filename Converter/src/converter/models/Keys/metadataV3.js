@@ -1,6 +1,6 @@
 "use strict";
 exports.__esModule = true;
-exports.ecdaaTrustAnchor = exports.attestationRootCertificates = exports.tcDisplayPNGCharacteristicsDescriptor = exports.supportedExtensions = exports.userVerificationDetails = exports.AuthenticatorGetInfo = exports.metadataKeysV3 = void 0;
+exports.ecdaaTrustAnchor = exports.attestationRootCertificates = exports.tcDisplayPNGCharacteristicsDescriptor = exports.supportedExtensions = exports.userVerificationDetails = exports.authenticatorOption = exports.AuthenticatorGetInfo = exports.metadataKeysV3 = void 0;
 var crypto_1 = require("crypto"); // per controllare attestationRootCertificates
 var metadataV2_1 = require("./metadataV2");
 var usefulFunction_1 = require("../FieldConverter/usefulFunction");
@@ -8,7 +8,7 @@ var V3toV2_1 = require("../FieldConverter/V3toV2");
 var error_1 = require("../Error/error");
 var metadataKeysV3 = /** @class */ (function () {
     //costruttore con tutti i campi, quelli richiesti sono obbligatori, gli altri facoltativi
-    function metadataKeysV3(description, authenticatorVersion, upv, schema, attestationTypes, attestationCertificateKeyIdentifiers, userVerificationDetails, authenticationAlgorithms, publicKeyAlgAndEncodings, keyProtection, matcherProtection, cryptoStrength, attachmentHint, tcDisplay, attestationRootCertificates, legalHeader, aaid, aaguid, alternativeDescriptions, protocolFamily, isKeyRestricted, isFreshUserVerificationRequired, tcDisplayContentType, tcDisplayPNGCharacteristics, ecdaaTrustAnchors, icon, supportedExtensions) {
+    function metadataKeysV3(description, authenticatorVersion, upv, schema, attestationTypes, attestationCertificateKeyIdentifiers, userVerificationDetails, authenticationAlgorithms, publicKeyAlgAndEncodings, keyProtection, matcherProtection, cryptoStrength, attachmentHint, tcDisplay, attestationRootCertificates, legalHeader, aaid, aaguid, alternativeDescriptions, protocolFamily, isKeyRestricted, isFreshUserVerificationRequired, tcDisplayContentType, tcDisplayPNGCharacteristics, ecdaaTrustAnchors, icon, supportedExtensions, authenticatorGetInfo) {
         if (cryptoStrength === void 0) { cryptoStrength = undefined; }
         if (protocolFamily === void 0) { protocolFamily = "uaf"; }
         if (isKeyRestricted === void 0) { isKeyRestricted = true; }
@@ -61,6 +61,7 @@ var metadataKeysV3 = /** @class */ (function () {
         else {
             this.supportedExtensions = undefined;
         }
+        this.authenticatorGetInfo = authenticatorGetInfo;
     }
     //medodo statico per generazione metadata V2
     metadataKeysV3.fromV3toV2 = function (m) {
@@ -126,7 +127,14 @@ var metadataKeysV3 = /** @class */ (function () {
             var cryptoStrength = (0, V3toV2_1.convertCryptoStrength3toV2)(m.cryptoStrength);
             var operatingEnv = (0, V3toV2_1.convertOperatingEnv3toV2)();
             var attachmentHint = (0, V3toV2_1.convertAttachmentHintV3toV2)(m.attachmentHint);
-            var isSecondFactorOnly = (0, V3toV2_1.convertIsSecondFactorOnly3toV2)();
+            var isSecondFactorOnly = (0, V3toV2_1.convertIsSecondFactorOnly3toV2)(undefined);
+            if (m.authenticatorGetInfo != undefined) {
+                if (m.authenticatorGetInfo.options != undefined) {
+                    if (m.authenticatorGetInfo.options.uv != undefined) {
+                        isSecondFactorOnly = (0, V3toV2_1.convertIsSecondFactorOnly3toV2)(m.authenticatorGetInfo.options.uv);
+                    }
+                }
+            }
             var tcDisplay = void 0;
             if (m.tcDisplay != undefined)
                 tcDisplay = (0, V3toV2_1.convertTcDisplayV3toV2)(m.tcDisplay);
@@ -276,7 +284,7 @@ var metadataKeysV3 = /** @class */ (function () {
     metadataKeysV3.prototype.authenticatorVersionCheck = function () {
         if (this.authenticatorVersion < 0 || this.authenticatorVersion > 4294967295)
             throw new error_1.MetadataKeyError("Errore valore authenticatorVersion");
-        if (this.authenticatorGetInfo != undefined && this.authenticatorGetInfo.firmwareVersion != this.authenticatorVersion)
+        if (this.authenticatorGetInfo != undefined && (this.authenticatorGetInfo != undefined && this.authenticatorGetInfo.firmwareVersion != undefined && this.authenticatorGetInfo.firmwareVersion != this.authenticatorVersion))
             throw new error_1.MetadataKeyError("Errore valore authenticatorVersion");
         return true;
     };
@@ -290,7 +298,7 @@ var metadataKeysV3 = /** @class */ (function () {
             throw new error_1.MetadataKeyError("Errore valore protocolFamily");
         if (protocolFamilyEnum[this.protocolFamily] == undefined)
             throw new error_1.MetadataKeyError("Errore valore protocolFamily");
-        if (this.authenticatorGetInfo != undefined) {
+        if (this.authenticatorGetInfo != undefined && this.authenticatorGetInfo.version != undefined) {
             if (this.protocolFamily == "fido2" && (this.authenticatorGetInfo.version.find(function (element) { return element == "FIDO_2_1"; }) == undefined &&
                 this.authenticatorGetInfo.version.find(function (element) { return element == "FIDO_2_0"; }) == undefined &&
                 this.authenticatorGetInfo.version.find(function (element) { return element == "FIDO_2_1_PRE"; }) == undefined))
@@ -595,8 +603,10 @@ var metadataKeysV3 = /** @class */ (function () {
      *          2) se presente c'è controllo in protocol family
      */
     metadataKeysV3.prototype.authenticatorGetInfoCheck = function () {
+        console.log("stringa preva @704", this.authenticatorGetInfo);
+        console.log("validate internal data", this.authenticatorGetInfo.validateInternalData());
         if (this.authenticatorGetInfo != undefined) {
-            if (!this.authenticatorGetInfo.validateInternalData())
+            if (!this.authenticatorGetInfo.validateInternalData()) //non ci dovrebbe mai entrare in quanto se fosse false sarebbe già stato sollevato errore da funzione validateinternaldata
                 throw new error_1.MetadataKeyError("Errore valore authenticatorGetInfo");
         }
         return true;
@@ -643,55 +653,55 @@ var AuthenticatorGetInfo = /** @class */ (function () {
         //se i valori non sono tra quelli consentiti
         if (this.version.find(function (element) { return element == "FIDO_2_0"; }) == undefined && this.version.find(function (element) { return element == "U2F_V2"; }) == undefined && this.version.find(function (element) { return element == "FIDO_2_1"; }) == undefined &&
             this.version.find(function (element) { return element == "FIDO_2_1_PRE"; }) == undefined)
-            return false;
+            throw new error_1.MetadataKeyError("Errore valore authenticatorGetInfo: version");
         //non è possibile che come valore ci sia soltanto U2F_V2 senza almeno FIDO_2_0, perché "FIDO UAF and FIDO U2F authenticators do not support authenticatorGetInfo" (https://fidoalliance.org/specs/mds/fido-metadata-statement-v3.0-ps-20210518.html#dom-metadatastatement-authenticatorgetinfo)
         if (this.version.find(function (element) { return element == "U2F_V2"; }) != undefined && this.version.find(function (element) { return element == "FIDO_2_0"; }) == undefined)
-            return false;
+            throw new error_1.MetadataKeyError("Errore valore authenticatorGetInfo: version");
         //se extension no ha un valore tra quelli consentiti
         if (this.extensions != undefined && this.extensions.find(function (element) { return element == "credProtect"; }) == undefined && this.extensions.find(function (element) { return element == "credBlob"; }) == undefined &&
             this.extensions.find(function (element) { return element == "credProtect"; }) == undefined && this.extensions.find(function (element) { return element == "largeBlobKey"; }) == undefined &&
             this.extensions.find(function (element) { return element == "minPinLength"; }) == undefined && this.extensions.find(function (element) { return element == "hmac-secret"; }))
-            return false;
+            throw new error_1.MetadataKeyError("Errore valore authenticatorGetInfo: extensions");
         if (!RegExp(/^[0-9a-f]+$/).test(this.aaguid))
-            return false;
+            throw new error_1.MetadataKeyError("Errore valore authenticatorGetInfo: aaguid");
         if (this.maxMsgSize != undefined && this.maxMsgSize < 0)
-            return false;
+            throw new error_1.MetadataKeyError("Errore valore authenticatorGetInfo: maxMsgSize");
         if (this.pinUvAuthProtocols != undefined) {
             for (var i = 0; i < this.pinUvAuthProtocols.length; i++) {
                 if (this.pinUvAuthProtocols[i] < 0)
-                    return false;
+                    throw new error_1.MetadataKeyError("Errore valore authenticatorGetInfo: pinUvAuthProtocols in posizione: " + i);
             }
         }
         if (this.maxCredentialCountInList != undefined && this.maxCredentialCountInList < 0)
-            return false;
+            throw new error_1.MetadataKeyError("Errore valore authenticatorGetInfo: maxCredentialCountInList");
         if (this.maxCredentialIdLength != undefined && this.maxCredentialIdLength < 0)
-            return false;
+            throw new error_1.MetadataKeyError("Errore valore authenticatorGetInfo: maxCredentialIdLength");
         if (this.transports != undefined && this.transports.find(function (element) { return element == "usb"; }) == undefined && this.transports.find(function (element) { return element == "nfc"; }) == undefined &&
             this.transports.find(function (element) { return element == "ble"; }) == undefined && this.transports.find(function (element) { return element == "internal"; }) == undefined)
-            return false;
+            throw new error_1.MetadataKeyError("Errore valore authenticatorGetInfo: transports");
         if (this.maxSerializedLargeBlobArray != undefined && this.maxSerializedLargeBlobArray < 0)
-            return false;
+            throw new error_1.MetadataKeyError("Errore valore authenticatorGetInfo: maxSerializedLargeBlobArray");
         if (this.minPINLength != undefined && this.minPINLength < 0)
-            return false;
+            throw new error_1.MetadataKeyError("Errore valore authenticatorGetInfo: minPINLength");
         if (this.firmwareVersion != undefined && this.firmwareVersion < 0)
-            return false;
+            throw new error_1.MetadataKeyError("Errore valore authenticatorGetInfo: firmwareVersion");
         if (this.maxCredBlobLength != undefined && this.maxCredBlobLength < 0)
-            return false;
+            throw new error_1.MetadataKeyError("Errore valore authenticatorGetInfo: maxCredBlobLength");
         if (this.maxRPIDsForSetMinPINLength != undefined && this.maxRPIDsForSetMinPINLength < 0)
-            return false;
+            throw new error_1.MetadataKeyError("Errore valore authenticatorGetInfo: maxRPIDsForSetMinPINLength");
         if (this.preferredPlatformUvAttempts != undefined && this.preferredPlatformUvAttempts < 0)
-            return false;
+            throw new error_1.MetadataKeyError("Errore valore authenticatorGetInfo: preferredPlatformUvAttempts");
         if (this.certifications != undefined && this.certifications.find(function (element) { return element == "FIPS-CMVP-2"; }) == undefined && this.certifications.find(function (element) { return element == "FIPS-CMVP-2"; }) == undefined &&
             this.certifications.find(function (element) { return element == "FIPS-CMVP-3"; }) == undefined && this.certifications.find(function (element) { return element == "FIPS-CMVP-2-PHY"; }) == undefined &&
             this.certifications.find(function (element) { return element == "FIPS-CMVP-3-PHY"; }) == undefined && this.certifications.find(function (element) { return element == "CC-EAL"; }) == undefined &&
             this.certifications.find(function (element) { return element == "FIDO"; }) == undefined)
-            return false;
+            throw new error_1.MetadataKeyError("Errore valore authenticatorGetInfo: certifications");
         if (this.remainingDiscoverableCredentials != undefined && this.remainingDiscoverableCredentials < 0)
-            return false;
+            throw new error_1.MetadataKeyError("Errore valore authenticatorGetInfo: remainingDiscoverableCredentials");
         if (this.vendorPrototypeConfigCommands != undefined) {
             for (var i = 0; i < this.vendorPrototypeConfigCommands.length; i++) {
                 if (this.vendorPrototypeConfigCommands[i] < 0)
-                    return false;
+                    throw new error_1.MetadataKeyError("Errore valore authenticatorGetInfo: vendorPrototypeConfigCommands in posizione: " + i);
             }
         }
         return true;
@@ -729,6 +739,7 @@ var authenticatorOption = /** @class */ (function () {
     }
     return authenticatorOption;
 }());
+exports.authenticatorOption = authenticatorOption;
 var algorithmAuthenticatorGetInfo = /** @class */ (function () {
     function algorithmAuthenticatorGetInfo(type, alg) {
         this.type = type;

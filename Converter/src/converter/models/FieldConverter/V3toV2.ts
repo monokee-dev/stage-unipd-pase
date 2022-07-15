@@ -76,8 +76,11 @@ export function convertCryptoStrength3toV2(cryptoStrength:number | undefined): n
 
 // CAMPO NON OBBLIGATORIO
 //per ora lascio settato a true
-export function convertIsSecondFactorOnly3toV2(): boolean{
-    return true;
+export function convertIsSecondFactorOnly3toV2(uv: boolean | undefined): boolean{
+    if(uv == undefined || uv == false)
+        return true;
+    else
+        return false;
 }
 
 // CAMPO NON OBBLIGATORIO

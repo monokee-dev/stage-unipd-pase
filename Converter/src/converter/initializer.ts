@@ -1,6 +1,6 @@
 import  * as MV2  from './models/Keys/metadataV2';
 import  * as MV3  from './models/Keys/metadataV3';
-import * as fs from "node:fs"
+import * as fs from "node:fs";
 
 
 import { metadataKeysV2 } from "./models/Keys/metadataV2";
@@ -27,7 +27,7 @@ export function metadataInitializer(path:string): metadataKeysV2 | metadataKeysV
             j.cryptoStrength,j.attachmentHint,j.tcDisplay,j.attestationRootCertificates,j.legalHeader,
             j.aaid,j.aaguid,j.alternativeDescriptions,j.protocolFamily,j.isKeyRestricted,
             j.isFreshUserVerificationRequired,j.tcDisplayContentType,j.tcDisplayPNGCharacteristics,
-            j.ecdaaTrustAnchors,j.icon,j.supportedExtensions)
+            j.ecdaaTrustAnchors,j.icon,j.supportedExtensions,j.authenticatorGetInfo)
     }
 
     return met;

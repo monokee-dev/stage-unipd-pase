@@ -1,6 +1,5 @@
 import { X509Certificate } from 'crypto'; // per controllare attestationRootCertificates
 import { metadataKeysV2 } from './metadataV2';
-import * as  conversion  from './../FieldConverter/V2toV3'
 import { convertAttestationRootCertificates } from '../FieldConverter/usefulFunction';
 import { convertAssertionSchemaV3toV2, convertAttachmentHintV3toV2, convertAttestationTypesV3toV2, convertauthenticationAlgorithmV3toV2, convertCryptoStrength3toV2, convertIsSecondFactorOnly3toV2, convertKeyProtectionV3toV2, convertMatcherProtectionV3toV2, convertOperatingEnv3toV2, convertpublicKeyAlgAndEncodingV3toV2, convertTcDisplayV3toV2, convertUserVerificationDetailsV3toV2 } from '../FieldConverter/V3toV2';
 import { MetadataKeyError } from '../Error/error';
@@ -15,7 +14,7 @@ export class metadataKeysV3{
         attestationRootCertificates:string[], legalHeader:string, aaid?:string, aaguid?:string, alternativeDescriptions?:string, 
         protocolFamily:string="uaf", isKeyRestricted:boolean = true, isFreshUserVerificationRequired:boolean = true, 
         tcDisplayContentType?:string, tcDisplayPNGCharacteristics?:tcDisplayPNGCharacteristicsDescriptor[], ecdaaTrustAnchors?:ecdaaTrustAnchor[], 
-        icon?:string, supportedExtensions?: ExtensionDescriptor[]){
+        icon?:string, supportedExtensions?: ExtensionDescriptor[], authenticatorGetInfo?:AuthenticatorGetInfo ){
 
             this.legalHeader=legalHeader;
             this.aaid=aaid;
@@ -65,6 +64,7 @@ export class metadataKeysV3{
             else{
                 this.supportedExtensions = undefined;
             }
+            this.authenticatorGetInfo = authenticatorGetInfo;
             
     }
 
@@ -163,7 +163,14 @@ export class metadataKeysV3{
             let cryptoStrength = convertCryptoStrength3toV2(m.cryptoStrength);
             let operatingEnv = convertOperatingEnv3toV2();
             let attachmentHint = convertAttachmentHintV3toV2(m.attachmentHint);
-            let isSecondFactorOnly = convertIsSecondFactorOnly3toV2();
+            let isSecondFactorOnly = convertIsSecondFactorOnly3toV2(undefined);
+            if(m.authenticatorGetInfo != undefined){
+                if(m.authenticatorGetInfo.options != undefined){
+                    if(m.authenticatorGetInfo.options.uv != undefined){
+                        isSecondFactorOnly = convertIsSecondFactorOnly3toV2(m.authenticatorGetInfo.options.uv)
+                    }
+                }
+            }
             let tcDisplay;
             if(m.tcDisplay != undefined)
                 tcDisplay = convertTcDisplayV3toV2(m.tcDisplay);
@@ -350,7 +357,7 @@ export class metadataKeysV3{
     private authenticatorVersionCheck(): boolean{
         if(this.authenticatorVersion < 0 || this.authenticatorVersion > 4294967295)
             throw new MetadataKeyError("Errore valore authenticatorVersion")
-        if(this.authenticatorGetInfo != undefined && this.authenticatorGetInfo.firmwareVersion != this.authenticatorVersion)
+        if(this.authenticatorGetInfo != undefined && (this.authenticatorGetInfo != undefined && this.authenticatorGetInfo.firmwareVersion != undefined && this.authenticatorGetInfo.firmwareVersion != this.authenticatorVersion))
             throw new MetadataKeyError("Errore valore authenticatorVersion")
         return true;
     }
@@ -365,7 +372,7 @@ export class metadataKeysV3{
             throw new MetadataKeyError("Errore valore protocolFamily")
         if(protocolFamilyEnum[this.protocolFamily as keyof typeof protocolFamilyEnum] == undefined) 
             throw new MetadataKeyError("Errore valore protocolFamily")
-        if(this.authenticatorGetInfo != undefined){
+        if(this.authenticatorGetInfo != undefined && this.authenticatorGetInfo.version != undefined){
             if(this.protocolFamily == "fido2" && (this.authenticatorGetInfo.version.find(element => element == "FIDO_2_1") == undefined && 
                                                 this.authenticatorGetInfo.version.find(element => element == "FIDO_2_0") == undefined &&
                                                 this.authenticatorGetInfo.version.find(element => element == "FIDO_2_1_PRE") == undefined))
@@ -693,12 +700,8 @@ export class metadataKeysV3{
      *          1) Verifica correttezza campi
      *          2) se presente c'è controllo in protocol family
      */
-     private authenticatorGetInfoCheck(): boolean{
-        if(this.authenticatorGetInfo != undefined){
-            if(!this.authenticatorGetInfo.validateInternalData())
-                throw new MetadataKeyError("Errore valore authenticatorGetInfo")
-        }   
-        return true;
+    private authenticatorGetInfoCheck(): boolean{
+        return this.authenticatorGetInfo!.validateInternalData();
     }
 }
 
@@ -771,56 +774,56 @@ export class AuthenticatorGetInfo{
         //se i valori non sono tra quelli consentiti
         if(this.version.find(element => element == "FIDO_2_0") == undefined && this.version.find(element => element == "U2F_V2") == undefined && this.version.find(element => element == "FIDO_2_1") == undefined &&
         this.version.find(element => element == "FIDO_2_1_PRE") == undefined)
-            return false;
+            throw new MetadataKeyError("Errore valore authenticatorGetInfo: version")
         //non è possibile che come valore ci sia soltanto U2F_V2 senza almeno FIDO_2_0, perché "FIDO UAF and FIDO U2F authenticators do not support authenticatorGetInfo" (https://fidoalliance.org/specs/mds/fido-metadata-statement-v3.0-ps-20210518.html#dom-metadatastatement-authenticatorgetinfo)
         if(this.version.find(element => element == "U2F_V2") != undefined && this.version.find(element => element == "FIDO_2_0") == undefined)
-            return false;
+            throw new MetadataKeyError("Errore valore authenticatorGetInfo: version")
         //se extension no ha un valore tra quelli consentiti
         if(this.extensions != undefined && this.extensions.find(element => element == "credProtect") == undefined && this.extensions.find(element => element == "credBlob") == undefined &&
             this.extensions.find(element => element == "credProtect") == undefined && this.extensions.find(element => element == "largeBlobKey") == undefined &&
             this.extensions.find(element => element == "minPinLength") == undefined && this.extensions.find(element => element == "hmac-secret"))
-            return false;
+                throw new MetadataKeyError("Errore valore authenticatorGetInfo: extensions")
         if(!RegExp(/^[0-9a-f]+$/).test(this.aaguid))
-            return false;
+            throw new MetadataKeyError("Errore valore authenticatorGetInfo: aaguid")
         if(this.maxMsgSize != undefined && this.maxMsgSize < 0)
-            return false;
+            throw new MetadataKeyError("Errore valore authenticatorGetInfo: maxMsgSize")
         if(this.pinUvAuthProtocols != undefined){
             for(let i=0; i<this.pinUvAuthProtocols.length;i++){
                 if(this.pinUvAuthProtocols[i] < 0)
-                    return false
+                    throw new MetadataKeyError("Errore valore authenticatorGetInfo: pinUvAuthProtocols in posizione: " + i)
             }
         }
         if(this.maxCredentialCountInList != undefined && this.maxCredentialCountInList < 0)
-            return false;
+            throw new MetadataKeyError("Errore valore authenticatorGetInfo: maxCredentialCountInList")
         if(this.maxCredentialIdLength != undefined && this.maxCredentialIdLength < 0)
-            return false;
+            throw new MetadataKeyError("Errore valore authenticatorGetInfo: maxCredentialIdLength")
         if(this.transports != undefined && this.transports.find(element => element == "usb") == undefined && this.transports.find(element => element == "nfc") == undefined &&
             this.transports.find(element => element == "ble") == undefined && this.transports.find(element => element == "internal") == undefined)
-            return false;
+                throw new MetadataKeyError("Errore valore authenticatorGetInfo: transports")
         
         if(this.maxSerializedLargeBlobArray != undefined && this.maxSerializedLargeBlobArray < 0)
-            return false;
+            throw new MetadataKeyError("Errore valore authenticatorGetInfo: maxSerializedLargeBlobArray")
         if(this.minPINLength != undefined && this.minPINLength < 0)
-            return false;
+            throw new MetadataKeyError("Errore valore authenticatorGetInfo: minPINLength")
         if(this.firmwareVersion != undefined && this.firmwareVersion < 0)
-            return false;
+            throw new MetadataKeyError("Errore valore authenticatorGetInfo: firmwareVersion")
         if(this.maxCredBlobLength  != undefined && this.maxCredBlobLength  < 0)
-            return false;
+            throw new MetadataKeyError("Errore valore authenticatorGetInfo: maxCredBlobLength")
         if(this.maxRPIDsForSetMinPINLength != undefined && this.maxRPIDsForSetMinPINLength < 0)
-            return false;
+            throw new MetadataKeyError("Errore valore authenticatorGetInfo: maxRPIDsForSetMinPINLength")
         if(this.preferredPlatformUvAttempts != undefined && this.preferredPlatformUvAttempts < 0)
-            return false;
+            throw new MetadataKeyError("Errore valore authenticatorGetInfo: preferredPlatformUvAttempts")
         if(this.certifications != undefined && this.certifications.find(element => element == "FIPS-CMVP-2") == undefined && this.certifications.find(element => element == "FIPS-CMVP-2") == undefined &&
         this.certifications.find(element => element == "FIPS-CMVP-3") == undefined && this.certifications.find(element => element == "FIPS-CMVP-2-PHY") == undefined && 
         this.certifications.find(element => element == "FIPS-CMVP-3-PHY") == undefined && this.certifications.find(element => element == "CC-EAL") == undefined &&
         this.certifications.find(element => element == "FIDO") == undefined)
-            return false;
+            throw new MetadataKeyError("Errore valore authenticatorGetInfo: certifications")
         if(this.remainingDiscoverableCredentials != undefined && this.remainingDiscoverableCredentials < 0)
-            return false;
+            throw new MetadataKeyError("Errore valore authenticatorGetInfo: remainingDiscoverableCredentials")
         if(this.vendorPrototypeConfigCommands != undefined){
             for(let i=0; i<this.vendorPrototypeConfigCommands.length;i++){
                 if(this.vendorPrototypeConfigCommands[i] < 0)
-                    return false
+                    throw new MetadataKeyError("Errore valore authenticatorGetInfo: vendorPrototypeConfigCommands in posizione: " + i)
             }
         }
         return true;
@@ -828,7 +831,7 @@ export class AuthenticatorGetInfo{
 }
 
 //controlli da fare
-class authenticatorOption{
+export class authenticatorOption{
     constructor(p:boolean = false, r:boolean = false, c:boolean | null = null, up:boolean=true, uv:boolean | null = null,
         uvT?:boolean, no?: boolean, la?:boolean, ep?:boolean, bio?:boolean, user?:boolean, uvBio?:boolean, auth?:boolean, uva?:boolean,
         cred?:boolean, crede?:boolean,setM?:boolean, make?:boolean, alw?:boolean){

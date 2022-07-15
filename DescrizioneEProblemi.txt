@@ -32,3 +32,7 @@ Problemi riscontrati:
 
 	-attachmentHint nella documentazione viene espressamente detto che un valore (il secondo) non deve essere inserito da solo; guardando il file fido con 
         svariati esempi del metadata si nota che questa regola non viene rispettata. Il convertitore al momento segue le regole della documentazione
+        
+        //to do issecondfactoronly -> userverfication uv
+                             false -> true 
+                              true -> false

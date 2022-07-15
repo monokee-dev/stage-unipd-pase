@@ -71,8 +71,11 @@ function convertCryptoStrength3toV2(cryptoStrength) {
 exports.convertCryptoStrength3toV2 = convertCryptoStrength3toV2;
 // CAMPO NON OBBLIGATORIO
 //per ora lascio settato a true
-function convertIsSecondFactorOnly3toV2() {
-    return true;
+function convertIsSecondFactorOnly3toV2(uv) {
+    if (uv == undefined || uv == false)
+        return true;
+    else
+        return false;
 }
 exports.convertIsSecondFactorOnly3toV2 = convertIsSecondFactorOnly3toV2;
 // CAMPO NON OBBLIGATORIO

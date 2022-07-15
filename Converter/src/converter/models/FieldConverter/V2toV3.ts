@@ -102,7 +102,7 @@ export function convertSchemaV2toV3(): number{
  * 
  *      - U2F_V2 non è mai da solo nel campo version, solitamente è posto insieme a FIDO_2_0
  */
-export function convertAuthenticatorGetInfoV2toV3(aaguid:string, assertionScheme:string): KeysV3.AuthenticatorGetInfo | undefined{
+export function convertAuthenticatorGetInfoV2toV3(aaguid:string, assertionScheme:string, isSecondFactorOnly: boolean | undefined, firmwareVersion: number | undefined): KeysV3.AuthenticatorGetInfo | undefined{
     let version: string[] = new Array();
     let aa: string = aaguid.replace("-","");
     if(assertionScheme=="FIDOV2"){
@@ -114,7 +114,11 @@ export function convertAuthenticatorGetInfoV2toV3(aaguid:string, assertionScheme
     if(version.length == 0){
         return undefined;
     }
-    return new KeysV3.AuthenticatorGetInfo(version, aa);
+
+    if(isSecondFactorOnly == undefined || isSecondFactorOnly == false)
+        return new KeysV3.AuthenticatorGetInfo(version, aa,undefined,new KeysV3.authenticatorOption(undefined,undefined,undefined,undefined,true));
+    else
+        return new KeysV3.AuthenticatorGetInfo(version, aa,undefined,new KeysV3.authenticatorOption(undefined,undefined,undefined,undefined,false),undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,firmwareVersion);  
 }
 
 // funzione singola per conversione dei codici degli algoritmi

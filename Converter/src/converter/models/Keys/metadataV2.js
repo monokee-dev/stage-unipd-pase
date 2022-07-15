@@ -155,17 +155,20 @@ var metadataKeysV2 = /** @class */ (function () {
             var icon = m.icon != undefined ? m.icon : undefined;
             var supportedExtensions_1 = m.supportedExtensions != undefined ? Array.from(m.supportedExtensions) : undefined;
             var schema = conversion.convertSchemaV2toV3();
-            var authenticatorgetinfo = void 0;
+            var authenticatorGetInfo = void 0;
             if (m.aaguid == undefined) {
-                if (m.assertionScheme == "FIDOV2")
-                    throw "Errore, campo assertionScheme presente con valore FidoV2, perciò authenticatorgetinfo è obbligatorio: il campo aaguid non è presente";
-                else
-                    authenticatorgetinfo = undefined;
+                if (m.assertionScheme == "FIDOV2") {
+                    throw "Errore, campo assertionScheme presente con valore FidoV2, perciò authenticatorGetInfo è obbligatorio: il campo aaguid non è presente";
+                }
+                else {
+                    authenticatorGetInfo = undefined;
+                }
             }
-            else
-                authenticatorgetinfo = conversion.convertAuthenticatorGetInfoV2toV3(m.aaguid, m.assertionScheme);
+            else {
+                authenticatorGetInfo = conversion.convertAuthenticatorGetInfoV2toV3(m.aaguid, m.assertionScheme, m.isSecondFactorOnly, m.authenticatorVersion);
+            }
             //ATTENZIONE controllare i vari campi all'interno del costruttore: i campi dati undefined che sono obbligatori dovrebbero essere inseriti con operatore ternario
-            result = new metadataV3_1.metadataKeysV3(description, authenticatorVersion, upv, schema, attestationTypes != undefined ? attestationTypes : new Array(), attestationCertificateKeyIdentifiers, userVerificationDetails_1 != undefined ? userVerificationDetails_1 : new Array(), authenticationAlgorithms, Array.from(publicKeyAlgAndEncodings), keyProtection != undefined ? keyProtection : new Array(), matcherProtection != undefined ? matcherProtection : new Array(), cryptoStrength, attachmentHint != undefined ? attachmentHint : new Array(), tcDisplay, attestationRootCertificates_1, legalHeader, aaid, aaguid, alternativeDescriptions, protocolFamily, isKeyRestricted, isFreshUserVerificationRequired, tcDisplayContentType, tcDisplayPNGCharacteristics != undefined ? tcDisplayPNGCharacteristics : undefined, ecdaaTrustAnchors, icon, supportedExtensions_1);
+            result = new metadataV3_1.metadataKeysV3(description, authenticatorVersion, upv, schema, attestationTypes != undefined ? attestationTypes : new Array(), attestationCertificateKeyIdentifiers, userVerificationDetails_1 != undefined ? userVerificationDetails_1 : new Array(), authenticationAlgorithms, Array.from(publicKeyAlgAndEncodings), keyProtection != undefined ? keyProtection : new Array(), matcherProtection != undefined ? matcherProtection : new Array(), cryptoStrength, attachmentHint != undefined ? attachmentHint : new Array(), tcDisplay, attestationRootCertificates_1, legalHeader, aaid, aaguid, alternativeDescriptions, protocolFamily, isKeyRestricted, isFreshUserVerificationRequired, tcDisplayContentType, tcDisplayPNGCharacteristics != undefined ? tcDisplayPNGCharacteristics : undefined, ecdaaTrustAnchors, icon, supportedExtensions_1, authenticatorGetInfo);
         }
         return result;
     };
@@ -312,8 +315,9 @@ var metadataKeysV2 = /** @class */ (function () {
      *          1) essendo il campo unsigned short:  0 <= authenticatorVersion <= 65.535
      */
     metadataKeysV2.prototype.authenticatorVersionCheck = function () {
-        if (this.authenticatorVersion < 0 || this.authenticatorVersion > 65535)
+        if (this.authenticatorVersion < 0 || this.authenticatorVersion > 65535) {
             throw new error_1.MetadataKeyError("Errore valore authenticatorVersion");
+        }
         return true;
     };
     /**
