@@ -1,12 +1,13 @@
 //import * as dotenv from 'dotenv';
 
 import  * as MV2  from './converter/models/Keys/v2/MetadataV2';
+import * as path from 'path'
+
 
 import { metadataInitializer } from './converter/initializer';
 
 
-
-    let metadata1 = metadataInitializer("./../resources/FIDOV3Keys.txt");
+    let metadata1 = metadataInitializer(path.join(__dirname, "resources/FIDOV3Keys.txt"));
     let metadata2;
     let metadata3;
     
