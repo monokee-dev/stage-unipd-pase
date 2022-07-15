@@ -1,4 +1,6 @@
-class TcDisplayPNGCharacteristicsDescriptor {
+import { RGBPaletteEntry } from "./RGBPaletteEntry";
+
+export class TcDisplayPNGCharacteristicsDescriptor {
 
     constructor(w: number = 0, h: number = 0, b: number = 0, c: number = 0, f: number = 0, i: number = 0, p?: RGBPaletteEntry[]) {
         this.width = w;
@@ -7,7 +9,7 @@ class TcDisplayPNGCharacteristicsDescriptor {
         this.compression = c;
         this.filter = f;
         this.interlace = i;
-        this.plte = p;
+        this.plte = p!=undefined ? Array.from(p) : undefined;
     }
     public width: number;
     public height: number;

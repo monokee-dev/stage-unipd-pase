@@ -7,21 +7,21 @@ export class V3toV2 {
     public static convertAttestationTypes(attestationTypes:string[]): number[] | undefined{
         var temp: number[] = new Array();
         for(var obj of attestationTypes){
-            temp.push(Number(V2V3Map.attestationTypesConverter(obj)));
+            temp.push(Number(V2V3Map.V2andV3.attestationTypesConverter(obj)));
         }
         return temp;
     }
 
 
     public static convertUserVerificationDetails(userVerification:string): number | undefined{
-        return Number(V2V3Map.userVerificationDetailsConverter(userVerification));
+        return Number(V2V3Map.V2andV3.userVerificationDetailsConverter(userVerification));
     }
 
 
     public static convertKeyProtection(keyProtection: string[]): number | undefined{
         let keyV3: number=0;
         for(let i=0; i<keyProtection.length; i++){
-            let temp = (Number(V2V3Map.keyProtectionConverter((keyProtection[i]))));
+            let temp = (Number(V2V3Map.V2andV3.keyProtectionConverter((keyProtection[i]))));
             keyV3 = keyV3 + temp;
         }
         return keyV3;
@@ -31,7 +31,7 @@ export class V3toV2 {
     public static convertMatcherProtection(matcherProtection: string[]): number | undefined{
         let keyV3: number=0;
         for(let i=0; i<matcherProtection.length; i++){
-            let temp = (Number(V2V3Map.matcherProtectionConverter((matcherProtection[i]))));
+            let temp = (Number(V2V3Map.V2andV3.matcherProtectionConverter((matcherProtection[i]))));
             keyV3 = keyV3 + temp;
         }
         return keyV3;
@@ -41,7 +41,7 @@ export class V3toV2 {
     public static convertAttachmentHint(attachmentHint: string[]): number | undefined{
         let keyV3: number=0;
         for(let i=0; i<attachmentHint.length; i++){
-            let temp = Number(V2V3Map.attachmentHintConverter((attachmentHint[i])));
+            let temp = Number(V2V3Map.V2andV3.attachmentHintConverter((attachmentHint[i])));
             keyV3 = keyV3 + temp;
         }
         return keyV3;
@@ -51,7 +51,7 @@ export class V3toV2 {
     public static convertTcDisplay(tcDisplay: string[]): number | undefined{
         let keyV3: number=0;
         for(let i=0; i<tcDisplay.length; i++){
-            let temp = (Number(V2V3Map.tcDisplayConverter((tcDisplay[i]))));   
+            let temp = (Number(V2V3Map.V2andV3.tcDisplayConverter((tcDisplay[i]))));   
             keyV3 = keyV3 + temp;
         }
         return keyV3;
@@ -91,14 +91,14 @@ export class V3toV2 {
 
 
     public static convertauthenticationAlgorithm(authenticationAlgorithm:string): number | undefined{
-        let temp = V2V3Map.authenticationAlgorithmsConverter(authenticationAlgorithm);
+        let temp = V2V3Map.V2andV3.authenticationAlgorithmsConverter(authenticationAlgorithm);
         if(temp)
             return Number(temp)
         return undefined;
     }
 
     public static convertpublicKeyAlgAndEncoding(publicKeyAlgAndEncoding:string): number | undefined{
-        let temp = V2V3Map.publicKeyAlgAndEncodingsConverter(publicKeyAlgAndEncoding);
+        let temp = V2V3Map.V2andV3.publicKeyAlgAndEncodingsConverter(publicKeyAlgAndEncoding);
         if(temp)
             return Number(temp)
         return undefined;

@@ -1,7 +1,9 @@
-import { MetadataKeyError } from "src/converter/models/Error/error";
+import { MetadataKeyError } from "./../../Error/error";
+import { AlgorithmAuthenticatorGetInfo } from "./AlgorithmAuthenticatorGetInfo";
+import { AuthenticatorOption } from "./AuthenticatorOption";
 
 export class AuthenticatorGetInfo {
-    constructor(ver: string[], aag: string, ext?: string[], opt?: AuthenticatorGetInfo, maxM?: number, pin?: number[], maxCc?: number, maxCIi?: number,
+    constructor(ver: string[], aag: string, ext?: string[], opt?: AuthenticatorOption, maxM?: number, pin?: number[], maxCc?: number, maxCIi?: number,
         tra?: string[], alg?: AlgorithmAuthenticatorGetInfo, maxA?: number, def?: number, fir?: number, maxS?: number, force?: boolean, minP?: number,
         maxCbl?: number, maxRpin?: number, pref?: number, uvM?: number, certif?: string[], remaining?: number, vendor?: number[]) {
         this.version = Array.from(ver);
@@ -33,7 +35,7 @@ export class AuthenticatorGetInfo {
     public version: string[];
     public extensions: string[] | undefined;
     public aaguid: string;
-    public options: AuthenticatorGetInfo | undefined;
+    public options: AuthenticatorOption | undefined;
     public maxMsgSize: number | undefined;
     public pinUvAuthProtocols: number[] | undefined;
     public maxCredentialCountInList: number | undefined;

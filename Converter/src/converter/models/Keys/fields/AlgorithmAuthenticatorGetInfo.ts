@@ -1,4 +1,4 @@
-class AlgorithmAuthenticatorGetInfo {
+export class AlgorithmAuthenticatorGetInfo {
     constructor(type: string, alg: number) {
         this.type = type;
         this.alg = alg;

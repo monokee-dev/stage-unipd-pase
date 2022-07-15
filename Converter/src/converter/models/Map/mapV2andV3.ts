@@ -1,133 +1,135 @@
-import { application } from "express";
+//import { application } from "express";
 
-export function attestationTypesConverter(x: number | string): number | string | undefined {
-    //controllo tipo: se number si ritorna il nome dell'algoritmo
-    if(typeof x === "number"){
-        return attestationTypesEnumMap[x];
-    }
-    //se stringa si ritorna il valore numerico
-    else if(typeof x === "string"){
-        for(var iter in attestationTypesEnumMap){
-            if(iter === x){
-                return attestationTypesEnumMap[iter];
-            }
+export class V2andV3{
+
+    static attestationTypesConverter(x: number | string): number | string | undefined {
+        //controllo tipo: se number si ritorna il nome dell'algoritmo
+        if(typeof x === "number"){
+            return attestationTypesEnumMap[x];
         }
-        return undefined;
+        //se stringa si ritorna il valore numerico
+        else if(typeof x === "string"){
+            for(var iter in attestationTypesEnumMap){
+                if(iter === x){
+                    return attestationTypesEnumMap[iter];
+                }
+            }
+            return undefined;
+        }
+    }
+
+    static userVerificationDetailsConverter(x: number | string): number | string | undefined {
+        //controllo tipo: se number si ritorna il nome dell'algoritmo
+        if(typeof x === "number"){
+            return userVerificationDetailsEnumMap[x];
+        }
+        //se stringa si ritorna il valore numerico
+        else if(typeof x === "string"){
+            for(var iter in userVerificationDetailsEnumMap){
+                if(iter === x){
+                    return userVerificationDetailsEnumMap[iter];
+                }
+            }
+            return undefined;
+        }
+    }
+
+    static keyProtectionConverter(x: number | string): number | string | undefined {
+        //controllo tipo: se number si ritorna il nome dell'algoritmo
+        if(typeof x === "number"){
+            return keyProtectionEnumMap[x];
+        }
+        //se stringa si ritorna il valore numerico
+        else if(typeof x === "string"){
+            for(var iter in keyProtectionEnumMap){
+                if(iter === x){
+                    return keyProtectionEnumMap[iter];
+                }
+            }
+            return undefined;
+        }
+    }
+
+    static matcherProtectionConverter(x: number | string): number | string | undefined {
+        //controllo tipo: se number si ritorna il nome dell'algoritmo
+        if(typeof x === "number"){
+            return matcherProtectionEnumMap[x];
+        }
+        //se stringa si ritorna il valore numerico
+        else if(typeof x === "string"){
+            for(var iter in matcherProtectionEnumMap){
+                if(iter === x){
+                    return matcherProtectionEnumMap[iter];
+                }
+            }
+            return undefined;
+        }
+    }
+
+    static attachmentHintConverter(x: number | string): number | string | undefined {
+        //controllo tipo: se number si ritorna il nome dell'algoritmo
+        if(typeof x === "number"){
+            return attachmentHintEnumMap[x];
+        }
+        //se stringa si ritorna il valore numerico
+        else if(typeof x === "string"){
+            for(var iter in attachmentHintEnumMap){
+                if(iter === x){
+                    return attachmentHintEnumMap[iter];
+                }
+            }
+            return undefined;
+        }
+    }
+
+    static tcDisplayConverter(x: number | string): number | string | undefined {
+        //controllo tipo: se number si ritorna il nome dell'algoritmo
+        if(typeof x === "number"){
+            return tcDisplayEnumMap[x];
+        }
+        //se stringa si ritorna il valore numerico
+        else if(typeof x === "string"){
+            for(var iter in tcDisplayEnumMap){
+                if(iter === x){
+                    return tcDisplayEnumMap[iter];
+                }
+            }
+            return undefined;
+        }
+    }
+
+    static authenticationAlgorithmsConverter(x: number | string): number | string | undefined{
+        //controllo tipo: se number si ritorna il nome dell'algoritmo
+        if(typeof x === "number"){
+            return authenticationAlgorithmsEnumMap[x];
+        }
+        //se stringa si ritorna il valore numerico
+        else if(typeof x === "string"){
+            for(var iter in authenticationAlgorithmsEnumMap){
+                if(iter === x){
+                    return authenticationAlgorithmsEnumMap[iter];
+                }
+            }
+            return undefined;
+        }
+    }
+
+    static publicKeyAlgAndEncodingsConverter(x: number | string): number | string | undefined {
+        //controllo tipo: se number si ritorna il nome dell'algoritmo
+        if(typeof x === "number"){
+            return publicKeyAlgAndEncodingsEnumMap[x];
+        }
+        //se stringa si ritorna il valore numerico
+        else if(typeof x === "string"){
+            for(var iter in publicKeyAlgAndEncodingsEnumMap){
+                if(iter === x){
+                    return publicKeyAlgAndEncodingsEnumMap[iter];
+                }
+            }
+            return undefined;
+        }
     }
 }
-
-export function userVerificationDetailsConverter(x: number | string): number | string | undefined {
-    //controllo tipo: se number si ritorna il nome dell'algoritmo
-    if(typeof x === "number"){
-        return userVerificationDetailsEnumMap[x];
-    }
-    //se stringa si ritorna il valore numerico
-    else if(typeof x === "string"){
-        for(var iter in userVerificationDetailsEnumMap){
-            if(iter === x){
-                return userVerificationDetailsEnumMap[iter];
-            }
-        }
-        return undefined;
-    }
-}
-
-export function keyProtectionConverter(x: number | string): number | string | undefined {
-    //controllo tipo: se number si ritorna il nome dell'algoritmo
-    if(typeof x === "number"){
-        return keyProtectionEnumMap[x];
-    }
-    //se stringa si ritorna il valore numerico
-    else if(typeof x === "string"){
-        for(var iter in keyProtectionEnumMap){
-            if(iter === x){
-                return keyProtectionEnumMap[iter];
-            }
-        }
-        return undefined;
-    }
-}
-
-export function matcherProtectionConverter(x: number | string): number | string | undefined {
-    //controllo tipo: se number si ritorna il nome dell'algoritmo
-    if(typeof x === "number"){
-        return matcherProtectionEnumMap[x];
-    }
-    //se stringa si ritorna il valore numerico
-    else if(typeof x === "string"){
-        for(var iter in matcherProtectionEnumMap){
-            if(iter === x){
-                return matcherProtectionEnumMap[iter];
-            }
-        }
-        return undefined;
-    }
-}
-
-export function attachmentHintConverter(x: number | string): number | string | undefined {
-    //controllo tipo: se number si ritorna il nome dell'algoritmo
-    if(typeof x === "number"){
-        return attachmentHintEnumMap[x];
-    }
-    //se stringa si ritorna il valore numerico
-    else if(typeof x === "string"){
-        for(var iter in attachmentHintEnumMap){
-            if(iter === x){
-                return attachmentHintEnumMap[iter];
-            }
-        }
-        return undefined;
-    }
-}
-
-export function tcDisplayConverter(x: number | string): number | string | undefined {
-    //controllo tipo: se number si ritorna il nome dell'algoritmo
-    if(typeof x === "number"){
-        return tcDisplayEnumMap[x];
-    }
-    //se stringa si ritorna il valore numerico
-    else if(typeof x === "string"){
-        for(var iter in tcDisplayEnumMap){
-            if(iter === x){
-                return tcDisplayEnumMap[iter];
-            }
-        }
-        return undefined;
-    }
-}
-
-export function authenticationAlgorithmsConverter(x: number | string): number | string | undefined{
-    //controllo tipo: se number si ritorna il nome dell'algoritmo
-    if(typeof x === "number"){
-        return authenticationAlgorithmsEnumMap[x];
-    }
-    //se stringa si ritorna il valore numerico
-    else if(typeof x === "string"){
-        for(var iter in authenticationAlgorithmsEnumMap){
-            if(iter === x){
-                return authenticationAlgorithmsEnumMap[iter];
-            }
-        }
-        return undefined;
-    }
-}
-
-export function publicKeyAlgAndEncodingsConverter(x: number | string): number | string | undefined {
-    //controllo tipo: se number si ritorna il nome dell'algoritmo
-    if(typeof x === "number"){
-        return publicKeyAlgAndEncodingsEnumMap[x];
-    }
-    //se stringa si ritorna il valore numerico
-    else if(typeof x === "string"){
-        for(var iter in publicKeyAlgAndEncodingsEnumMap){
-            if(iter === x){
-                return publicKeyAlgAndEncodingsEnumMap[iter];
-            }
-        }
-        return undefined;
-    }
-}
-
 enum attestationTypesEnumMap{
     "basic_full" = 15879,
     "basic_surrogate" = 15880,

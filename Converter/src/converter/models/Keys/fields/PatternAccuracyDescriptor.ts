@@ -1,4 +1,4 @@
-class PatternAccuracyDescriptor {
+export class PatternAccuracyDescriptor {
     constructor(ba: number, mL?: number, bl?: number) {
         this.minComplexity = ba;
         this.maxRetries = mL!;

@@ -1,4 +1,4 @@
-class BiometricAccuracyDescriptor {
+export class BiometricAccuracyDescriptor {
     constructor(SFR?: boolean, SFA?: boolean, mT?: number, mR?: number, bls?: number) {
         this.selfAttestedFRR = SFR!;
         this.selfAttestedFAR = SFA!;

@@ -1,5 +1,5 @@
 
-enum V3FunctionName {
+export enum V3FunctionName {
     "aaid" = 1,
     "aaguid" = 2,
     "attestationCertificateKeyIdentifiers" = 3,
@@ -25,7 +25,41 @@ enum V3FunctionName {
     //supportedExtensions = 23,
 }
 
-enum tcDisplayEnum {
+export enum V2FunctionName{
+    "aaid" = 1,
+    "aaguid" = 2,
+    "attestationCertificateKeyIdentifiers" = 3,
+    "authenticatorVersion" = 4,
+    "protocolFamily" = 5,
+    "upv" = 6,
+    "assertionScheme" = 7,
+    "authenticationAlgorithm" = 8,
+    "authenticationAlgorithms" = 9,
+    "publicKeyAlgAndEncoding" = 10,
+    "publicKeyAlgAndEncodings" = 11,
+    "attestationTypes" = 12,
+    "userVerificationDetails" = 13,
+    "keyProtection" = 14,
+    "matcherProtection" = 15,
+    "cryptoStrengthCeck" = 16,
+    "operatingEnv" = 17,
+    "attachmentHint" = 18,
+    "tcDisplay" = 19,
+    "tcDisplayContentType" = 20,
+    "tcDisplayPNGCharacteristics" = 21,
+    "attestationRootCertificates" = 22,
+    "ecdaaTrustAnchors" = 23,
+    "icon" = 24,
+    //supportedExtensions = 25,   
+}
+
+export enum assertionSchemeEnum{
+    "U2FV1BIN",
+    "FIDOV2",
+    "UAFV1TLV",
+}
+
+export enum tcDisplayEnum {
     "any",
     "privileged_software",
     "tee",
@@ -33,7 +67,7 @@ enum tcDisplayEnum {
     "remote",
 }
 
-enum attachmentHintEnum {
+export enum attachmentHintEnum {
     "internal",
     "external",
     "wired",
@@ -45,13 +79,13 @@ enum attachmentHintEnum {
     "wifi_direct",
 }
 
-enum matcherProtectionEnum {
+export enum matcherProtectionEnum {
     "software",
     "tee",
     "on_chip",
 }
 
-enum keyProtectionEnum {
+export enum keyProtectionEnum {
     "software",
     "hardware",
     "tee",
@@ -59,14 +93,14 @@ enum keyProtectionEnum {
     "remote_handle",
 }
 
-enum protocolFamilyEnum {
+export enum protocolFamilyEnum {
     "uaf",
     "u2f",
     "fido2",
 }
 
 //errore documentazione: 0x000B == 0x003 (solo nome tra virgolette)
-enum authenticationAlgorithmsEnum {
+export enum authenticationAlgorithmsEnum {
     "secp256r1_ecdsa_sha256_raw",
     "secp256r1_ecdsa_sha256_der",
     "rsassa_pss_sha256_raw",
@@ -87,7 +121,7 @@ enum authenticationAlgorithmsEnum {
     "ed25519_eddsa_sha512_raw",
 }
 
-enum publicKeyAlgAndEncodingsEnum {
+export enum publicKeyAlgAndEncodingsEnum {
     "ecc_x962_raw",
     "ecc_x962_der",
     "rsa_2048_raw",
@@ -95,14 +129,14 @@ enum publicKeyAlgAndEncodingsEnum {
     "cose",
 }
 
-enum attestationTypesEnum {
+export enum attestationTypesEnum {
     "basic_full",
     "basic_surrogate",
     "ecdaa",
     "attca",
 }
 
-enum tcDisplayContentTypeEnum {
+export enum tcDisplayContentTypeEnum {
     "application/octet-stream",
     "application/postscript",
     "message/external-body",
@@ -116,7 +150,7 @@ enum tcDisplayContentTypeEnum {
     "text/foo",
 }
 
-enum operatingEnvEnum {
+export enum operatingEnvEnum {
     "TEEs based on ARM TrustZone HW",
     "TEE Based on Intel VT HW",
     "TEE Based on Intel SGX HW",
@@ -128,7 +162,7 @@ enum operatingEnvEnum {
     "Secure Element (SE)",
 }
 
-enum VerificationMethodDescriptorUserVerificationMethodEnum {
+export enum VerificationMethodDescriptorUserVerificationMethodEnum {
     "error",
     "presence_internal",
     "fingerprint_internal",
@@ -144,7 +178,7 @@ enum VerificationMethodDescriptorUserVerificationMethodEnum {
     "passcode_external",
     "pattern_external",
 }
-enum G1CurveEnum {
+export enum G1CurveEnum {
     "BN_P256",
     "BN_P638",
     "BN_ISOP256",

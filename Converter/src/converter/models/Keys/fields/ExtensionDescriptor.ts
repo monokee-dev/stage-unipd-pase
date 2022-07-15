@@ -1,4 +1,4 @@
-class ExtensionDescriptor {
+export class ExtensionDescriptor {
     constructor(i: string, f: boolean, t?: number, d?: string) {
         this.id = i;
         this.tag = t!;

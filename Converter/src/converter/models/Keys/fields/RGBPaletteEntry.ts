@@ -1,4 +1,4 @@
-class RGBPaletteEntry {
+export class RGBPaletteEntry {
 
     constructor(r1: number = 0, g1: number = 0, b1: number = 0) {
         this.r = r1;

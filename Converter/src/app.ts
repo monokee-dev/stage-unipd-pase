@@ -1,15 +1,16 @@
-import * as dotenv from 'dotenv';
+//import * as dotenv from 'dotenv';
 
-import  * as MV2  from './converter/models/Keys/metadataV2';
-import  * as MV3  from './converter/models/Keys/metadataV3';
+import  * as MV2  from './converter/models/Keys/v2/MetadataV2';
 
 import { metadataInitializer } from './converter/initializer';
 
-    let metadata1 = metadataInitializer("../resources/FIDOV3Keys.json", true);
+
+
+    let metadata1 = metadataInitializer("./../resources/FIDOV3Keys.txt");
     let metadata2;
     let metadata3;
     
-    if(metadata1 instanceof MV2.metadataKeysV2){
+    if(metadata1 instanceof MV2.MetadataKeysV2){
         //metadata2 = metadataKeysV2.fromV2toV3(metadata1)
         //metadata3 = metadataKeysV3.fromV3toV2(metadata2)
     }

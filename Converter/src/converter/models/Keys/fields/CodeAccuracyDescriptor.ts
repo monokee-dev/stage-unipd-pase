@@ -1,4 +1,4 @@
-class CodeAccuracyDescriptor {
+export class CodeAccuracyDescriptor {
     constructor(ba: number, mL: number, mR?: number, bl?: number) {
         this.base = ba;
         this.minLength = mL;

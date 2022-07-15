@@ -1,4 +1,6 @@
-class SupportedExtensions {
+import { ExtensionDescriptor } from "./ExtensionDescriptor";
+
+export class SupportedExtensions {
     constructor(info: ExtensionDescriptor) {
         this.data = info;
     }

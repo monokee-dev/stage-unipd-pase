@@ -1,16 +1,24 @@
 import { X509Certificate } from 'crypto'; // per controllare attestationRootCertificates
 import { MetadataKeyError } from '../../Error/error';
 import { V3toV2 } from '../../FieldConverter/V3toV2';
-import { metadataKeysV2 } from '../metadataV2';
+import { MetadataKeysV2 } from '../v2/MetadataV2';
 import { AuthenticatorGetInfo } from '../fields/AuthenticatorGetInfo';
-import { Version } from "../fields/Version"
+import { Version } from "../fields/Version";
+import { convertAttestationRootCertificates } from '../../FieldConverter/usefulFunction';
+import {attachmentHintEnum, attestationTypesEnum, authenticationAlgorithmsEnum, keyProtectionEnum, matcherProtectionEnum, protocolFamilyEnum, publicKeyAlgAndEncodingsEnum, tcDisplayContentTypeEnum, tcDisplayEnum, V3FunctionName} from "./../fields/enums"
+import { VerificationMethodANDCombinationsV3 } from '../fields/VerificationMethodANDCombinations';
+import * as Enum from "./../fields/enums"
+import { ExtensionDescriptor } from '../fields/ExtensionDescriptor';
+import { TcDisplayPNGCharacteristicsDescriptor } from '../fields/TcDisplayPNGCharacteristicsDescriptor';
+import { ECDAATrustAnchor } from '../fields/ECDAATrustAnchor';
 
-class MetadataKeysV3 {
+
+export class MetadataKeysV3 {
 
     //costruttore con tutti i campi, quelli richiesti sono obbligatori, gli altri facoltativi
     constructor(description: string, authenticatorVersion: number, upv: Version[], schema: number,
         attestationTypes: string[], attestationCertificateKeyIdentifiers: string[] | undefined,
-        userVerificationDetails: VerificationMethodANDCombinations[], authenticationAlgorithms: string[], publicKeyAlgAndEncodings: string[],
+        userVerificationDetails: VerificationMethodANDCombinationsV3[], authenticationAlgorithms: string[], publicKeyAlgAndEncodings: string[],
         keyProtection: string[], matcherProtection: string[], cryptoStrength: number | undefined = undefined, attachmentHint: string[], tcDisplay: string[] | undefined,
         attestationRootCertificates: string[], legalHeader: string, aaid?: string, aaguid?: string, alternativeDescriptions?: string,
         protocolFamily: string = "uaf", isKeyRestricted: boolean = true, isFreshUserVerificationRequired: boolean = true,
@@ -83,7 +91,7 @@ class MetadataKeysV3 {
     public authenticationAlgorithms: string[];
     public publicKeyAlgAndEncodings: string[];
     public attestationTypes: string[];
-    public userVerificationDetails: VerificationMethodANDCombinations[];
+    public userVerificationDetails: VerificationMethodANDCombinationsV3[];
     public keyProtection: string[];
     public isKeyRestricted: boolean;
     public isFreshUserVerificationRequired: boolean;
@@ -100,8 +108,8 @@ class MetadataKeysV3 {
     public authenticatorGetInfo: AuthenticatorGetInfo | undefined;
 
     //medodo statico per generazione metadata V2
-    public static fromV3toV2(m: MetadataKeysV3): metadataKeysV2 {
-        let result: metadataKeysV2;
+    public static fromV3toV2(m: MetadataKeysV3): MetadataKeysV2 {
+        let result: MetadataKeysV2;
         if (!m.validateAll())
             throw "Errore, metadata versione 3 non valido";
         else {
@@ -183,7 +191,7 @@ class MetadataKeysV3 {
             let ecdaaTrustAnchors: ECDAATrustAnchor[] | undefined = m.ecdaaTrustAnchors != undefined ? Array.from(m.ecdaaTrustAnchors) : undefined;
             let icon: string | undefined = m.icon != undefined ? m.icon : undefined;
             let supportedExtensions: ExtensionDescriptor[] | undefined = m.supportedExtensions != undefined ? Array.from(m.supportedExtensions) : undefined;
-            result = new metadataKeysV2(description, authenticatorVersion, upv, assertionScheme, authenticationAlgorithm != undefined ? authenticationAlgorithm : 0, publicKeyAlgAndEncoding != undefined ? publicKeyAlgAndEncoding : 0,
+            result = new MetadataKeysV2(description, authenticatorVersion, upv, assertionScheme, authenticationAlgorithm != undefined ? authenticationAlgorithm : 0, publicKeyAlgAndEncoding != undefined ? publicKeyAlgAndEncoding : 0,
                 attestationTypes != undefined ? attestationTypes : new Array(), userVerificationDetails, isSecondFactorOnly, keyProtection != undefined ? keyProtection : 0, matcherProtection != undefined ? matcherProtection : 0,
                 cryptoStrength != undefined ? cryptoStrength : 0, attachmentHint != undefined ? attachmentHint : 0, tcDisplay != undefined ? tcDisplay : 0, attestationRootCertificates, legalHeader, aaid, aaguid, attestationCertificateKeyIdentifiers,
                 alternativeDescriptions, protocolFamily, authenticationAlgorithms != undefined ? authenticationAlgorithms : undefined, publicKeyAlgAndEncodings != undefined ? publicKeyAlgAndEncodings : undefined, isKeyRestricted, isFreshUserVerificationRequired, operatingEnv, tcDisplayContentType,
@@ -195,7 +203,6 @@ class MetadataKeysV3 {
     //funzione validazione singolo campo
     //attenzione, lo switch deve corrispondere all'enum
     public validateData(str: string): boolean {
-        console.debug("validateData of " + str + " use code case:" + V3FunctionName[str as keyof typeof V3FunctionName])
         switch (V3FunctionName[str as keyof typeof V3FunctionName]) {
             case 1:
                 return this.aaidCheck()
@@ -705,8 +712,6 @@ class MetadataKeysV3 {
      *          2) se presente c'è controllo in protocol family
      */
     private authenticatorGetInfoCheck(): boolean {
-        console.debug("This is Mv3 @705 authenticatorGetInfoCheck\tTHIS:", this)
-        console.debug("This is Mv3 @705 authenticatorGetInfoCheck\tAGI: ", this.authenticatorGetInfo)
         if (this.authenticatorGetInfo !== undefined) {
             return this.authenticatorGetInfo.validateInternalData();
         }
